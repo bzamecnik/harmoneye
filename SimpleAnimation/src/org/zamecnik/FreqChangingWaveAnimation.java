@@ -39,11 +39,9 @@ public class FreqChangingWaveAnimation extends JPanel implements ActionListener 
 		super.paintComponent(g);
 		Graphics2D g2 = (Graphics2D) g;
 
-		RenderingHints rh = new RenderingHints(RenderingHints.KEY_ANTIALIASING,
-				RenderingHints.VALUE_ANTIALIAS_ON);
+		RenderingHints rh = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-		rh.put(RenderingHints.KEY_RENDERING,
-				RenderingHints.VALUE_RENDER_QUALITY);
+		rh.put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 
 		g2.setRenderingHints(rh);
 
@@ -93,8 +91,7 @@ public class FreqChangingWaveAnimation extends JPanel implements ActionListener 
 		}
 
 		public void update() {
-			frequency = minFrequency + (frequency - minFrequency + freqStep)
-					% (maxFrequency - minFrequency);
+			frequency = minFrequency + (frequency - minFrequency + freqStep) % (maxFrequency - minFrequency);
 
 			float factor = (float) (frequency * TWO_PI / (float) values.length);
 			for (int i = 0; i < values.length; i++) {
@@ -120,16 +117,13 @@ public class FreqChangingWaveAnimation extends JPanel implements ActionListener 
 	}
 
 	class Spectrum {
-		private final float DB_THRESHOLD = (float) -(20 * Math
-				.log10(2 << (16 - 1)));
+		private final float DB_THRESHOLD = (float) -(20 * Math.log10(2 << (16 - 1)));
 		private Signal signal;
 		/** peak amplitude spectrum */
 		private float[] amplitudeSpectrumDb;
 		private Line2D.Float line = new Line2D.Float();
 		private FloatFFT_1D fft;
 		private int sampleCount;
-
-		private boolean printed = false;
 
 		public Spectrum(Signal signal) {
 			this.signal = signal;
@@ -141,18 +135,6 @@ public class FreqChangingWaveAnimation extends JPanel implements ActionListener 
 		public void update() {
 			float[] signalValues = signal.getValues();
 			computeAmplitudeSpectrum(signalValues);
-
-			if (!printed) {
-				for (float value : signal.getValues()) {
-					System.out.print(value + ", ");
-				}
-				System.out.println();
-				for (float value : amplitudeSpectrumDb) {
-					System.out.print(value + ", ");
-				}
-				System.out.println();
-				printed = true;
-			}
 		}
 
 		private void computeAmplitudeSpectrum(float[] signal) {
@@ -169,8 +151,7 @@ public class FreqChangingWaveAnimation extends JPanel implements ActionListener 
 				float magnitude = (float) Math.sqrt(re * re + im * im);
 				float peakAmplitude = magnitude * normalizationFactor;
 				float referenceAmplitude = 1;
-				float amplitudeDb = (float) (20 * Math.log10(peakAmplitude
-						/ referenceAmplitude));
+				float amplitudeDb = (float) (20 * Math.log10(peakAmplitude / referenceAmplitude));
 				float scaledAmplitudeDb = 1 + amplitudeDb / -DB_THRESHOLD;
 				amplitudeSpectrumDb[i] = scaledAmplitudeDb;
 			}
@@ -180,8 +161,7 @@ public class FreqChangingWaveAnimation extends JPanel implements ActionListener 
 			float x = 0;
 			Dimension size = getSize();
 			float height = (float) size.getHeight();
-			float step = (float) size.getWidth()
-					/ (amplitudeSpectrumDb.length - 2);
+			float step = (float) size.getWidth() / (amplitudeSpectrumDb.length - 2);
 
 			for (int i = 1; i < amplitudeSpectrumDb.length; i++) {
 				x += step;

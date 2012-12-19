@@ -9,7 +9,7 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 
 public class WavFileReader {
 	private static final int BUFFER_SIZE = 16 * 1024;
-	private static final String INPUT_FILE_NAME = "/Users/bzamecnik/dev/harmoneye/data/wav/kamca-02.wav";
+	private static final String INPUT_FILE_NAME = "/Users/bzamecnik/dev/harmoneye/data/wav/c-scale.wav";
 
 	public static void main(String[] args)
 			throws UnsupportedAudioFileException, IOException {
