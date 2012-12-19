@@ -40,28 +40,13 @@ package org.zamecnik;
  * All other methods copyright Steve Potts, 2002
  */
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.IOException;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
-import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
-import javax.sound.sampled.UnsupportedAudioFileException;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.SoftBevelBorder;
 
 /**
  * SimpleSoundCapture Example. This is a simple program to record sounds and
@@ -70,190 +55,48 @@ import javax.swing.border.SoftBevelBorder;
  * 
  * @author Steve Potts
  */
-public class SimpleFilePlayer extends JPanel implements ActionListener {
+public class SimpleFilePlayer {
 
 	private static final String INPUT_FILE_NAME = "/Users/bzamecnik/dev/harmoneye/data/wav/097_1.WAV";
+	private static final int BUFFER_SIZE = 16384;
 
-	final int bufSize = 16384;
+	public void play() throws Exception {
+		File file = new File(INPUT_FILE_NAME);
+		AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(file);
 
-	Playback playback = new Playback();
-
-	AudioInputStream audioInputStream;
-
-	JButton playB;
-
-	JTextField textField;
-
-	String errStr;
-
-	File file;
-
-	public SimpleFilePlayer() {
-		setLayout(new BorderLayout());
-		SoftBevelBorder sbb = new SoftBevelBorder(SoftBevelBorder.LOWERED);
-		setBorder(new EmptyBorder(5, 5, 5, 5));
-
-		JPanel p1 = new JPanel();
-		p1.setLayout(new BoxLayout(p1, BoxLayout.X_AXIS));
-
-		JPanel p2 = new JPanel();
-		p2.setBorder(sbb);
-		p2.setLayout(new BoxLayout(p2, BoxLayout.Y_AXIS));
-
-		JPanel buttonsPanel = new JPanel();
-		buttonsPanel.setBorder(new EmptyBorder(10, 0, 5, 0));
-		playB = addButton("Play", buttonsPanel, true);
-		p2.add(buttonsPanel);
-
-		p1.add(p2);
-		add(p1);
-	}
-
-	public void open() {
-	}
-
-	public void close() {
-		if (playback.thread != null) {
-			playB.doClick(0);
-		}
-	}
-
-	private JButton addButton(String name, JPanel p, boolean state) {
-		JButton b = new JButton(name);
-		b.addActionListener(this);
-		b.setEnabled(state);
-		p.add(b);
-		return b;
-	}
-
-	public void actionPerformed(ActionEvent e) {
-		Object obj = e.getSource();
-		if (obj.equals(playB)) {
-			if (playB.getText().startsWith("Play")) {
-				playback.start();
-				playB.setText("Stop");
-			} else {
-				playback.stop();
-				playB.setText("Play");
-			}
-		}
-	}
-
-	/**
-	 * Write data to the OutputChannel.
-	 */
-	public class Playback implements Runnable {
-
-		SourceDataLine line;
-
-		Thread thread;
-
-		public void start() {
-			errStr = null;
-			thread = new Thread(this);
-			thread.setName("Playback");
-			thread.start();
+		AudioFormat format = audioInputStream.getFormat();
+		DataLine.Info info = new DataLine.Info(SourceDataLine.class, format);
+		if (!AudioSystem.isLineSupported(info)) {
+			throw new Exception("Line matching " + info + " not supported.");
 		}
 
-		public void stop() {
-			thread = null;
+		SourceDataLine playbackLine = (SourceDataLine) AudioSystem.getLine(info);
+		playbackLine.open(format, BUFFER_SIZE);
+
+		int frameSizeInBytes = format.getFrameSize();
+		int bufferLengthInFrames = playbackLine.getBufferSize() / 8;
+		int bufferLengthInBytes = bufferLengthInFrames * frameSizeInBytes;
+		byte[] buffer = new byte[bufferLengthInBytes];
+
+		playbackLine.start();
+
+		int readBytesCount = 0;
+		while (readBytesCount >= 0) {
+			int bytesToWriteCount = readBytesCount;
+			while (bytesToWriteCount > 0) {
+				int writtenBytesCount = playbackLine.write(buffer, 0, bytesToWriteCount);
+				bytesToWriteCount -= writtenBytesCount;
+			}
+			readBytesCount = audioInputStream.read(buffer);
 		}
 
-		private void shutDown(String message) {
-			if ((errStr = message) != null) {
-				System.err.println(errStr);
-			}
-			if (thread != null) {
-				thread = null;
-				playB.setText("Play");
-			}
-		}
-
-		public void run() {
-			// make sure we have something to play
-			if (audioInputStream == null) {
-				try {
-					audioInputStream = AudioSystem
-							.getAudioInputStream(new File(INPUT_FILE_NAME));
-				} catch (UnsupportedAudioFileException | IOException e) {
-					e.printStackTrace();
-					return;
-				}
-			}
-
-			AudioFormat format = audioInputStream.getFormat();
-
-			// define the required attributes for our line,
-			// and make sure a compatible line is supported.
-
-			DataLine.Info info = new DataLine.Info(SourceDataLine.class, format);
-			if (!AudioSystem.isLineSupported(info)) {
-				shutDown("Line matching " + info + " not supported.");
-				return;
-			}
-
-			// get and open the source data line for playback.
-
-			try {
-				line = (SourceDataLine) AudioSystem.getLine(info);
-				line.open(format, bufSize);
-			} catch (LineUnavailableException ex) {
-				shutDown("Unable to open the line: " + ex);
-				return;
-			}
-
-			// play back the captured audio data
-
-			int frameSizeInBytes = format.getFrameSize();
-			int bufferLengthInFrames = line.getBufferSize() / 8;
-			int bufferLengthInBytes = bufferLengthInFrames * frameSizeInBytes;
-			byte[] data = new byte[bufferLengthInBytes];
-			int numBytesRead = 0;
-
-			// start the source data line
-			line.start();
-
-			while (thread != null) {
-				try {
-					if ((numBytesRead = audioInputStream.read(data)) == -1) {
-						break;
-					}
-					int numBytesRemaining = numBytesRead;
-					while (numBytesRemaining > 0) {
-						numBytesRemaining -= line.write(data, 0,
-								numBytesRemaining);
-					}
-				} catch (Exception e) {
-					shutDown("Error during playback: " + e);
-					break;
-				}
-			}
-			// we reached the end of the stream.
-			// let the data play out, then
-			// stop and close the line.
-			if (thread != null) {
-				line.drain();
-			}
-			line.stop();
-			line.close();
-			line = null;
-			shutDown(null);
-		}
+		playbackLine.drain();
+		playbackLine.stop();
+		playbackLine.close();
 	}
 
-	public static void main(String s[]) {
-		SimpleFilePlayer ssc = new SimpleFilePlayer();
-		ssc.open();
-		JFrame f = new JFrame("Playback");
-		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		f.getContentPane().add("Center", ssc);
-		f.pack();
-		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-		int w = 360;
-		int h = 170;
-		f.setLocation(screenSize.width / 2 - w / 2, screenSize.height / 2 - h
-				/ 2);
-		f.setSize(w, h);
-		f.show();
+	public static void main(String s[]) throws Exception {
+		SimpleFilePlayer player = new SimpleFilePlayer();
+		player.play();
 	}
 }
