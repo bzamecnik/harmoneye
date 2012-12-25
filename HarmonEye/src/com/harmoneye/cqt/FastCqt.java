@@ -22,7 +22,7 @@ public class FastCqt extends AbstractCqt {
 	@Override
 	public Complex[] transform(double[] signal) {
 		computeSpectralKernels();
-		System.out.println(spectralKernels);
+//		System.out.println(spectralKernels);
 
 		int size = nextPowerOf2(bandWidth(0));
 
