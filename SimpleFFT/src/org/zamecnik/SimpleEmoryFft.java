@@ -2,7 +2,7 @@ package org.zamecnik;
 
 import edu.emory.mathcs.jtransforms.fft.FloatFFT_1D;
 
-public class SimpleFft {
+public class SimpleEmoryFft {
 	private static final int DATA_SIZE = 128;
 
 	public static void main(String[] args) {
