@@ -35,10 +35,11 @@ public abstract class AbstractCqt implements Cqt {
 		return (int) Math.ceil(q * samplingFreq / centerFreq(k));
 	}
 
-	protected Complex[] temporalKernel(int k, int size) {
+	protected Complex[] temporalKernel(int k) {
+		int size = bandWidth(k);
 		Complex[] coeffs = new Complex[size];
 		double sizeInv = 1.0 / size;
-		double factor = -2 * Math.PI * q * sizeInv;
+		double factor = 2 * Math.PI * q * sizeInv;
 		for (int i = 0; i < size; i++) {
 			Complex value = ComplexUtils.polar2Complex(window.value(i * sizeInv) * sizeInv, i * factor);
 			coeffs[i] = value;
