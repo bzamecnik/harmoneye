@@ -33,8 +33,9 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 
 	private static final int TIME_PERIOD_MILLIS = 100;
 
-	private static final String INPUT_FILE_NAME = "/Users/bzamecnik/dev/harmoneye/data/wav/c-scale.wav";
-	private static final int BUFFER_SIZE = 4 * 1024;
+	private static final String INPUT_FILE_NAME = "/Users/bzamecnik/dev/harmoneye/data/wav/c-scale-piano-mono.wav";
+	private static final int BUFFER_SIZE = 16 * 1024;
+	private static final boolean IS_STEREO = false;
 
 	Spectrum spectrum = new Spectrum();
 	private Timer timer;
@@ -60,8 +61,6 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 
 		g2.setRenderingHints(rh);
 
-		g2.setColor(Color.BLACK);
-		g2.setPaint(Color.BLACK);
 		spectrum.paint(g2);
 	}
 
@@ -82,9 +81,11 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 	}
 
 	class Spectrum {
+
 		private final double DB_THRESHOLD = -(20 * Math.log10(2 << (16 - 1)));
 		private static final int BINS_PER_HALFTONE = 3;
 		private static final int PITCH_BIN_COUNT = BINS_PER_HALFTONE * 12;
+		private static final int OCTAVE_COUNT = 2;
 
 		private Complex[] cqSpectrum;
 		/** peak amplitude spectrum */
@@ -114,22 +115,43 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 		}
 
 		private void computePitchClassProfile() {
-//			double octaveCountInv = 1.0 / 3;
-//			for (int i = 0; i < PITCH_BIN_COUNT; i++) {
-////				double value = 0;
-////				for (int j = i; j < amplitudeSpectrumDb.length; j += PITCH_BIN_COUNT) {
-////					value += amplitudeSpectrumDb[j];
-////				}
-////				value *= octaveCountInv;
-//				
-//				double value = amplitudeSpectrumDb[i + 1 * PITCH_BIN_COUNT];
-//				
-//				
-//				octaveBinsDb[i] = value;
-//			}
+			double octaveCountInv = 1.0 / OCTAVE_COUNT;
+			for (int i = 0; i < PITCH_BIN_COUNT; i++) {
+				double value = 0;
+				for (int j = i; j < amplitudeSpectrumDb.length; j += PITCH_BIN_COUNT) {
+					value += amplitudeSpectrumDb[j];
+				}
+				value *= octaveCountInv;
 
-						octaveBinsDb = amplitudeSpectrumDb;
+				//	double value = amplitudeSpectrumDb[i + 0 * PITCH_BIN_COUNT];
+
+				octaveBinsDb[i] = value;
+			}
+
+//			octaveBinsDb = amplitudeSpectrumDb;
+			pitchClassProfileDb = octaveBinsDb;
+
+			// TODO: smooth the data, eg. with a Kalman filter
 			
+//			for (int i = 0, pitchClass = 0; i < octaveBinsDb.length; i += BINS_PER_HALFTONE, pitchClass++) {
+//				double value = 0;
+//
+//				double center = octaveBinsDb[i + 2];
+//				if (center >= octaveBinsDb[i] &&
+//					center >= octaveBinsDb[i + 1] &&
+//					center >= octaveBinsDb[i + 3] &&
+//					center >= octaveBinsDb[i + 4])
+//				{
+//					value = center;
+//				}
+////				double center = octaveBinsDb[i + 1];
+////				if (center >= octaveBinsDb[i] &&
+////					center >= octaveBinsDb[i + 2])
+////				{
+////					value = center;
+////				}
+//				pitchClassProfileDb[pitchClass] = value;
+//			}
 		}
 
 		public void paint(Graphics2D graphics) {
@@ -139,12 +161,24 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 			float x = 0;
 			Dimension size = getSize();
 			float height = (float) size.getHeight();
-			float step = (float) size.getWidth() / (octaveBinsDb.length);
+			float step = (float) size.getWidth() / (pitchClassProfileDb.length);
 
-			for (int i = 1; i < octaveBinsDb.length; i++) {
-				line.setFrameFromDiagonal(x, height, x + step - 1, (1 - octaveBinsDb[i]) * height);
+			graphics.setColor(Color.BLACK);
+			graphics.setPaint(Color.BLACK);
+			for (int i = 0; i < pitchClassProfileDb.length; i++) {
+				line.setFrameFromDiagonal(x, height, x + step - 1, (1 - pitchClassProfileDb[i]) * height);
 				x += step;
 				graphics.fill(line);
+				graphics.draw(line);
+			}
+			
+			graphics.setColor(Color.RED);
+			x = 0;
+			int binCount = 12;
+			step = (float) size.getWidth() / binCount;
+			for (int i = 0; i < binCount; i++) {
+				line.setFrameFromDiagonal(x, 0, x + step - 1, height);
+				x += step;
 				graphics.draw(line);
 			}
 		}
@@ -209,7 +243,7 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 
 		public double[] getFrameAmplitudes(double[] amplitudes) {
 			//			printByteArray(buffer);
-			byte[] monoSignal = stereoToMono(buffer);
+			byte[] monoSignal =  (IS_STEREO) ? stereoToMono(buffer) : buffer;
 			//			printByteArray(monoSignal);
 			if (amplitudes == null) {
 				amplitudes = new double[monoSignal.length / 2];
