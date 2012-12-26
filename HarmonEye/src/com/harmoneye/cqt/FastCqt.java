@@ -19,11 +19,13 @@ public class FastCqt extends AbstractCqt {
 	// spectral kernels - already Hermite-conjugated (conjugated and transposed) for the transform
 	FieldMatrix<Complex> spectralKernels;
 
-	@Override
-	public Complex[] transform(double[] signal) {
+	public FastCqt() {
 		computeSpectralKernels();
 //		System.out.println(spectralKernels);
-
+	}
+	
+	@Override
+	public Complex[] transform(double[] signal) {
 		int size = nextPowerOf2(bandWidth(0));
 
 		signal = padRight(signal, size);
