@@ -17,7 +17,8 @@ public abstract class AbstractCqt implements Cqt {
 //	protected final double maxFreq = 20.0f;
 //	protected final double samplingFreq = 2 * maxFreq;
 
-	protected final int binsPerHalftone = 5;
+	protected final int binsPerHalftone = 3;
+	protected final int binsPerHalftoneHalf = binsPerHalftone / 2;
 	protected final int binsPerOctave = 12 * binsPerHalftone;
 	protected final double binsPerOctaveInv = 1.0 / binsPerOctave;
 
@@ -29,7 +30,9 @@ public abstract class AbstractCqt implements Cqt {
 	protected double windowIntegral = windowIntegral(window);
 
 	protected double centerFreq(int k) {
-		return (baseFreq * FastMath.pow(2, k * binsPerOctaveInv));
+		// (k - binsPerHalftoneHalf) instead of k
+		// in order to put the center frequency in the center bin for that haftone
+		return (baseFreq * FastMath.pow(2, (k - binsPerHalftoneHalf) * binsPerOctaveInv));
 	}
 
 	protected int bandWidth(int k) {

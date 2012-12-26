@@ -83,7 +83,8 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 
 	class Spectrum {
 		private final double DB_THRESHOLD = -(20 * Math.log10(2 << (16 - 1)));
-		private static final int PITCH_BIN_COUNT = 5 * 12;
+		private static final int BINS_PER_HALFTONE = 3;
+		private static final int PITCH_BIN_COUNT = BINS_PER_HALFTONE * 12;
 
 		private Complex[] cqSpectrum;
 		/** peak amplitude spectrum */
