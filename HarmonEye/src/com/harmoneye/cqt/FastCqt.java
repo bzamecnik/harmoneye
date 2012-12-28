@@ -1,14 +1,14 @@
 package com.harmoneye.cqt;
 
 import org.apache.commons.math3.complex.Complex;
-import org.apache.commons.math3.complex.ComplexField;
 import org.apache.commons.math3.linear.ArrayFieldVector;
 import org.apache.commons.math3.linear.FieldMatrix;
 import org.apache.commons.math3.linear.FieldVector;
-import org.apache.commons.math3.linear.SparseFieldMatrix;
 import org.apache.commons.math3.transform.DftNormalization;
 import org.apache.commons.math3.transform.FastFourierTransformer;
 import org.apache.commons.math3.transform.TransformType;
+
+import com.harmoneye.NonZeroSparseFieldMatrix;
 
 public class FastCqt extends AbstractCqt {
 
@@ -26,6 +26,7 @@ public class FastCqt extends AbstractCqt {
 	public FastCqt() {
 		computeSpectralKernels();
 //		System.out.println(spectralKernels);
+		System.out.println("kernel: " + spectralKernels.getColumnDimension() + " x " + spectralKernels.getRowDimension());
 		
 		signalBlockSize = nextPowerOf2(bandWidth(0));
 		System.out.println("signalBlockSize:" + signalBlockSize);
@@ -35,21 +36,26 @@ public class FastCqt extends AbstractCqt {
 	@Override
 	public Complex[] transform(double[] signal) {
 		signal = padRight(signal, signalBlockSize);
-
 		Complex[] spectrum = fft.transform(signal, TransformType.FORWARD);
-
 		ArrayFieldVector<Complex> spectrumVector = new ArrayFieldVector<Complex>(spectrum);
+		
+//		long start = System.nanoTime();
 		FieldVector<Complex> product = spectralKernels.operate(spectrumVector);
+//		long end = System.nanoTime();
+//		System.out.println("total: " + (end - start) / 1e6 + " ms");
+		
 		product.mapMultiplyToSelf(normalizationFactor);
-		return product.toArray();
+		Complex[] productArray = product.toArray();
+		return productArray;
 	}
 
 	protected void computeSpectralKernels() {
 		if (spectralKernels != null) {
 			return;
 		}
-		spectralKernels = new SparseFieldMatrix<Complex>(ComplexField.getInstance(), totalBins,
-			nextPowerOf2(bandWidth(0)));
+//		spectralKernels = new SparseFieldMatrix<Complex>(ComplexField.getInstance(), totalBins,
+//			nextPowerOf2(bandWidth(0)));
+		spectralKernels = new NonZeroSparseFieldMatrix(totalBins, nextPowerOf2(bandWidth(0)));
 		for (int k = 0; k < totalBins; k++) {
 			spectralKernels.setRow(k, conjugate(spectralKernel(k)));
 		}
