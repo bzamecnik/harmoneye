@@ -19,23 +19,28 @@ public class FastCqt extends AbstractCqt {
 	// spectral kernels - already Hermite-conjugated (conjugated and transposed) for the transform
 	FieldMatrix<Complex> spectralKernels;
 
+	private int signalBlockSize;
+
+	private Complex normalizationFactor;
+
 	public FastCqt() {
 		computeSpectralKernels();
 //		System.out.println(spectralKernels);
+		
+		signalBlockSize = nextPowerOf2(bandWidth(0));
+		System.out.println("signalBlockSize:" + signalBlockSize);
+		normalizationFactor = new Complex(2 / (signalBlockSize * windowIntegral));
 	}
 	
 	@Override
 	public Complex[] transform(double[] signal) {
-		int size = nextPowerOf2(bandWidth(0));
-
-		signal = padRight(signal, size);
+		signal = padRight(signal, signalBlockSize);
 
 		Complex[] spectrum = fft.transform(signal, TransformType.FORWARD);
 
-		double normalizationFactor = 2 / (size * windowIntegral);
 		ArrayFieldVector<Complex> spectrumVector = new ArrayFieldVector<Complex>(spectrum);
 		FieldVector<Complex> product = spectralKernels.operate(spectrumVector);
-		product.mapMultiplyToSelf(new Complex(normalizationFactor));
+		product.mapMultiplyToSelf(normalizationFactor);
 		return product.toArray();
 	}
 
