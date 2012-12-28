@@ -1,4 +1,4 @@
-package experiment;
+package com.harmoneye;
 
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.OpenMapRealMatrix;

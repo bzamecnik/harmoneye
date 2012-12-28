@@ -2,6 +2,8 @@ package test;
 
 import static org.junit.Assert.*;
 
+import java.util.Date;
+
 import org.apache.commons.math3.complex.Complex;
 import org.junit.Test;
 
@@ -53,6 +55,30 @@ public class TestCqt {
 			assertTrue(error < EPSILON);
 		}
 
+	}
+
+	public void testFastCqtSpeed() {
+
+		double signal[] = new double[8192];
+
+		Cqt cqt = new FastCqt();
+
+		long start = System.nanoTime();
+		int iterations = 100;
+		for (int i = 0; i < iterations; i++) {
+			Complex[] cqBins = cqt.transform(signal);
+
+		}
+		long end = System.nanoTime();
+		System.out.println(new Date());
+		System.out.println("total: " + (end - start) / 1e6 + " ms");
+		System.out.println("average: " + (end - start) / (iterations * 1e6) + " ms");
+		System.out.println("average: " + (iterations * 1e9) / (end - start) + " per sec");
+
+	}
+
+	public static void main(String[] args) {
+		new TestCqt().testFastCqtSpeed();
 	}
 
 	private Double[] abs(Complex[] values) {

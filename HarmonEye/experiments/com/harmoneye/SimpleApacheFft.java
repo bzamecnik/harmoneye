@@ -1,4 +1,6 @@
-package org.zamecnik;
+package com.harmoneye;
+
+import java.util.Date;
 
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.transform.DftNormalization;
@@ -6,7 +8,7 @@ import org.apache.commons.math3.transform.FastFourierTransformer;
 import org.apache.commons.math3.transform.TransformType;
 
 public class SimpleApacheFft {
-	private static final int DATA_SIZE = 128;
+	private static final int DATA_SIZE = 8 * 1024;
 
 	public static void main(String[] args) {
 		double[] data = generateCosineWave();
@@ -15,14 +17,27 @@ public class SimpleApacheFft {
 
 		FastFourierTransformer fft = new FastFourierTransformer(DftNormalization.STANDARD);
 
-		Complex[] spectrum = fft.transform(data, TransformType.FORWARD);
+		System.out.println(new Date());
+		long start = System.nanoTime();
+		
+		Complex[] spectrum = null;
+		int iterations = 10000;
+		for (int i = 0; i < iterations; i++) {
+			spectrum = fft.transform(data, TransformType.FORWARD);
+		}
+		
+		long end = System.nanoTime();
+		System.out.println(new Date());
+		System.out.println("total: " + (end - start) / 1e6 + " ms");
+		System.out.println("average: " + (end - start) / (iterations * 1e6) + " ms");
+		System.out.println("average: " + (iterations * 1e9) / (end - start) + " per sec");
 
 		double[] amplitudeSpectrum = abs(spectrum);
 
 		normalize(amplitudeSpectrum);
 		chop(amplitudeSpectrum);
 
-		System.out.println("FFT-transformed values: " + print(amplitudeSpectrum));
+//		System.out.println("FFT-transformed values: " + print(amplitudeSpectrum));
 	}
 
 	private static double[] abs(Complex[] values) {

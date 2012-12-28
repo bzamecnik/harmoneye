@@ -1,9 +1,12 @@
-package org.zamecnik;
+package com.harmoneye;
+
+import java.util.Arrays;
+import java.util.Date;
 
 import edu.emory.mathcs.jtransforms.fft.FloatFFT_1D;
 
 public class SimpleEmoryFft {
-	private static final int DATA_SIZE = 128;
+	private static final int DATA_SIZE = 4 * 1024;
 
 	public static void main(String[] args) {
 		float[] data = generateCosineWave();
@@ -11,11 +14,32 @@ public class SimpleEmoryFft {
 		System.out.println("Original values: " + print(data));
 
 		FloatFFT_1D fft = new FloatFFT_1D(DATA_SIZE);
-		fft.realForward(data);
+		
+
+		System.out.println(new Date());
+		long counter = 0;
+		
+		int iterations = 10000;
+		
+		for (int i = 0; i < iterations; i++) {
+			float[] dataCopy = Arrays.copyOf(data, data.length);
+			long start = System.nanoTime();
+			fft.realForward(dataCopy);
+			long end = System.nanoTime();
+			counter += end - start;
+		}
+		
+		System.out.println(new Date());
+		System.out.println("total: " + counter / 1e6 + " ms");
+		System.out.println("average: " + counter / (iterations * 1e6) + " ms");
+		System.out.println("average: " + (iterations * 1e9) / counter + " per sec");
+
+
+		
 		normalize(data);
 		chop(data);
 
-		System.out.println("FFT-transformed values: " + print(data));
+//		System.out.println("FFT-transformed values: " + print(data));
 	}
 
 	private static void normalize(float[] spectrum) {
