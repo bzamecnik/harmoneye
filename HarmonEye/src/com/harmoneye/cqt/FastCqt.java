@@ -66,7 +66,7 @@ public class FastCqt extends AbstractCqt {
 	}
 
 	protected Complex[] spectralKernel(int k) {
-		Complex[] temporalKernel = padRight(temporalKernel(k), nextPowerOf2(bandWidth(0)));
+		Complex[] temporalKernel = padLeft(temporalKernel(k), nextPowerOf2(bandWidth(0)));
 		Complex[] spectrum = fft.transform(temporalKernel, TransformType.FORWARD);
 		chop(spectrum);
 		return spectrum;
@@ -81,6 +81,20 @@ public class FastCqt extends AbstractCqt {
 		for (int i = values.length; i < totalSize; i++) {
 			padded[i] = Complex.ZERO;
 		}
+		return padded;
+	}
+	
+	private Complex[] padLeft(Complex[] values, int totalSize) {
+		Complex[] padded = new Complex[totalSize];
+		int dataSize = Math.min(values.length, totalSize);
+		int paddingSize = totalSize - dataSize;
+		for (int i = 0; i < paddingSize; i++) {
+			padded[i] = Complex.ZERO;
+		}
+		for (int i = paddingSize; i < totalSize; i++) {
+			padded[i] = values[i - paddingSize];
+		}
+		
 		return padded;
 	}
 
