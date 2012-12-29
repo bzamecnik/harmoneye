@@ -59,9 +59,11 @@ public class TestCqt {
 
 	public void testFastCqtSpeed() {
 
-		double signal[] = new double[8192];
+		FastCqt cqt = new FastCqt();
+		
+		double signal[] = new double[cqt.getSignalBlockSize()];
 
-		Cqt cqt = new FastCqt();
+		
 
 		long start = System.nanoTime();
 		int iterations = 100;

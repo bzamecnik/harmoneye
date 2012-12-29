@@ -9,6 +9,7 @@ import org.apache.commons.math3.transform.DftNormalization;
 import org.apache.commons.math3.transform.FastFourierTransformer;
 import org.apache.commons.math3.transform.TransformType;
 
+import com.harmoneye.LinkedListNonZeroSparseFieldMatrix;
 import com.harmoneye.NonZeroSparseFieldMatrix;
 
 public class FastCqt extends AbstractCqt {
@@ -61,6 +62,7 @@ public class FastCqt extends AbstractCqt {
 			spectralKernels.setRow(k, conjugate(spectralKernel(k)));
 		}
 		spectralKernels.transpose();
+		spectralKernels = new LinkedListNonZeroSparseFieldMatrix<>(spectralKernels);
 	}
 
 	protected Complex[] spectralKernel(int k) {
@@ -121,4 +123,9 @@ public class FastCqt extends AbstractCqt {
 		return value;
 	}
 
+
+	public int getSignalBlockSize() {
+		return signalBlockSize;
+	}
+	
 }

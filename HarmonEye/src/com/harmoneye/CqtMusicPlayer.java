@@ -25,6 +25,7 @@ import javax.swing.Timer;
 
 import org.apache.commons.math3.complex.Complex;
 
+import com.harmoneye.cqt.AbstractCqt;
 import com.harmoneye.cqt.Cqt;
 import com.harmoneye.cqt.FastCqt;
 
@@ -86,10 +87,12 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 
 	class Spectrum {
 
+		private AbstractCqt cqt = new FastCqt();
+		
 		private final double DB_THRESHOLD = -(20 * Math.log10(2 << (16 - 1)));
-		private static final int BINS_PER_HALFTONE = 3;
-		private static final int PITCH_BIN_COUNT = BINS_PER_HALFTONE * 12;
-		private static final int OCTAVE_COUNT = 2;
+		private final int BINS_PER_HALFTONE = cqt.getBinsPerHalftone();
+		private final int PITCH_BIN_COUNT = cqt.getBinsPerOctave();
+		private final int OCTAVE_COUNT = cqt.getOctaveCount();
 
 		private Complex[] cqSpectrum;
 		/** peak amplitude spectrum */
@@ -97,7 +100,7 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 		private double[] octaveBinsDb = new double[PITCH_BIN_COUNT];
 		private double[] pitchClassProfileDb = new double[12];
 		private Rectangle2D.Float line = new Rectangle2D.Float();
-		private Cqt cqt = new FastCqt();
+		
 
 		public void updateSignal(double[] signal) {
 //			long start = System.nanoTime();
@@ -127,12 +130,20 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 		private void computePitchClassProfile() {
 			double octaveCountInv = 1.0 / OCTAVE_COUNT;
 			for (int i = 0; i < PITCH_BIN_COUNT; i++) {
+// average over octaves:
+				//				double value = 0;
+//				for (int j = i; j < amplitudeSpectrumDb.length; j += PITCH_BIN_COUNT) {
+//					value += amplitudeSpectrumDb[j];
+//				}
+//				value *= octaveCountInv;
+
+				// maximum over octaves:
 				double value = 0;
 				for (int j = i; j < amplitudeSpectrumDb.length; j += PITCH_BIN_COUNT) {
-					value += amplitudeSpectrumDb[j];
+					value = Math.max(value, amplitudeSpectrumDb[j]);
 				}
-				value *= octaveCountInv;
 
+				
 				//	double value = amplitudeSpectrumDb[i + 0 * PITCH_BIN_COUNT];
 
 				octaveBinsDb[i] = value;
