@@ -1,4 +1,4 @@
-package test;
+package com.harmoneye.cqt;
 
 import static org.junit.Assert.*;
 
