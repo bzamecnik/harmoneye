@@ -10,6 +10,8 @@ import java.awt.event.ActionListener;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
@@ -22,7 +24,6 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
-import org.apache.commons.math3.analysis.function.Expm1;
 import org.apache.commons.math3.complex.Complex;
 
 import com.harmoneye.cqt.FastCqt;
@@ -386,12 +387,13 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 		}
 
 		private void littleEndianBytesToDoubles(byte[] bytes, double[] floats) {
-			// assume 16-bit values
 			assert bytes.length == 2 * floats.length;
 			// signed short to [-1; 1]
-			float normalizationFactor = 1 / (float) 0xffff;
-			for (int i = 0; 2 * i < bytes.length; i++) {
-				floats[i] = normalizationFactor * (bytes[2 * i] | (bytes[2 * i + 1] << 8));
+			float normalizationFactor = 2 / (float) 0xffff;
+			ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
+			byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+			for (int i = 0; i < floats.length && byteBuffer.hasRemaining(); i++) {
+				floats[i] = normalizationFactor * byteBuffer.getShort();
 			}
 		}
 

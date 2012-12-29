@@ -10,6 +10,8 @@ import java.awt.event.ActionListener;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
@@ -30,7 +32,7 @@ public class SpectrogramMusicPlayer extends JPanel implements ActionListener {
 
 	private static final int TIME_PERIOD_MILLIS = 100;
 
-	private static final String INPUT_FILE_NAME = "/Users/bzamecnik/dev/harmoneye/data/wav/c-scale.wav";
+	private static final String INPUT_FILE_NAME = "/Users/bzamecnik/dev/harmoneye/data/wav/c-scale-piano-mono.wav";
 	private static final int BUFFER_SIZE = 4 * 1024;
 	private static final int SAMPLE_COUNT = BUFFER_SIZE / 4;
 
@@ -214,12 +216,13 @@ public class SpectrogramMusicPlayer extends JPanel implements ActionListener {
 		}
 
 		private static void littleEndianBytesToFloats(byte[] bytes, float[] floats) {
-			// assume 16-bit values
 			assert bytes.length == 2 * floats.length;
 			// signed short to [-1; 1]
-			float normalizationFactor = 1 / (float) 0xffff;
-			for (int i = 0; 2 * i < bytes.length; i++) {
-				floats[i] = normalizationFactor * (bytes[2 * i] | (bytes[2 * i + 1] << 8));
+			float normalizationFactor = 2 / (float) 0xffff;
+			ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
+			byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+			for (int i = 0; i < floats.length && byteBuffer.hasRemaining(); i++) {
+				floats[i] = normalizationFactor * byteBuffer.getShort();
 			}
 		}
 
