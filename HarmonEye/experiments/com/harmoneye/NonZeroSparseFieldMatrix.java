@@ -1,22 +1,21 @@
 package com.harmoneye;
 
 import org.apache.commons.math3.Field;
-import org.apache.commons.math3.complex.Complex;
-import org.apache.commons.math3.complex.ComplexField;
+import org.apache.commons.math3.FieldElement;
 import org.apache.commons.math3.exception.DimensionMismatchException;
 import org.apache.commons.math3.linear.SparseFieldMatrix;
 
-public class NonZeroSparseFieldMatrix extends SparseFieldMatrix<Complex> {
+public class NonZeroSparseFieldMatrix<T extends FieldElement<T>> extends SparseFieldMatrix<T> {
 
-	private final Field<Complex> field;
+	private final Field<T> field;
 
-	public NonZeroSparseFieldMatrix(int rowCount, int columnCount) {
-		super(ComplexField.getInstance(), rowCount, columnCount);
-		this.field = ComplexField.getInstance();
+	public NonZeroSparseFieldMatrix(Field<T> field, int rowCount, int columnCount) {
+		super(field, rowCount, columnCount);
+		this.field = field;
 	}
 
 	@Override
-	public Complex[] operate(final Complex[] v) {
+	public T[] operate(final T[] v) {
 
 		final int nRows = getRowDimension();
 		final int nCols = getColumnDimension();
@@ -24,12 +23,13 @@ public class NonZeroSparseFieldMatrix extends SparseFieldMatrix<Complex> {
 			throw new DimensionMismatchException(v.length, nCols);
 		}
 
-		final Complex[] out = buildArray(field, nRows);
+		T zero = field.getZero();
+		final T[] out = buildArray(field, nRows);
 		for (int row = 0; row < nRows; ++row) {
-			Complex sum = field.getZero();
+			T sum = zero;
 			for (int i = 0; i < nCols; ++i) {
-				Complex entry = getEntry(row, i);
-				if (entry.abs() > 0) {
+				T entry = getEntry(row, i);
+				if (!zero.equals(entry)) {
 					sum = sum.add(entry.multiply(v[i]));
 				}
 			}

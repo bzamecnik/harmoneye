@@ -1,6 +1,7 @@
 package com.harmoneye.cqt;
 
 import org.apache.commons.math3.complex.Complex;
+import org.apache.commons.math3.complex.ComplexField;
 import org.apache.commons.math3.linear.ArrayFieldVector;
 import org.apache.commons.math3.linear.FieldMatrix;
 import org.apache.commons.math3.linear.FieldVector;
@@ -53,9 +54,9 @@ public class FastCqt extends AbstractCqt {
 		if (spectralKernels != null) {
 			return;
 		}
-//		spectralKernels = new SparseFieldMatrix<Complex>(ComplexField.getInstance(), totalBins,
-//			nextPowerOf2(bandWidth(0)));
-		spectralKernels = new NonZeroSparseFieldMatrix(totalBins, nextPowerOf2(bandWidth(0)));
+		ComplexField field = ComplexField.getInstance();
+//		spectralKernels = new SparseFieldMatrix<Complex>(field, totalBins, nextPowerOf2(bandWidth(0)));
+		spectralKernels = new NonZeroSparseFieldMatrix<Complex>(field, totalBins, nextPowerOf2(bandWidth(0)));
 		for (int k = 0; k < totalBins; k++) {
 			spectralKernels.setRow(k, conjugate(spectralKernel(k)));
 		}

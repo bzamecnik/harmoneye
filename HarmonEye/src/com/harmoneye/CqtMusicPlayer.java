@@ -32,9 +32,9 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 
 	private static final long serialVersionUID = 1L;
 
-	private static final int TIME_PERIOD_MILLIS = 100;
+	private static final int TIME_PERIOD_MILLIS = 50;
 
-	private static final String INPUT_FILE_NAME = "/Users/bzamecnik/dev/harmoneye/data/wav/c-scale-piano-mono.wav";
+	private static final String INPUT_FILE_NAME = "/Users/bzamecnik/dev/harmoneye/data/wav/04-Sla-Maria-do-klastera-simple.wav";
 	private static final int BUFFER_SIZE = 8 * 1024;
 	private static final boolean IS_STEREO = false;
 

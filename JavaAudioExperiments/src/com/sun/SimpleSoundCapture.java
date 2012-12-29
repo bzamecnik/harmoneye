@@ -209,8 +209,8 @@ public class SimpleSoundCapture extends JPanel implements ActionListener {
 			// get an AudioInputStream of the desired format for playback
 
 			AudioFormat.Encoding encoding = AudioFormat.Encoding.PCM_SIGNED;
-			float rate = 44100.0f;
-			int channels = 2;
+			float rate = 11025.0f;
+			int channels = 1;
 			int frameSize = 4;
 			int sampleSize = 16;
 			boolean bigEndian = true;
@@ -323,8 +323,8 @@ public class SimpleSoundCapture extends JPanel implements ActionListener {
 			// and make sure a compatible line is supported.
 
 			AudioFormat.Encoding encoding = AudioFormat.Encoding.PCM_SIGNED;
-			float rate = 44100.0f;
-			int channels = 2;
+			float rate = 11025.0f;
+			int channels = 1;
 			int frameSize = 4;
 			int sampleSize = 16;
 			boolean bigEndian = true;
