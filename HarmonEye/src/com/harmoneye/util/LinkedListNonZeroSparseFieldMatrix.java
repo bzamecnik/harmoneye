@@ -51,9 +51,7 @@ public class LinkedListNonZeroSparseFieldMatrix<T extends FieldElement<T>> exten
 			for (SparseEntry<T> columnEntry : row) {
 				T entry = columnEntry.getEntry();
 				int columnIndex = columnEntry.getIndex();
-				if (!zero.equals(entry)) {
-					sum = sum.add(entry.multiply(vector[columnIndex]));
-				}
+				sum = sum.add(entry.multiply(vector[columnIndex]));
 			}
 			out[rowIndex] = sum;
 		}
