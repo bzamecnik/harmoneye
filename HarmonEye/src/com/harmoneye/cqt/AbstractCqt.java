@@ -8,13 +8,13 @@ import org.apache.commons.math3.util.FastMath;
 
 public abstract class AbstractCqt implements Cqt {
 
-	protected final int octaveCount = 4;
+	protected final int octaveCount = 3;
 	
-	protected final double baseFreq = 2 * 65.4063913251;
+	protected final double baseFreq = 65.4063913251;
 	protected final double maxFreq = Math.pow(2, octaveCount) * baseFreq;
 	protected final double samplingFreq = 11025;
 
-	protected final int binsPerHalftone = 7;
+	protected final int binsPerHalftone = 5;
 	protected final int binsPerHalftoneHalf = binsPerHalftone / 2;
 	protected final int binsPerOctave = 12 * binsPerHalftone;
 	protected final double binsPerOctaveInv = 1.0 / binsPerOctave;
