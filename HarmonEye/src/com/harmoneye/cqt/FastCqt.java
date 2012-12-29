@@ -9,8 +9,8 @@ import org.apache.commons.math3.transform.DftNormalization;
 import org.apache.commons.math3.transform.FastFourierTransformer;
 import org.apache.commons.math3.transform.TransformType;
 
-import com.harmoneye.LinkedListNonZeroSparseFieldMatrix;
-import com.harmoneye.NonZeroSparseFieldMatrix;
+import com.harmoneye.util.LinkedListNonZeroSparseFieldMatrix;
+import com.harmoneye.util.NonZeroSparseFieldMatrix;
 
 public class FastCqt extends AbstractCqt {
 
