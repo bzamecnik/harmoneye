@@ -1,15 +1,12 @@
 package com.harmoneye.cqt;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Date;
 
 import org.apache.commons.math3.complex.Complex;
 import org.junit.Test;
 
-import com.harmoneye.cqt.Cqt;
-import com.harmoneye.cqt.DirectCqt;
-import com.harmoneye.cqt.FastCqt;
 import com.harmoneye.util.Formatter;
 
 public class TestCqt {
@@ -59,7 +56,7 @@ public class TestCqt {
 
 	public void testFastCqtSpeed() {
 
-		FastCqt cqt = new FastCqt();
+		FastSparseVectorCqt cqt = new FastSparseVectorCqt();
 		
 		double signal[] = new double[cqt.getSignalBlockSize()];
 
