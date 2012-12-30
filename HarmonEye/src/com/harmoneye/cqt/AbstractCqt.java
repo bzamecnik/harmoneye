@@ -8,7 +8,7 @@ import org.apache.commons.math3.util.FastMath;
 
 public abstract class AbstractCqt implements Cqt {
 
-	protected final int octaveCount = 3;
+	protected final int octaveCount = 7;
 	
 	protected final double baseFreq = 65.4063913251;
 	protected final double maxFreq = Math.pow(2, octaveCount) * baseFreq;
