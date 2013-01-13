@@ -24,8 +24,10 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
+import org.apache.commons.math3.analysis.solvers.NewtonSolver;
 import org.apache.commons.math3.complex.Complex;
 
+import com.harmoneye.cqt.AbstractCqt.HarmonicPatternPitchClassDetector;
 import com.harmoneye.cqt.FastCqt;
 import com.harmoneye.util.DoubleCircularBuffer;
 
@@ -110,6 +112,8 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 		private ExpSmoother pcpSmoother = new ExpSmoother(12, 0.1);
 		private ExpSmoother binMaxAvgSmoother = new ExpSmoother(2, 0.1);
 		
+		private HarmonicPatternPitchClassDetector pcDetector = cqt.new HarmonicPatternPitchClassDetector();
+		
 		public void updateSignal(DoubleCircularBuffer amplitudeBuffer) {
 			amplitudeBuffer.readLast(amplitudes, amplitudes.length);
 //			long start = System.nanoTime();
@@ -137,31 +141,33 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 		}
 
 		private void computePitchClassProfile() {
-			double octaveCountInv = 1.0 / OCTAVE_COUNT;
-			for (int i = 0; i < PITCH_BIN_COUNT; i++) {
-// average over octaves:
+//			double octaveCountInv = 1.0 / OCTAVE_COUNT;
+//			for (int i = 0; i < PITCH_BIN_COUNT; i++) {
+//// average over octaves:
+////				double value = 0;
+////				for (int j = i; j < amplitudeSpectrumDb.length; j += PITCH_BIN_COUNT) {
+////					value += amplitudeSpectrumDb[j];
+////				}
+////				value *= octaveCountInv;
+//
+////				 maximum over octaves:
 //				double value = 0;
 //				for (int j = i; j < amplitudeSpectrumDb.length; j += PITCH_BIN_COUNT) {
-//					value += amplitudeSpectrumDb[j];
+//					value = Math.max(value, amplitudeSpectrumDb[j]);
 //				}
-//				value *= octaveCountInv;
-
-//				 maximum over octaves:
-				double value = 0;
-				for (int j = i; j < amplitudeSpectrumDb.length; j += PITCH_BIN_COUNT) {
-					value = Math.max(value, amplitudeSpectrumDb[j]);
-				}
-
-//				double value = 1;
-//				for (int j = i; j < amplitudeSpectrumDb.length; j += PITCH_BIN_COUNT) {
-//					value *= amplitudeSpectrumDb[j];
-//				}
-//				value = Math.pow(value, octaveCountInv);
-				
-				//	double value = amplitudeSpectrumDb[i + 0 * PITCH_BIN_COUNT];
-
-				octaveBinsDb[i] = value;
-			}
+//
+////				double value = 1;
+////				for (int j = i; j < amplitudeSpectrumDb.length; j += PITCH_BIN_COUNT) {
+////					value *= amplitudeSpectrumDb[j];
+////				}
+////				value = Math.pow(value, octaveCountInv);
+//				
+//				//	double value = amplitudeSpectrumDb[i + 0 * PITCH_BIN_COUNT];
+//
+//				octaveBinsDb[i] = value;
+//			}
+			
+			octaveBinsDb = pcDetector.detectPitchClasses(amplitudeSpectrumDb);
 
 			
 //			octaveBinsDb = amplitudeSpectrumDb;
