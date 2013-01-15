@@ -10,8 +10,6 @@ import java.awt.event.ActionListener;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
@@ -19,12 +17,12 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
+import javax.sound.sampled.TargetDataLine;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
-import org.apache.commons.math3.analysis.solvers.NewtonSolver;
 import org.apache.commons.math3.complex.Complex;
 
 import com.harmoneye.cqt.AbstractCqt.HarmonicPatternPitchClassDetector;
@@ -39,12 +37,14 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 	private static final int TIME_PERIOD_MILLIS = 20;
 
 	private static boolean IS_CIRCLE_ENABLED = true;
+	private static boolean IS_MICROPHONE_CAPTURE_ENABLED = true;
 	
 	private static final String INPUT_FILE_NAME = "/Users/bzamecnik/dev/harmoneye/data/wav/04-Sla-Maria-do-klastera-simple.wav";
 
 	Spectrum spectrum = new Spectrum();
 	private Timer timer;
 	private Playback playback;
+	private Capture capture;
 	private DoubleCircularBuffer amplitudeBuffer = new DoubleCircularBuffer(spectrum.getSignalBlockSize());
 
 	public CqtMusicPlayer() {
@@ -52,8 +52,14 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 		timer.setInitialDelay(190);
 		timer.start();
 
-		playback = new Playback();
-		playback.start();
+		if (IS_MICROPHONE_CAPTURE_ENABLED) {
+		capture = new Capture();
+		capture.start();
+		} else {
+			playback = new Playback();
+			playback.start();
+		}
+
 	}
 
 	public void paint(Graphics g) {
@@ -403,41 +409,72 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 			playbackLine.stop();
 			playbackLine.close();
 		}
+	}
+	
+	public class Capture implements Runnable {
 
-		private byte[] stereoToMono(byte[] input) {
-			byte[] output = new byte[input.length / 2];
-			for (int i = 0; i < output.length; i += 2) {
-				output[i] = input[2 * i];
-				output[i + 1] = input[2 * i + 1];
+		TargetDataLine line;
+		Thread thread;
+
+		private static final int READ_BUFFER_SIZE_SAMPLES = 256;
+
+		public void start() {
+			thread = new Thread(this);
+			thread.setName("Playback");
+			thread.start();
 			}
-			return output;
+
+		public void stop() {
+			thread = null;
 		}
 
-		private void littleEndianBytesToDoubles(byte[] bytes, double[] floats) {
-			assert bytes.length == 2 * floats.length;
-			// signed short to [-1; 1]
-			float normalizationFactor = 2 / (float) 0xffff;
-			ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
-			byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
-			for (int i = 0; i < floats.length && byteBuffer.hasRemaining(); i++) {
-				floats[i] = normalizationFactor * byteBuffer.getShort();
+		public void run() {
+			try {
+				capture();
+			} catch (Exception e) {
+				System.err.println(e);
+				thread = null;
 			}
 		}
 
-		private void printByteArray(byte[] data) {
-			StringBuilder sb = new StringBuilder();
-			for (byte item : data) {
-				sb.append(String.format("%02X, ", item));
-			}
-			System.out.println(sb.toString());
-		}
+		private void capture() throws UnsupportedAudioFileException, IOException, Exception, LineUnavailableException {
+			AudioFormat.Encoding encoding = AudioFormat.Encoding.PCM_SIGNED;
+			float sampleRate = 11025.0f;
+			int channelCount = 1;
+			int sampleSizeBytes = 2;
+			int sampleSizeBits = 8 * sampleSizeBytes;
+			int frameSizeBytes = channelCount * sampleSizeBytes;
+			boolean bigEndian = false;
 
-		private void printFloatArray(float[] data) {
-			StringBuilder sb = new StringBuilder();
-			for (float item : data) {
-				sb.append(String.format("%02f, ", item));
+			AudioFormat format = new AudioFormat(encoding, sampleRate, sampleSizeBits, channelCount, frameSizeBytes,
+				sampleRate, bigEndian);
+
+			DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
+
+			TargetDataLine line = (TargetDataLine) AudioSystem.getLine(info);
+			int bufferSize = sampleSizeBytes * READ_BUFFER_SIZE_SAMPLES;
+			line.open(format, bufferSize);
+			
+			byte[] data = new byte[bufferSize];
+			double[] amplitudes = new double[READ_BUFFER_SIZE_SAMPLES];
+			
+			line.start();
+
+			boolean captureEnabled = true;
+			while (captureEnabled) {
+				int readBytesCount = line.read(data, 0, bufferSize);
+				if (readBytesCount == -1) {
+					break;
+		}
+				ByteConverter.littleEndianBytesToDoubles(data, amplitudes);
+
+				amplitudeBuffer.write(amplitudes);
 			}
-			System.out.println(sb.toString());
+
+			// we reached the end of the stream.
+			// stop and close the line.
+			line.stop();
+			line.close();
 		}
 	}
 	
