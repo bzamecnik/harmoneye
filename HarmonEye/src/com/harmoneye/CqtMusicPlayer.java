@@ -29,6 +29,7 @@ import org.apache.commons.math3.complex.Complex;
 
 import com.harmoneye.cqt.AbstractCqt.HarmonicPatternPitchClassDetector;
 import com.harmoneye.cqt.FastCqt;
+import com.harmoneye.util.ByteConverter;
 import com.harmoneye.util.DoubleCircularBuffer;
 
 public class CqtMusicPlayer extends JPanel implements ActionListener {
@@ -393,7 +394,7 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 //				long stop = System.nanoTime();
 //				System.out.println((stop - start) / 1000000.0);
 				readBytesCount = audioInputStream.read(readBuffer);
-				littleEndianBytesToDoubles(readBuffer, amplitudes);
+				ByteConverter.littleEndianBytesToDoubles(readBuffer, amplitudes);
 				amplitudeBuffer.write(amplitudes);
 				
 			}
