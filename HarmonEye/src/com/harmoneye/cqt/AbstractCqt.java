@@ -88,6 +88,12 @@ public abstract class AbstractCqt implements Cqt {
 			for (int i = 0; i < cqBins.length; i++) {
 				octaveBins[i % binsPerOctave] += sum(extractHarmonics(cqBins, i, HARMONIC_COUNT));
 			}
+			
+//			double[] octaveBins = new double[cqBins.length];
+//			for (int i = 0; i < cqBins.length; i++) {
+//				octaveBins[i] = sum(extractHarmonics(cqBins, i, HARMONIC_COUNT));
+//			}
+			
 			// normalize
 			double max = 0;
 			for (int i = 0; i < octaveBins.length; i++) {
@@ -98,9 +104,7 @@ public abstract class AbstractCqt implements Cqt {
 					octaveBins[i] /= max;
 				}
 			}
-			for (int i = 0; i < octaveBins.length; i++) {
-				octaveBins[i] *= octaveBins[i];
-			}
+			
 			return octaveBins;
 		}
 

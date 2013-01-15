@@ -38,7 +38,7 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 
 	private static boolean IS_CIRCLE_ENABLED = true;
 	private static boolean IS_MICROPHONE_CAPTURE_ENABLED = true;
-	
+
 	private static final String INPUT_FILE_NAME = "/Users/bzamecnik/dev/harmoneye/data/wav/04-Sla-Maria-do-klastera-simple.wav";
 
 	Spectrum spectrum = new Spectrum();
@@ -53,8 +53,8 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 		timer.start();
 
 		if (IS_MICROPHONE_CAPTURE_ENABLED) {
-		capture = new Capture();
-		capture.start();
+			capture = new Capture();
+			capture.start();
 		} else {
 			playback = new Playback();
 			playback.start();
@@ -63,7 +63,7 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 	}
 
 	public void paint(Graphics g) {
-//		long stop = System.nanoTime();
+		//		long stop = System.nanoTime();
 		super.paintComponent(g);
 		Graphics2D g2 = (Graphics2D) g;
 
@@ -74,8 +74,8 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 		g2.setRenderingHints(rh);
 
 		spectrum.paint(g2);
-//		long stop = System.nanoTime();
-//		System.out.println((stop - start) / 1000000.0);
+		//		long stop = System.nanoTime();
+		//		System.out.println((stop - start) / 1000000.0);
 	}
 
 	public void actionPerformed(ActionEvent e) {
@@ -96,7 +96,7 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 	class Spectrum {
 
 		private FastCqt cqt = new FastCqt();
-		
+
 		private final double DB_THRESHOLD = -(20 * Math.log10(2 << (16 - 1)));
 		private final int BINS_PER_HALFTONE = cqt.getBinsPerHalftone();
 		private final int PITCH_BIN_COUNT = cqt.getBinsPerOctave();
@@ -118,16 +118,16 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 		private ExpSmoother binSmoother = new ExpSmoother(PITCH_BIN_COUNT, 0.4);
 		private ExpSmoother pcpSmoother = new ExpSmoother(12, 0.1);
 		private ExpSmoother binMaxAvgSmoother = new ExpSmoother(2, 0.1);
-		
+
 		private HarmonicPatternPitchClassDetector pcDetector = cqt.new HarmonicPatternPitchClassDetector();
-		
+
 		public void updateSignal(DoubleCircularBuffer amplitudeBuffer) {
 			amplitudeBuffer.readLast(amplitudes, amplitudes.length);
-//			long start = System.nanoTime();
+			//			long start = System.nanoTime();
 			computeAmplitudeSpectrum(amplitudes);
 			computePitchClassProfile();
-//			long stop = System.nanoTime();
-//			System.out.println("update: " + (stop - start) / 1000000.0);
+			//			long stop = System.nanoTime();
+			//			System.out.println("update: " + (stop - start) / 1000000.0);
 		}
 
 		private void computeAmplitudeSpectrum(double[] signal) {
@@ -148,106 +148,134 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 		}
 
 		private void computePitchClassProfile() {
-//			double octaveCountInv = 1.0 / OCTAVE_COUNT;
-//			for (int i = 0; i < PITCH_BIN_COUNT; i++) {
-//// average over octaves:
-////				double value = 0;
-////				for (int j = i; j < amplitudeSpectrumDb.length; j += PITCH_BIN_COUNT) {
-////					value += amplitudeSpectrumDb[j];
-////				}
-////				value *= octaveCountInv;
-//
-////				 maximum over octaves:
-//				double value = 0;
-//				for (int j = i; j < amplitudeSpectrumDb.length; j += PITCH_BIN_COUNT) {
-//					value = Math.max(value, amplitudeSpectrumDb[j]);
-//				}
-//
-////				double value = 1;
-////				for (int j = i; j < amplitudeSpectrumDb.length; j += PITCH_BIN_COUNT) {
-////					value *= amplitudeSpectrumDb[j];
-////				}
-////				value = Math.pow(value, octaveCountInv);
-//				
-//				//	double value = amplitudeSpectrumDb[i + 0 * PITCH_BIN_COUNT];
-//
-//				octaveBinsDb[i] = value;
-//			}
-			
-			octaveBinsDb = pcDetector.detectPitchClasses(amplitudeSpectrumDb);
+			double octaveCountInv = 1.0 / OCTAVE_COUNT;
+			for (int i = 0; i < PITCH_BIN_COUNT; i++) {
+				// average over octaves:
+				//				double value = 0;
+				//				for (int j = i; j < amplitudeSpectrumDb.length; j += PITCH_BIN_COUNT) {
+				//					value += amplitudeSpectrumDb[j];
+				//				}
+				//				value *= octaveCountInv;
 
-			
-//			octaveBinsDb = amplitudeSpectrumDb;
-//			pitchClassProfileDb = octaveBinsDb;
-//			smoothedOctaveBinsDb = binSmoother.smooth(octaveBinsDb);
-//			smoothedOctaveBinsDb = octaveBinsDb;
+				//				 maximum over octaves:
+				double value = 0;
+				for (int j = i; j < amplitudeSpectrumDb.length; j += PITCH_BIN_COUNT) {
+					value = Math.max(value, amplitudeSpectrumDb[j]);
+				}
 
-//			double max = 0;
-//			double average = 0;
-//			for (int i = 0; i < octaveBinsDb.length; i++) {
-//				max = Math.max(max, octaveBinsDb[i]);
-//				average += octaveBinsDb[i];
-//			}
-//			average /= octaveBinsDb.length;
-//			for (int pitchClass = 0; pitchClass < 12; pitchClass++) {
-//				double pitchClassAverage = 0;
-//				for (int i = 0; i < BINS_PER_HALFTONE; i++) {
-//					pitchClassAverage += octaveBinsDb[BINS_PER_HALFTONE * pitchClass + i];
-//				}
-//				pitchClassAverage /= BINS_PER_HALFTONE;
-//				if (pitchClassAverage <= average) {
-//					for (int i = 0; i < BINS_PER_HALFTONE; i++) {
-//						octaveBinsDb[BINS_PER_HALFTONE * pitchClass + i] = 0;
-//					}
-//				}
-//			}
-//			double[] result = binMaxAvgSmoother.smooth(new double[]{max, average});
-//			max = result[0];
-//			average = result[1];
-//			double normalizationFactor = Math.abs(max - average) > 1e-6 ? 1 / Math.abs(max - average) : 1;
-//			double normalizationFactor = max > 1e-6 ? 1 / max : 1;
-//			double normalizationFactor = 1;
-//			for (int i = 0; i < octaveBinsDb.length; i++) {
-//				normalizedOctaveBinsDb[i] = (octaveBinsDb[i] - average) * normalizationFactor;
-//			}
-			
-//			smoothedOctaveBinsDb = binSmoother.smooth(normalizedOctaveBinsDb);
+				//				double value = 1;
+				//				for (int j = i; j < amplitudeSpectrumDb.length; j += PITCH_BIN_COUNT) {
+				//					value *= amplitudeSpectrumDb[j];
+				//				}
+				//				value = Math.pow(value, octaveCountInv);
+
+				//	double value = amplitudeSpectrumDb[i + 0 * PITCH_BIN_COUNT];
+
+				octaveBinsDb[i] = value;
+			}
+
+			double[] pitchClassBinsDb = pcDetector.detectPitchClasses(amplitudeSpectrumDb);
+			double max = 0;
+			for (int i = 0; i < amplitudeSpectrumDb.length; i++) {
+				max = Math.max(max, amplitudeSpectrumDb[i]);
+			}
+			// just an ad hoc reduction of noise
+			for (int i = 0; i < pitchClassBinsDb.length; i++) {
+				pitchClassBinsDb[i] = Math.pow(pitchClassBinsDb[i], 3);
+			}
+			for (int i = 0; i < pitchClassBinsDb.length; i++) {
+				pitchClassBinsDb[i] *= max;
+			}
+			for (int i = 0; i < octaveBinsDb.length; i++) {
+				octaveBinsDb[i] *= pitchClassBinsDb[i];
+			}
+			//			for (int i = 0; i < octaveBinsDb.length; i++) {
+			//				octaveBinsDb[i] = pitchClassBinsDb[i];
+			//			}
+			for (int i = 0; i < octaveBinsDb.length; i++) {
+				octaveBinsDb[i] = Math.pow(octaveBinsDb[i], 1 / 3.0);
+			}
+
+			//			double avg = 0;
+			//			for (int i = 0; i < octaveBinsDb.length; i++) {
+			//				avg += octaveBinsDb[i];
+			//			}
+			//			avg /= octaveBinsDb.length;
+			//			for (int i = 0; i < octaveBinsDb.length; i++) {
+			//				octaveBinsDb[i] = octaveBinsDb[i] > 1.75 * avg ? octaveBinsDb[i] : 0.25 * octaveBinsDb[i];
+			//			}
+
+			//			octaveBinsDb = amplitudeSpectrumDb;
+			//			pitchClassProfileDb = octaveBinsDb;
+			//			smoothedOctaveBinsDb = binSmoother.smooth(octaveBinsDb);
+			//			smoothedOctaveBinsDb = octaveBinsDb;
+
+			//			double max = 0;
+			//			double average = 0;
+			//			for (int i = 0; i < octaveBinsDb.length; i++) {
+			//				max = Math.max(max, octaveBinsDb[i]);
+			//				average += octaveBinsDb[i];
+			//			}
+			//			average /= octaveBinsDb.length;
+			//			for (int pitchClass = 0; pitchClass < 12; pitchClass++) {
+			//				double pitchClassAverage = 0;
+			//				for (int i = 0; i < BINS_PER_HALFTONE; i++) {
+			//					pitchClassAverage += octaveBinsDb[BINS_PER_HALFTONE * pitchClass + i];
+			//				}
+			//				pitchClassAverage /= BINS_PER_HALFTONE;
+			//				if (pitchClassAverage <= average) {
+			//					for (int i = 0; i < BINS_PER_HALFTONE; i++) {
+			//						octaveBinsDb[BINS_PER_HALFTONE * pitchClass + i] = 0;
+			//					}
+			//				}
+			//			}
+			//			double[] result = binMaxAvgSmoother.smooth(new double[]{max, average});
+			//			max = result[0];
+			//			average = result[1];
+			//			double normalizationFactor = Math.abs(max - average) > 1e-6 ? 1 / Math.abs(max - average) : 1;
+			//			double normalizationFactor = max > 1e-6 ? 1 / max : 1;
+			//			double normalizationFactor = 1;
+			//			for (int i = 0; i < octaveBinsDb.length; i++) {
+			//				normalizedOctaveBinsDb[i] = (octaveBinsDb[i] - average) * normalizationFactor;
+			//			}
+
+			//			smoothedOctaveBinsDb = binSmoother.smooth(normalizedOctaveBinsDb);
 			smoothedOctaveBinsDb = binSmoother.smooth(octaveBinsDb);
-//			smoothedOctaveBinsDb = normalizedOctaveBinsDb;
-//			
+			//			smoothedOctaveBinsDb = normalizedOctaveBinsDb;
+			//			
 			pitchClassProfileDb = smoothedOctaveBinsDb;
 
-//			for (int pitchClass = 0; pitchClass < pitchClassProfileDb.length; pitchClass++) {
-//				double value = 0;
-//				for (int i = 0; i < BINS_PER_HALFTONE; i++) {
-//					value = Math.max(value, octaveBinsDb[BINS_PER_HALFTONE * pitchClass + i]);
-//				}
-//				pitchClassProfileDb[pitchClass] = value;
-//			}
-//			smoothedPitchClassProfileDb = pcpSmoother.smooth(pitchClassProfileDb);
-//			pitchClassProfileDb = smoothedPitchClassProfileDb;
-			
+			//			for (int pitchClass = 0; pitchClass < pitchClassProfileDb.length; pitchClass++) {
+			//				double value = 0;
+			//				for (int i = 0; i < BINS_PER_HALFTONE; i++) {
+			//					value = Math.max(value, octaveBinsDb[BINS_PER_HALFTONE * pitchClass + i]);
+			//				}
+			//				pitchClassProfileDb[pitchClass] = value;
+			//			}
+			//			smoothedPitchClassProfileDb = pcpSmoother.smooth(pitchClassProfileDb);
+			//			pitchClassProfileDb = smoothedPitchClassProfileDb;
+
 			// TODO: smooth the data, eg. with a Kalman filter
-			
-//			for (int i = 0, pitchClass = 0; i < octaveBinsDb.length; i += BINS_PER_HALFTONE, pitchClass++) {
-//				double value = 0;
-//
-//				double center = octaveBinsDb[i + 2];
-//				if (center >= octaveBinsDb[i] &&
-//					center >= octaveBinsDb[i + 1] &&
-//					center >= octaveBinsDb[i + 3] &&
-//					center >= octaveBinsDb[i + 4])
-//				{
-//					value = center;
-//				}
-////				double center = octaveBinsDb[i + 1];
-////				if (center >= octaveBinsDb[i] &&
-////					center >= octaveBinsDb[i + 2])
-////				{
-////					value = center;
-////				}
-//				pitchClassProfileDb[pitchClass] = value;
-//			}
+
+			//			for (int i = 0, pitchClass = 0; i < octaveBinsDb.length; i += BINS_PER_HALFTONE, pitchClass++) {
+			//				double value = 0;
+			//
+			//				double center = octaveBinsDb[i + 2];
+			//				if (center >= octaveBinsDb[i] &&
+			//					center >= octaveBinsDb[i + 1] &&
+			//					center >= octaveBinsDb[i + 3] &&
+			//					center >= octaveBinsDb[i + 4])
+			//				{
+			//					value = center;
+			//				}
+			////				double center = octaveBinsDb[i + 1];
+			////				if (center >= octaveBinsDb[i] &&
+			////					center >= octaveBinsDb[i + 2])
+			////				{
+			////					value = center;
+			////				}
+			//				pitchClassProfileDb[pitchClass] = value;
+			//			}
 		}
 
 		public void paint(Graphics2D graphics) {
@@ -255,7 +283,7 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 				return;
 			}
 			setBackground(Color.DARK_GRAY);
-			
+
 			if (IS_CIRCLE_ENABLED) {
 				drawPitchClassCircle(graphics);
 			} else {
@@ -267,16 +295,16 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 			Dimension panelSize = getSize();
 			int size = (int) (0.9 * Math.min(panelSize.getWidth(), panelSize.getHeight()));
 			float center = 0.5f * size;
-			float x = 0.5f * ((float)panelSize.getWidth() - size);
-			float y = 0.5f * ((float)panelSize.getHeight() - size);
+			float x = 0.5f * ((float) panelSize.getWidth() - size);
+			float y = 0.5f * ((float) panelSize.getHeight() - size);
 
 			graphics.setColor(Color.GRAY);
-			graphics.drawOval((int)x, (int)y, size, size);
+			graphics.drawOval((int) x, (int) y, size, size);
 			for (int i = 0; i < 12; i++) {
 				double angle = 2 * Math.PI * ((i - 0.5) / 12.0);
 				graphics.drawLine((int)(x + center), (int)(y + center), (int)(x + center + 0.5 * size  * Math.cos(angle)), (int)(y + center + 0.5 * size * Math.sin(angle)));
 			}
-			
+
 			float arcAngleStep = 360.0f / PITCH_BIN_COUNT;
 			for (int i = 0; i < PITCH_BIN_COUNT; i++) {
 				float value = (float) pitchClassProfileDb[i];
@@ -286,23 +314,23 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 				int barSize = (int) (value * size);
 				graphics.fillArc((int)(x + (1 - value) * center), (int)(y + (1 - value) * center), barSize, barSize, startAngle, (int) -arcAngleStep);
 			}
-//			float arcAngleStep = 360.0f / 12;
-//			for (int i = 0; i < 12; i++) {
-//				float hue = (float) pitchClassProfileDb[i];
-////				Color color = getColor(hue);
-//				graphics.setColor(Color.getHSBColor(0, 0, hue));
-//				int startAngle = (int) (90 - arcAngleStep * (i/* - 0.5f*/));
-//				graphics.fillArc(x, y, size, size, startAngle, (int) -(arcAngleStep * 0.8f));
-//			}
-			
+			//			float arcAngleStep = 360.0f / 12;
+			//			for (int i = 0; i < 12; i++) {
+			//				float hue = (float) pitchClassProfileDb[i];
+			////				Color color = getColor(hue);
+			//				graphics.setColor(Color.getHSBColor(0, 0, hue));
+			//				int startAngle = (int) (90 - arcAngleStep * (i/* - 0.5f*/));
+			//				graphics.fillArc(x, y, size, size, startAngle, (int) -(arcAngleStep * 0.8f));
+			//			}
+
 			graphics.setColor(getBackground());
 			float centerSizeFactor = 0.1f;
-			int centerSize = (int)(centerSizeFactor * size);
+			int centerSize = (int) (centerSizeFactor * size);
 			int centerOffset = (size - centerSize) / 2;
-			graphics.fillOval((int)(x + centerOffset), (int)(y + centerOffset), centerSize, centerSize);
-			
+			graphics.fillOval((int) (x + centerOffset), (int) (y + centerOffset), centerSize, centerSize);
+
 			graphics.setColor(Color.GRAY);
-			graphics.drawOval((int)(x + centerOffset), (int)(y + centerOffset), centerSize, centerSize);
+			graphics.drawOval((int) (x + centerOffset), (int) (y + centerOffset), centerSize, centerSize);
 		}
 
 		private void drawPitchClassBars(Graphics2D graphics) {
@@ -317,11 +345,11 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 				x += step;
 				Color color = getColor((float) pitchClassProfileDb[i]);
 				graphics.setColor(color);
-				graphics.setPaint(color);	
+				graphics.setPaint(color);
 				graphics.fill(line);
 				graphics.draw(line);
 			}
-			
+
 			graphics.setColor(Color.GRAY);
 			x = 0;
 			int binCount = pitchClassProfileDb.length / BINS_PER_HALFTONE;
@@ -332,12 +360,12 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 				graphics.draw(line);
 			}
 		}
-		
+
 		Color getColor(float value) {
 			float hue = (1.8f - value) % 1.0f;
 			return Color.getHSBColor(hue, 0.25f + 0.75f * value, 0.25f + 0.75f * value);
 		}
-		
+
 		public int getSignalBlockSize() {
 			return signalBlockSize;
 		}
@@ -392,17 +420,17 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 			int readBytesCount = 0;
 			while (thread != null && readBytesCount >= 0) {
 				int bytesToWriteCount = readBytesCount;
-//				long start = System.nanoTime();
+				//				long start = System.nanoTime();
 				while (bytesToWriteCount > 0) {
 					int writtenBytesCount = playbackLine.write(readBuffer, 0, bytesToWriteCount);
 					bytesToWriteCount -= writtenBytesCount;
 				}
-//				long stop = System.nanoTime();
-//				System.out.println((stop - start) / 1000000.0);
+				//				long stop = System.nanoTime();
+				//				System.out.println((stop - start) / 1000000.0);
 				readBytesCount = audioInputStream.read(readBuffer);
 				ByteConverter.littleEndianBytesToDoubles(readBuffer, amplitudes);
 				amplitudeBuffer.write(amplitudes);
-				
+
 			}
 
 			playbackLine.drain();
@@ -410,7 +438,7 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 			playbackLine.close();
 		}
 	}
-	
+
 	public class Capture implements Runnable {
 
 		TargetDataLine line;
@@ -422,7 +450,7 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 			thread = new Thread(this);
 			thread.setName("Playback");
 			thread.start();
-			}
+		}
 
 		public void stop() {
 			thread = null;
@@ -454,10 +482,10 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 			TargetDataLine line = (TargetDataLine) AudioSystem.getLine(info);
 			int bufferSize = sampleSizeBytes * READ_BUFFER_SIZE_SAMPLES;
 			line.open(format, bufferSize);
-			
+
 			byte[] data = new byte[bufferSize];
 			double[] amplitudes = new double[READ_BUFFER_SIZE_SAMPLES];
-			
+
 			line.start();
 
 			boolean captureEnabled = true;
@@ -465,7 +493,7 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 				int readBytesCount = line.read(data, 0, bufferSize);
 				if (readBytesCount == -1) {
 					break;
-		}
+				}
 				ByteConverter.littleEndianBytesToDoubles(data, amplitudes);
 
 				amplitudeBuffer.write(amplitudes);
@@ -477,23 +505,23 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 			line.close();
 		}
 	}
-	
+
 	private static class ExpSmoother {
 		double[] data;
 		double currentWeight;
 		double previousWeight;
-		
+
 		public ExpSmoother(int size, double currentWeight) {
 			data = new double[size];
 			this.currentWeight = currentWeight;
 			previousWeight = 1 - currentWeight;
 		}
-		
+
 		public double[] smooth(double[] currentFrame) {
 			assert data.length == currentFrame.length;
-			
+
 			for (int i = 0; i < data.length; i++) {
-				data[i] = previousWeight * data[i] + currentWeight * currentFrame[i]; 
+				data[i] = previousWeight * data[i] + currentWeight * currentFrame[i];
 			}
 			return data;
 		}
