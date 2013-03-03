@@ -41,7 +41,7 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 
 	private static final String INPUT_FILE_NAME = "/Users/bzamecnik/dev/harmoneye/data/wav/04-Sla-Maria-do-klastera-simple.wav";
 
-	Spectrum spectrum = new Spectrum();
+	private Spectrum spectrum = new Spectrum();
 	private Timer timer;
 	private Playback playback;
 	private Capture capture;
@@ -419,18 +419,14 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 
 			int readBytesCount = 0;
 			while (thread != null && readBytesCount >= 0) {
-				int bytesToWriteCount = readBytesCount;
-				//				long start = System.nanoTime();
-				while (bytesToWriteCount > 0) {
-					int writtenBytesCount = playbackLine.write(readBuffer, 0, bytesToWriteCount);
-					bytesToWriteCount -= writtenBytesCount;
-				}
-				//				long stop = System.nanoTime();
-				//				System.out.println((stop - start) / 1000000.0);
 				readBytesCount = audioInputStream.read(readBuffer);
 				ByteConverter.littleEndianBytesToDoubles(readBuffer, amplitudes);
 				amplitudeBuffer.write(amplitudes);
 
+				// long start = System.nanoTime();
+				playbackLine.write(readBuffer, 0, readBytesCount);
+				// long stop = System.nanoTime();
+				// System.out.println((stop - start) * 1e-6);
 			}
 
 			playbackLine.drain();
@@ -448,7 +444,7 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 
 		public void start() {
 			thread = new Thread(this);
-			thread.setName("Playback");
+			thread.setName("Capture");
 			thread.start();
 		}
 
