@@ -50,10 +50,10 @@ public class MusicAnalyzer implements SoundConsumer {
 	private DoubleCircularBuffer amplitudeBuffer = new DoubleCircularBuffer(
 			signalBlockSize);
 
-	private JPanel panel;
+	private Visualizer visualizer;
 
 	public MusicAnalyzer(JPanel panel) {
-		this.panel = panel;
+		visualizer = new Visualizer(panel);
 	}
 
 	@Override
@@ -232,141 +232,155 @@ public class MusicAnalyzer implements SoundConsumer {
 		// }
 	}
 
-	public void paint(Graphics2D graphics) {
-		if (amplitudeSpectrumDb == null) {
-			return;
-		}
-
-		if (IS_CIRCLE_ENABLED) {
-			drawPitchClassCircle(graphics);
-		} else {
-			drawPitchClassBars(graphics);
-		}
-	}
-
-	private void drawPitchClassCircle(Graphics2D graphics) {
-		Dimension panelSize = panel.getSize();
-		int size = (int) (0.9 * Math.min(panelSize.getWidth(),
-				panelSize.getHeight()));
-		float center = 0.5f * size;
-		float x = 0.5f * ((float) panelSize.getWidth() - size);
-		float y = 0.5f * ((float) panelSize.getHeight() - size);
-
-		graphics.setColor(Color.GRAY);
-		graphics.drawOval((int) x, (int) y, size, size);
-		// lines between bins
-		for (int i = 0; i < 12; i++) {
-			double angle = 2 * Math.PI * ((i - 0.5) / 12.0);
-			graphics.drawLine((int) (x + center), (int) (y + center), (int) (x
-					+ center + 0.5 * size * Math.cos(angle)),
-					(int) (y + center + 0.5 * size * Math.sin(angle)));
-		}
-
-		// bins
-		float arcAngleStep = 360.0f / PITCH_BIN_COUNT;
-		for (int i = 0; i < PITCH_BIN_COUNT; i++) {
-			float value = (float) pitchClassProfileDb[i];
-			Color color = getColor(value);
-			graphics.setColor(color);
-			int startAngle = (int) (90 - arcAngleStep
-					* (i - 0.5f * BINS_PER_HALFTONE));
-			float relativeLength = 0.85f * value;
-			int barSize = (int) (relativeLength * size);
-			graphics.fillArc((int) (x + (1 - relativeLength) * center),
-					(int) (y + (1 - relativeLength) * center), barSize,
-					barSize, startAngle, (int) -arcAngleStep);
-		}
-		// float arcAngleStep = 360.0f / 12;
-		// for (int i = 0; i < 12; i++) {
-		// float hue = (float) pitchClassProfileDb[i];
-		// // Color color = getColor(hue);
-		// graphics.setColor(Color.getHSBColor(0, 0, hue));
-		// int startAngle = (int) (90 - arcAngleStep * (i/* - 0.5f*/));
-		// graphics.fillArc(x, y, size, size, startAngle, (int)
-		// -(arcAngleStep * 0.8f));
-		// }
-
-		drawHalftoneNames(graphics, size, center, x, y);
-
-		graphics.setColor(Color.DARK_GRAY);
-		float centerSizeFactor = 0.1f;
-		int centerSize = (int) (centerSizeFactor * size);
-		int centerOffset = (size - centerSize) / 2;
-		graphics.fillOval((int) (x + centerOffset), (int) (y + centerOffset),
-				centerSize, centerSize);
-
-		graphics.setColor(Color.GRAY);
-		graphics.drawOval((int) (x + centerOffset), (int) (y + centerOffset),
-				centerSize, centerSize);
-	}
-
-	private void drawHalftoneNames(Graphics2D graphics, int size, float center,
-			float x, float y) {
-		Font font = new Font("Arial", Font.BOLD, size / 15);
-		graphics.setFont(font);
-		FontMetrics fm = graphics.getFontMetrics();
-		int offsetY = fm.getAscent() / 2;
-		double angleStep = 2 * Math.PI / HALFTONE_NAMES.length;
-		double angle = 9 * angleStep;
-		for (int i = 0; i < HALFTONE_NAMES.length; i++, angle += angleStep) {
-			float value = getMaxBinValue(i);
-			Color color = getColor(value);
-			graphics.setColor(color);
-			String str = HALFTONE_NAMES[i];
-			int offsetX = fm.stringWidth(str) / 2;
-			graphics.drawString(
-					str,
-					(int) (x + center + 0.43 * size * Math.cos(angle) - offsetX),
-					(int) (y + center + 0.43 * size * Math.sin(angle) + offsetY));
-		}
-	}
-
-	private float getMaxBinValue(int halftoneIndex) {
-		float max = 0;
-		int baseIndex = BINS_PER_HALFTONE * halftoneIndex;
-		for (int i = 0; i < BINS_PER_HALFTONE; i++) {
-			float value = (float) smoothedOctaveBinsDb[baseIndex + i];
-			max = Math.max(max, value);
-		}
-		return max;
-	}
-
-	private void drawPitchClassBars(Graphics2D graphics) {
-		float x = 0;
-		Dimension size = panel.getSize();
-		float height = (float) size.getHeight();
-		float step = (float) size.getWidth() / (pitchClassProfileDb.length);
-
-		for (int i = 0; i < pitchClassProfileDb.length; i++) {
-			line.setFrameFromDiagonal(x, height, x + step - 1,
-					(1 - pitchClassProfileDb[i]) * height);
-			x += step;
-			Color color = getColor((float) pitchClassProfileDb[i]);
-			graphics.setColor(color);
-			graphics.setPaint(color);
-			graphics.fill(line);
-			graphics.draw(line);
-		}
-
-		graphics.setColor(Color.GRAY);
-		x = 0;
-		int binCount = pitchClassProfileDb.length / BINS_PER_HALFTONE;
-		step = (float) size.getWidth() / binCount;
-		for (int i = 0; i < binCount; i++) {
-			line.setFrameFromDiagonal(x, 0, x + step - 1, height);
-			x += step;
-			graphics.draw(line);
-		}
-	}
-
-	Color getColor(float value) {
-		float hue = (1.8f - value) % 1.0f;
-		return Color.getHSBColor(hue, 0.25f + 0.75f * value,
-				0.25f + 0.75f * value);
-	}
-
 	public int getSignalBlockSize() {
 		return signalBlockSize;
+	}
+
+	public void paint(Graphics2D graphics) {
+		visualizer.paint(graphics);
+	}
+
+	private class Visualizer {
+
+		private JPanel panel;
+
+		public Visualizer(JPanel panel) {
+			this.panel = panel;
+		}
+
+		public void paint(Graphics2D graphics) {
+			if (amplitudeSpectrumDb == null) {
+				return;
+			}
+
+			if (IS_CIRCLE_ENABLED) {
+				drawPitchClassCircle(graphics);
+			} else {
+				drawPitchClassBars(graphics);
+			}
+		}
+
+		private void drawPitchClassCircle(Graphics2D graphics) {
+			Dimension panelSize = panel.getSize();
+			int size = (int) (0.9 * Math.min(panelSize.getWidth(),
+					panelSize.getHeight()));
+			float center = 0.5f * size;
+			float x = 0.5f * ((float) panelSize.getWidth() - size);
+			float y = 0.5f * ((float) panelSize.getHeight() - size);
+
+			graphics.setColor(Color.GRAY);
+			graphics.drawOval((int) x, (int) y, size, size);
+			// lines between bins
+			for (int i = 0; i < 12; i++) {
+				double angle = 2 * Math.PI * ((i - 0.5) / 12.0);
+				graphics.drawLine((int) (x + center), (int) (y + center),
+						(int) (x + center + 0.5 * size * Math.cos(angle)),
+						(int) (y + center + 0.5 * size * Math.sin(angle)));
+			}
+
+			// bins
+			float arcAngleStep = 360.0f / PITCH_BIN_COUNT;
+			for (int i = 0; i < PITCH_BIN_COUNT; i++) {
+				float value = (float) pitchClassProfileDb[i];
+				Color color = getColor(value);
+				graphics.setColor(color);
+				int startAngle = (int) (90 - arcAngleStep
+						* (i - 0.5f * BINS_PER_HALFTONE));
+				float relativeLength = 0.85f * value;
+				int barSize = (int) (relativeLength * size);
+				graphics.fillArc((int) (x + (1 - relativeLength) * center),
+						(int) (y + (1 - relativeLength) * center), barSize,
+						barSize, startAngle, (int) -arcAngleStep);
+			}
+			// float arcAngleStep = 360.0f / 12;
+			// for (int i = 0; i < 12; i++) {
+			// float hue = (float) pitchClassProfileDb[i];
+			// // Color color = getColor(hue);
+			// graphics.setColor(Color.getHSBColor(0, 0, hue));
+			// int startAngle = (int) (90 - arcAngleStep * (i/* - 0.5f*/));
+			// graphics.fillArc(x, y, size, size, startAngle, (int)
+			// -(arcAngleStep * 0.8f));
+			// }
+
+			drawHalftoneNames(graphics, size, center, x, y);
+
+			graphics.setColor(Color.DARK_GRAY);
+			float centerSizeFactor = 0.1f;
+			int centerSize = (int) (centerSizeFactor * size);
+			int centerOffset = (size - centerSize) / 2;
+			graphics.fillOval((int) (x + centerOffset),
+					(int) (y + centerOffset), centerSize, centerSize);
+
+			graphics.setColor(Color.GRAY);
+			graphics.drawOval((int) (x + centerOffset),
+					(int) (y + centerOffset), centerSize, centerSize);
+		}
+
+		private void drawHalftoneNames(Graphics2D graphics, int size,
+				float center, float x, float y) {
+			Font font = new Font("Arial", Font.BOLD, size / 15);
+			graphics.setFont(font);
+			FontMetrics fm = graphics.getFontMetrics();
+			int offsetY = fm.getAscent() / 2;
+			double angleStep = 2 * Math.PI / HALFTONE_NAMES.length;
+			double angle = 9 * angleStep;
+			for (int i = 0; i < HALFTONE_NAMES.length; i++, angle += angleStep) {
+				float value = getMaxBinValue(i);
+				Color color = getColor(value);
+				graphics.setColor(color);
+				String str = HALFTONE_NAMES[i];
+				int offsetX = fm.stringWidth(str) / 2;
+				graphics.drawString(
+						str,
+						(int) (x + center + 0.43 * size * Math.cos(angle) - offsetX),
+						(int) (y + center + 0.43 * size * Math.sin(angle) + offsetY));
+			}
+		}
+
+		private float getMaxBinValue(int halftoneIndex) {
+			float max = 0;
+			int baseIndex = BINS_PER_HALFTONE * halftoneIndex;
+			for (int i = 0; i < BINS_PER_HALFTONE; i++) {
+				float value = (float) smoothedOctaveBinsDb[baseIndex + i];
+				max = Math.max(max, value);
+			}
+			return max;
+		}
+
+		private void drawPitchClassBars(Graphics2D graphics) {
+			float x = 0;
+			Dimension size = panel.getSize();
+			float height = (float) size.getHeight();
+			float step = (float) size.getWidth() / (pitchClassProfileDb.length);
+
+			for (int i = 0; i < pitchClassProfileDb.length; i++) {
+				line.setFrameFromDiagonal(x, height, x + step - 1,
+						(1 - pitchClassProfileDb[i]) * height);
+				x += step;
+				Color color = getColor((float) pitchClassProfileDb[i]);
+				graphics.setColor(color);
+				graphics.setPaint(color);
+				graphics.fill(line);
+				graphics.draw(line);
+			}
+
+			graphics.setColor(Color.GRAY);
+			x = 0;
+			int binCount = pitchClassProfileDb.length / BINS_PER_HALFTONE;
+			step = (float) size.getWidth() / binCount;
+			for (int i = 0; i < binCount; i++) {
+				line.setFrameFromDiagonal(x, 0, x + step - 1, height);
+				x += step;
+				graphics.draw(line);
+			}
+		}
+
+		Color getColor(float value) {
+			float hue = (1.8f - value) % 1.0f;
+			return Color.getHSBColor(hue, 0.25f + 0.75f * value,
+					0.25f + 0.75f * value);
+		}
+
 	}
 
 	private static class ExpSmoother {
