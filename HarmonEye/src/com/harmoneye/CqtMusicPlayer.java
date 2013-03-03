@@ -2,6 +2,8 @@ package com.harmoneye;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -63,7 +65,7 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 	}
 
 	public void paint(Graphics g) {
-		//		long stop = System.nanoTime();
+		// long stop = System.nanoTime();
 		super.paintComponent(g);
 		Graphics2D g2 = (Graphics2D) g;
 
@@ -74,12 +76,16 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 		g2.setRenderingHints(rh);
 
 		spectrum.paint(g2);
-		//		long stop = System.nanoTime();
-		//		System.out.println((stop - start) / 1000000.0);
+		// long stop = System.nanoTime();
+		// System.out.println((stop - start) / 1000000.0);
 	}
 
 	public void actionPerformed(ActionEvent e) {
+		// long start = System.nanoTime();
 		spectrum.updateSignal(amplitudeBuffer);
+		// long stop = System.nanoTime();
+		// System.out.println((stop - start) * 1e-6);
+
 		repaint();
 	}
 
@@ -96,6 +102,8 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 	class Spectrum {
 
 		private FastCqt cqt = new FastCqt();
+
+		private final String[] HALFTONE_NAMES = { "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B" };
 
 		private final double DB_THRESHOLD = -(20 * Math.log10(2 << (16 - 1)));
 		private final int BINS_PER_HALFTONE = cqt.getBinsPerHalftone();
@@ -300,19 +308,25 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 
 			graphics.setColor(Color.GRAY);
 			graphics.drawOval((int) x, (int) y, size, size);
+			// lines between bins
 			for (int i = 0; i < 12; i++) {
 				double angle = 2 * Math.PI * ((i - 0.5) / 12.0);
-				graphics.drawLine((int)(x + center), (int)(y + center), (int)(x + center + 0.5 * size  * Math.cos(angle)), (int)(y + center + 0.5 * size * Math.sin(angle)));
+				graphics.drawLine((int) (x + center), (int) (y + center),
+					(int) (x + center + 0.5 * size * Math.cos(angle)),
+					(int) (y + center + 0.5 * size * Math.sin(angle)));
 			}
 
+			// bins
 			float arcAngleStep = 360.0f / PITCH_BIN_COUNT;
 			for (int i = 0; i < PITCH_BIN_COUNT; i++) {
 				float value = (float) pitchClassProfileDb[i];
 				Color color = getColor(value);
 				graphics.setColor(color);
 				int startAngle = (int) (90 - arcAngleStep * (i - 0.5f * BINS_PER_HALFTONE));
-				int barSize = (int) (value * size);
-				graphics.fillArc((int)(x + (1 - value) * center), (int)(y + (1 - value) * center), barSize, barSize, startAngle, (int) -arcAngleStep);
+				float relativeLength = 0.85f * value;
+				int barSize = (int) (relativeLength * size);
+				graphics.fillArc((int) (x + (1 - relativeLength) * center), (int) (y + (1 - relativeLength) * center),
+					barSize, barSize, startAngle, (int) -arcAngleStep);
 			}
 			//			float arcAngleStep = 360.0f / 12;
 			//			for (int i = 0; i < 12; i++) {
@@ -322,6 +336,8 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 			//				int startAngle = (int) (90 - arcAngleStep * (i/* - 0.5f*/));
 			//				graphics.fillArc(x, y, size, size, startAngle, (int) -(arcAngleStep * 0.8f));
 			//			}
+
+			drawHalftoneNames(graphics, size, center, x, y);
 
 			graphics.setColor(getBackground());
 			float centerSizeFactor = 0.1f;
@@ -333,13 +349,40 @@ public class CqtMusicPlayer extends JPanel implements ActionListener {
 			graphics.drawOval((int) (x + centerOffset), (int) (y + centerOffset), centerSize, centerSize);
 		}
 
+		private void drawHalftoneNames(Graphics2D graphics, int size, float center, float x, float y) {
+			Font font = new Font("Arial", Font.BOLD, size / 15);
+			graphics.setFont(font);
+			FontMetrics fm = graphics.getFontMetrics();
+			int offsetY = fm.getAscent() / 2;
+			double angleStep = 2 * Math.PI / HALFTONE_NAMES.length;
+			double angle = 9 * angleStep;
+			for (int i = 0; i < HALFTONE_NAMES.length; i++, angle += angleStep) {
+				float value = getMaxBinValue(i);
+				Color color = getColor(value);
+				graphics.setColor(color);
+				String str = HALFTONE_NAMES[i];
+				int offsetX = fm.stringWidth(str) / 2;
+				graphics.drawString(str, (int) (x + center + 0.43 * size * Math.cos(angle) - offsetX), (int) (y
+					+ center + 0.43 * size * Math.sin(angle) + offsetY));
+			}
+		}
+
+		private float getMaxBinValue(int halftoneIndex) {
+			float max = 0;
+			int baseIndex = BINS_PER_HALFTONE * halftoneIndex;
+			for (int i = 0; i < BINS_PER_HALFTONE; i++) {
+				float value = (float) smoothedOctaveBinsDb[baseIndex + i];
+				max = Math.max(max, value);
+			}
+			return max;
+		}
+
 		private void drawPitchClassBars(Graphics2D graphics) {
 			float x = 0;
 			Dimension size = getSize();
 			float height = (float) size.getHeight();
 			float step = (float) size.getWidth() / (pitchClassProfileDb.length);
 
-			
 			for (int i = 0; i < pitchClassProfileDb.length; i++) {
 				line.setFrameFromDiagonal(x, height, x + step - 1, (1 - pitchClassProfileDb[i]) * height);
 				x += step;
