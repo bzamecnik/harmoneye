@@ -27,7 +27,7 @@ public class MusicAnalyzer implements SoundConsumer {
 	private final double DB_THRESHOLD = -(20 * Math.log10(2 << (16 - 1)));
 	private final int BINS_PER_HALFTONE = cqt.getBinsPerHalftone();
 	private final int PITCH_BIN_COUNT = cqt.getBinsPerOctave();
-	private final int OCTAVE_COUNT = cqt.getOctaveCount();
+//	private final int OCTAVE_COUNT = cqt.getOctaveCount();
 
 	// in samples
 	private int signalBlockSize = cqt.getSignalBlockSize();
@@ -38,13 +38,13 @@ public class MusicAnalyzer implements SoundConsumer {
 	private double[] amplitudeSpectrumDb;
 	private double[] octaveBinsDb = new double[PITCH_BIN_COUNT];
 	private double[] smoothedOctaveBinsDb = new double[PITCH_BIN_COUNT];
-	private double[] normalizedOctaveBinsDb = new double[PITCH_BIN_COUNT];
+	// private double[] normalizedOctaveBinsDb = new double[PITCH_BIN_COUNT];
 	private double[] pitchClassProfileDb = new double[12];
-	private double[] smoothedPitchClassProfileDb = new double[12];
+	// private double[] smoothedPitchClassProfileDb = new double[12];
 	private Rectangle2D.Float line = new Rectangle2D.Float();
 	private ExpSmoother binSmoother = new ExpSmoother(PITCH_BIN_COUNT, 0.4);
-	private ExpSmoother pcpSmoother = new ExpSmoother(12, 0.1);
-	private ExpSmoother binMaxAvgSmoother = new ExpSmoother(2, 0.1);
+	// private ExpSmoother pcpSmoother = new ExpSmoother(12, 0.1);
+	// private ExpSmoother binMaxAvgSmoother = new ExpSmoother(2, 0.1);
 
 	private HarmonicPatternPitchClassDetector pcDetector = cqt.new HarmonicPatternPitchClassDetector();
 	private DoubleCircularBuffer amplitudeBuffer = new DoubleCircularBuffer(
@@ -89,7 +89,7 @@ public class MusicAnalyzer implements SoundConsumer {
 	}
 
 	private void computePitchClassProfile() {
-		double octaveCountInv = 1.0 / OCTAVE_COUNT;
+//		double octaveCountInv = 1.0 / OCTAVE_COUNT;
 		for (int i = 0; i < PITCH_BIN_COUNT; i++) {
 			// average over octaves:
 			// double value = 0;

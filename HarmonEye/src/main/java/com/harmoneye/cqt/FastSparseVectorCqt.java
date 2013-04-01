@@ -1,37 +1,40 @@
 package com.harmoneye.cqt;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.complex.ComplexField;
 import org.apache.commons.math3.linear.ArrayFieldVector;
-import org.apache.commons.math3.linear.FieldMatrix;
 import org.apache.commons.math3.linear.FieldVector;
+import org.apache.commons.math3.linear.SparseFieldVector;
 import org.apache.commons.math3.transform.DftNormalization;
 import org.apache.commons.math3.transform.FastFourierTransformer;
 import org.apache.commons.math3.transform.TransformType;
 
-import com.harmoneye.util.LinkedListNonZeroSparseFieldMatrix;
-import com.harmoneye.util.NonZeroSparseFieldMatrix;
+import com.harmoneye.util.LinkedListNonZeroSparseFieldVector;
 
-public class FastCqt extends AbstractCqt {
+public class FastSparseVectorCqt extends AbstractCqt {
 
 	private static final double CHOP_THRESHOLD = 0.005;
 
 	FastFourierTransformer fft = new FastFourierTransformer(DftNormalization.STANDARD);
 
 	// spectral kernels - already Hermite-conjugated (conjugated and transposed) for the transform
-	FieldMatrix<Complex> spectralKernels;
+	List<FieldVector<Complex>> spectralKernels;
 
 	private int signalBlockSize;
 
 	private Complex normalizationFactor;
 
-	public FastCqt() {
+	public FastSparseVectorCqt() {
+		signalBlockSize = nextPowerOf2(bandWidth(0));
 		computeSpectralKernels();
 //		System.out.println(spectralKernels);
-		System.out.println("kernel: " + spectralKernels.getColumnDimension() + " x " + spectralKernels.getRowDimension());
+//		System.out.println("kernel: " + spectralKernels.size() + " x " + spectralKernels.get(0).getDimension());
 		
-		signalBlockSize = nextPowerOf2(bandWidth(0));
-		System.out.println("signalBlockSize:" + signalBlockSize);
+		
+//		System.out.println("signalBlockSize:" + signalBlockSize);
 		normalizationFactor = new Complex(2 / (signalBlockSize * windowIntegral));
 	}
 	
@@ -39,16 +42,21 @@ public class FastCqt extends AbstractCqt {
 	public Complex[] transform(double[] signal) {
 		signal = padRight(signal, signalBlockSize);
 		Complex[] spectrum = fft.transform(signal, TransformType.FORWARD);
-		ArrayFieldVector<Complex> spectrumVector = new ArrayFieldVector<Complex>(spectrum);
+		FieldVector<Complex> spectrumVector = new ArrayFieldVector<Complex>(spectrum);
 		
 //		long start = System.nanoTime();
-		FieldVector<Complex> product = spectralKernels.operate(spectrumVector);
+		Complex[] product = new Complex[spectralKernels.size()];
+		for (int i = 0; i < spectralKernels.size(); i++) {
+			FieldVector<Complex> kernel = spectralKernels.get(i);
+			Complex dotProduct = kernel.dotProduct(spectrumVector);
+			Complex value = dotProduct.multiply(normalizationFactor);
+			product[i] = value;
+		}
+		
 //		long end = System.nanoTime();
 //		System.out.println("total: " + (end - start) / 1e6 + " ms");
 		
-		product.mapMultiplyToSelf(normalizationFactor);
-		Complex[] productArray = product.toArray();
-		return productArray;
+		return product;
 	}
 
 	protected void computeSpectralKernels() {
@@ -56,17 +64,17 @@ public class FastCqt extends AbstractCqt {
 			return;
 		}
 		ComplexField field = ComplexField.getInstance();
-//		spectralKernels = new SparseFieldMatrix<Complex>(field, totalBins, nextPowerOf2(bandWidth(0)));
-		spectralKernels = new NonZeroSparseFieldMatrix<Complex>(field, totalBins, nextPowerOf2(bandWidth(0)));
+		spectralKernels = new ArrayList<FieldVector<Complex>>(totalBins);
 		for (int k = 0; k < totalBins; k++) {
-			spectralKernels.setRow(k, conjugate(spectralKernel(k)));
+			Complex[] kernel = padRight(conjugate(spectralKernel(k)), signalBlockSize);
+			SparseFieldVector<Complex> sparseKernel = new SparseFieldVector<Complex>(field, kernel);
+			spectralKernels.add(new LinkedListNonZeroSparseFieldVector<Complex>(sparseKernel));
 		}
-		spectralKernels.transpose();
-		spectralKernels = new LinkedListNonZeroSparseFieldMatrix<>(spectralKernels);
 	}
 
 	protected Complex[] spectralKernel(int k) {
-		Complex[] temporalKernel = padLeft(temporalKernel(k), nextPowerOf2(bandWidth(0)));
+		Complex[] temporalKernel = temporalKernel(k);
+		temporalKernel = padLeft(temporalKernel, signalBlockSize);
 		Complex[] spectrum = fft.transform(temporalKernel, TransformType.FORWARD);
 		chop(spectrum);
 		return spectrum;

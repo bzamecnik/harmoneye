@@ -27,10 +27,10 @@ public abstract class AbstractCqt implements Cqt {
 	protected double windowIntegral = windowIntegral(window);
 
 	public AbstractCqt() {
-		System.out.println("octave count: " + octaveCount);
-		System.out.println("base freq: " + baseFreq);
-		System.out.println("max freq: " + maxFreq);
-		System.out.println("bandWidth[0]: " + bandWidth(0));
+//		System.out.println("octave count: " + octaveCount);
+//		System.out.println("base freq: " + baseFreq);
+//		System.out.println("max freq: " + maxFreq);
+//		System.out.println("bandWidth[0]: " + bandWidth(0));
 	}
 
 	protected double centerFreq(int k) {
