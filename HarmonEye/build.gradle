@@ -52,6 +52,7 @@ task bundleapp(dependsOn: 'jar') << {
     	mainclassname: "com.harmoneye.HarmonEye",
     	shortversion: version,
     	applicationCategory: "public.app-category.music",
+      icon: "src/main/resources/HarmonEye.icns"
     ) {
     	classpath(file: jar.archivePath)
     }
