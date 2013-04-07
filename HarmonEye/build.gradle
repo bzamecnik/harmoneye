@@ -1,0 +1,58 @@
+apply plugin: 'java'
+
+version = '1.0'
+
+repositories {
+	mavenCentral()
+	flatDir {
+		dirs 'lib'
+	}
+}
+
+
+configurations {
+	bundleapp
+}
+
+
+dependencies {
+	compile 'colt:colt:1.2.0'
+	compile 'edu.emory.mathcs:JTransforms:2.4'
+	compile 'org.apache.commons:commons-math3:3.1.1'
+	compile 'org.apache.commons:commons-lang3:3.1'
+
+	bundleapp ':appbundler:1.0'
+}
+
+jar {
+	manifest {
+		attributes 'Main-Class': 'com.harmoneye.HarmonEye'
+	}
+	from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+}
+
+
+ant {
+	taskdef(
+		name: 'bundleapp',
+		classname: 'com.oracle.appbundler.AppBundlerTask',
+		classpath: configurations.bundleapp.asPath
+	)
+}
+
+task bundleapp(dependsOn: 'jar') << {
+	def distDirPath = "dist"
+	def distDir = new File(distDirPath)
+	distDir.mkdirs()
+    ant.bundleapp(
+    	outputdirectory: distDirPath,
+    	name: "HarmonEye",
+    	displayname: "HarmonEye",
+    	identifier: "com.harmoneye.HarmonEye",
+    	mainclassname: "com.harmoneye.HarmonEye",
+    	shortversion: version,
+    	applicationCategory: "public.app-category.music",
+    ) {
+    	classpath(file: jar.archivePath)
+    }
+}
