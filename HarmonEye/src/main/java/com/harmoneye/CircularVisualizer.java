@@ -16,6 +16,7 @@ public class CircularVisualizer extends AbstractVisualizer {
 
 	@Override
 	public void paint(Graphics2D graphics) {
+		super.paint(graphics);
 		drawPitchClassCircle(graphics);
 	}
 

@@ -2,6 +2,7 @@ package com.harmoneye;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.geom.Rectangle2D;
 
 import javax.swing.JPanel;
@@ -23,7 +24,15 @@ abstract class AbstractVisualizer {
 		this.panel = panel;
 	}
 
-	public abstract void paint(Graphics2D graphics);
+	public void paint(Graphics2D graphics) {
+		RenderingHints rh = new RenderingHints(RenderingHints.KEY_ANTIALIASING,
+				RenderingHints.VALUE_ANTIALIAS_ON);
+		rh.put(RenderingHints.KEY_RENDERING,
+				RenderingHints.VALUE_RENDER_QUALITY);
+		graphics.setRenderingHints(rh);
+
+		panel.setBackground(Color.DARK_GRAY);
+	}
 
 	Color getColor(float value) {
 		float hue = (1.8f - value) % 1.0f;

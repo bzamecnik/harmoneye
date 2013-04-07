@@ -41,13 +41,6 @@ public class AbstractHarmonEyeApp extends JPanel implements ActionListener {
 		super.paintComponent(g);
 		Graphics2D g2 = (Graphics2D) g;
 
-		RenderingHints rh = new RenderingHints(RenderingHints.KEY_ANTIALIASING,
-				RenderingHints.VALUE_ANTIALIAS_ON);
-		rh.put(RenderingHints.KEY_RENDERING,
-				RenderingHints.VALUE_RENDER_QUALITY);
-		g2.setRenderingHints(rh);
-
-		setBackground(Color.DARK_GRAY);
 		soundAnalyzer.paint(g2);
 	}
 
