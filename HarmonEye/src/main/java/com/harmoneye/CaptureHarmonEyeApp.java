@@ -13,6 +13,11 @@ public class CaptureHarmonEyeApp extends AbstractHarmonEyeApp {
 		super.start();
 		capture.start();
 	}
+	
+	public void stop() {
+		super.stop();
+		capture.stop();
+	}
 
 	public static void main(String[] args) {
 		new CaptureHarmonEyeApp().start();

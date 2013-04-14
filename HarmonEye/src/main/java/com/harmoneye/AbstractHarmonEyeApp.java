@@ -7,6 +7,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.Date;
 
 import javax.swing.AbstractAction;
 import javax.swing.ImageIcon;
@@ -14,80 +15,120 @@ import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
-public class AbstractHarmonEyeApp extends JPanel implements ActionListener {
-	private static final long serialVersionUID = 1L;
+public class AbstractHarmonEyeApp {
 
 	private static final int TIME_PERIOD_MILLIS = 20;
+	private static final String WINDOW_TITLE = "HarmonEye";
 
 	private Timer timer;
 	protected MusicAnalyzer soundAnalyzer;
 
+	private VisualizerPanel visualizerPanel;
+	private JFrame frame;
+
 	private CircleOfFifthsEnabledAction circleOfFifthsEnabledAction;
 	private JCheckBoxMenuItem circleOfFifthsEnabledMenuItem;
+	private PauseAction pauseAction;
+	private JMenuItem pauseMenuItem;
 
 	public AbstractHarmonEyeApp() {
-		timer = new Timer(TIME_PERIOD_MILLIS, this);
+		timer = new Timer(TIME_PERIOD_MILLIS, new TimerActionListener());
 		timer.setInitialDelay(190);
-		soundAnalyzer = new MusicAnalyzer(this);
 
-		JFrame frame = new JFrame("HarmonEye");
-		frame.add(this);
+		visualizerPanel = new VisualizerPanel();
+		// enable pausing
+		visualizerPanel.addMouseListener(new MouseClickListener());
+
+		soundAnalyzer = new MusicAnalyzer(visualizerPanel);
+
+		circleOfFifthsEnabledAction = new CircleOfFifthsEnabledAction("Circle of fifths", null, "", new Integer(
+			KeyEvent.VK_F));
+		pauseAction = new PauseAction("Pause", null, "", new Integer(KeyEvent.VK_P));
+
+		createFrame();
+	}
+
+	private void createFrame() {
+		frame = new JFrame(WINDOW_TITLE);
+		frame.add(visualizerPanel);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setSize(512, 512);
 		frame.setLocationRelativeTo(null);
 
-		circleOfFifthsEnabledAction = new CircleOfFifthsEnabledAction(
-				"Circle of fifths", null, "", new Integer(KeyEvent.VK_F));
-
 		frame.setJMenuBar(createMenuBar());
 
 		frame.setVisible(true);
-
-		// enable pausing
-		this.addMouseListener(new MouseClickListener());
 	}
 
 	private JMenuBar createMenuBar() {
-		JMenu mainMenu = new JMenu("Settings");
+		JMenuBar menuBar = new JMenuBar();
 
-		circleOfFifthsEnabledMenuItem = new JCheckBoxMenuItem(
-				circleOfFifthsEnabledAction);
+		JMenu menu = new JMenu("Analysis");
+
+		pauseMenuItem = new JMenuItem(pauseAction);
+		pauseMenuItem.setIcon(null);
+		menu.add(pauseMenuItem);
+
+		menuBar.add(menu);
+
+		menu = new JMenu("Settings");
+
+		circleOfFifthsEnabledMenuItem = new JCheckBoxMenuItem(circleOfFifthsEnabledAction);
 		circleOfFifthsEnabledMenuItem.setSelected(false);
 		circleOfFifthsEnabledMenuItem.setIcon(null);
-		mainMenu.add(circleOfFifthsEnabledMenuItem);
+		menu.add(circleOfFifthsEnabledMenuItem);
 
-		JMenuBar menuBar = new JMenuBar();
-		menuBar.add(mainMenu);
+		menuBar.add(menu);
+
 		return menuBar;
 	}
 
 	public void start() {
 		timer.start();
+		pauseMenuItem.setText("Pause");
+		frame.setTitle(WINDOW_TITLE);
 	}
 
-	public void paint(Graphics g) {
-		super.paintComponent(g);
-		Graphics2D g2 = (Graphics2D) g;
-
-		soundAnalyzer.paint(g2);
+	public void stop() {
+		timer.stop();
+		pauseMenuItem.setText("Play");
+		frame.setTitle("= " + WINDOW_TITLE + " =");
 	}
 
-	public void actionPerformed(ActionEvent e) {
-		soundAnalyzer.updateSignal();
-		repaint();
+	private void toggle() {
+		if (timer.isRunning()) {
+			stop();
+		} else {
+			start();
+		}
+	}
+
+	private class VisualizerPanel extends JPanel {
+		private static final long serialVersionUID = 1L;
+
+		public void paint(Graphics g) {
+			super.paintComponent(g);
+			soundAnalyzer.paint((Graphics2D) g);
+		}
+	}
+
+	private final class TimerActionListener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			soundAnalyzer.updateSignal();
+			visualizerPanel.repaint();
+		}
 	}
 
 	private final class MouseClickListener implements MouseListener {
 		@Override
 		public void mouseClicked(MouseEvent e) {
-			if (timer.isRunning()) {
-				timer.stop();
-			} else {
-				timer.restart();
-			}
+			pauseAction.actionPerformed(new ActionEvent(e.getSource(), ActionEvent.ACTION_PERFORMED, "Pause",
+				new Date().getTime(), 0));
 		}
 
 		@Override
@@ -110,17 +151,33 @@ public class AbstractHarmonEyeApp extends JPanel implements ActionListener {
 	private class CircleOfFifthsEnabledAction extends AbstractAction {
 		private static final long serialVersionUID = 1L;
 
-		public CircleOfFifthsEnabledAction(String text, ImageIcon icon,
-				String desc, Integer mnemonic) {
+		boolean fifthsEnabled = false;
+
+		public CircleOfFifthsEnabledAction(String text, ImageIcon icon, String desc, Integer mnemonic) {
 			super(text, icon);
 			putValue(SHORT_DESCRIPTION, desc);
 			putValue(MNEMONIC_KEY, mnemonic);
 		}
 
 		public void actionPerformed(ActionEvent e) {
-			boolean fifthsEnabled = circleOfFifthsEnabledMenuItem.getState();
+			// boolean fifthsEnabled = circleOfFifthsEnabledMenuItem.getState();
+			fifthsEnabled = !fifthsEnabled;
 			soundAnalyzer.getVisualizer().setPitchStep(fifthsEnabled ? 7 : 1);
-			repaint();
+			visualizerPanel.repaint();
+		}
+	}
+
+	public class PauseAction extends AbstractAction {
+		private static final long serialVersionUID = 1L;
+
+		public PauseAction(String text, ImageIcon icon, String desc, Integer mnemonic) {
+			super(text, icon);
+			putValue(SHORT_DESCRIPTION, desc);
+			putValue(MNEMONIC_KEY, mnemonic);
+		}
+
+		public void actionPerformed(ActionEvent e) {
+			toggle();
 		}
 	}
 }
