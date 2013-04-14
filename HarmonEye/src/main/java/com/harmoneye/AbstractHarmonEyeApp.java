@@ -18,6 +18,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.KeyStroke;
 import javax.swing.Timer;
 
 import org.simplericity.macify.eawt.ApplicationEvent;
@@ -77,20 +78,30 @@ public class AbstractHarmonEyeApp {
 	private JMenuBar createMenuBar() {
 		JMenuBar menuBar = new JMenuBar();
 
-		JMenu menu = new JMenu("Analysis");
+		JMenu menu = new JMenu("Visualization");
 
 		pauseMenuItem = new JMenuItem(pauseAction);
-		pauseMenuItem.setIcon(null);
+		pauseMenuItem.setAccelerator(KeyStroke.getKeyStroke(' '));
 		menu.add(pauseMenuItem);
 
-		menuBar.add(menu);
-
-		menu = new JMenu("Settings");
-
 		circleOfFifthsEnabledMenuItem = new JCheckBoxMenuItem(circleOfFifthsEnabledAction);
-		circleOfFifthsEnabledMenuItem.setSelected(false);
-		circleOfFifthsEnabledMenuItem.setIcon(null);
+		circleOfFifthsEnabledMenuItem.setAccelerator(KeyStroke.getKeyStroke('f'));
 		menu.add(circleOfFifthsEnabledMenuItem);
+
+		menuBar.add(menu);
+		
+		menu = new JMenu("Window");
+
+		final JCheckBoxMenuItem alwaysOnTopMenuItem = new JCheckBoxMenuItem();
+		alwaysOnTopMenuItem.setAction(new AbstractAction("Always on top") {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				frame.setAlwaysOnTop(alwaysOnTopMenuItem.getState());
+			}
+		});
+		menu.add(alwaysOnTopMenuItem);
 
 		menuBar.add(menu);
 
