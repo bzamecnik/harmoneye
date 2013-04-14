@@ -24,7 +24,7 @@ public class CircularVisualizer extends AbstractVisualizer {
 		if (pitchClassProfile == null) {
 			return;
 		}
-		
+
 		Dimension panelSize = panel.getSize();
 		int size = (int) (0.9 * Math.min(panelSize.getWidth(),
 				panelSize.getHeight()));
@@ -32,20 +32,26 @@ public class CircularVisualizer extends AbstractVisualizer {
 		float x = 0.5f * ((float) panelSize.getWidth() - size);
 		float y = 0.5f * ((float) panelSize.getHeight() - size);
 
-		graphics.setColor(Color.GRAY);
-		graphics.drawOval((int) x, (int) y, size, size);
-		// lines between bins
-		for (int i = 0; i < 12; i++) {
-			double angle = 2 * Math.PI * ((i - 0.5) / 12.0);
-			graphics.drawLine((int) (x + center), (int) (y + center), (int) (x
-					+ center + 0.5 * size * Math.cos(angle)),
-					(int) (y + center + 0.5 * size * Math.sin(angle)));
-		}
+		drawPitchClassFrame(graphics, size, center, x, y);
+		drawPitchClassBins(graphics, size, center, x, y);
+		drawHalftoneNames(graphics, size, center, x, y);
+		drawCentralPupil(graphics, size, x, y);
+	}
 
-		// bins
+	private void drawPitchClassBins(Graphics2D graphics, int size,
+			float center, float x, float y) {
 		float arcAngleStep = 360.0f / pitchBinCount;
 		for (int i = 0; i < pitchBinCount; i++) {
-			float value = (float) pitchClassProfile[i];
+			// int index = i;
+			int pitchClass = i / binsPerHalftone;
+			int binInPitchClass = i % binsPerHalftone;
+			int movedPitchClass = (pitchClass * getPitchStep()) % 12;
+			int index = movedPitchClass * binsPerHalftone + binInPitchClass;
+			// System.out.println("pitchClass: " + pitchClass
+			// + ", binInPitchClass: " + binInPitchClass
+			// + ", movedPitchClass: " + movedPitchClass + ", index: "
+			// + index);
+			float value = (float) pitchClassProfile[index];
 			Color color = getColor(value);
 			graphics.setColor(color);
 			int startAngle = (int) (90 - arcAngleStep
@@ -56,28 +62,23 @@ public class CircularVisualizer extends AbstractVisualizer {
 					(int) (y + (1 - relativeLength) * center), barSize,
 					barSize, startAngle, (int) -arcAngleStep);
 		}
-		// float arcAngleStep = 360.0f / 12;
-		// for (int i = 0; i < 12; i++) {
-		// float hue = (float) pitchClassProfileDb[i];
-		// // Color color = getColor(hue);
-		// graphics.setColor(Color.getHSBColor(0, 0, hue));
-		// int startAngle = (int) (90 - arcAngleStep * (i/* - 0.5f*/));
-		// graphics.fillArc(x, y, size, size, startAngle, (int)
-		// -(arcAngleStep * 0.8f));
-		// }
+	}
 
-		drawHalftoneNames(graphics, size, center, x, y);
-
-		graphics.setColor(Color.DARK_GRAY);
-		float centerSizeFactor = 0.1f;
-		int centerSize = (int) (centerSizeFactor * size);
-		int centerOffset = (size - centerSize) / 2;
-		graphics.fillOval((int) (x + centerOffset), (int) (y + centerOffset),
-				centerSize, centerSize);
-
+	private void drawPitchClassFrame(Graphics2D graphics, int size,
+			float center, float x, float y) {
 		graphics.setColor(Color.GRAY);
-		graphics.drawOval((int) (x + centerOffset), (int) (y + centerOffset),
-				centerSize, centerSize);
+
+		graphics.drawOval((int) x, (int) y, size, size);
+
+		// lines between bins
+		for (int i = 0; i < 12; i++) {
+			double angle = 2 * Math.PI * ((i - 0.5) / 12.0);
+			int startX = (int) (x + center);
+			int startY = (int) (y + center);
+			graphics.drawLine(startX, startY, (int) (x + center + 0.5 * size
+					* Math.cos(angle)),
+					(int) (y + center + 0.5 * size * Math.sin(angle)));
+		}
 	}
 
 	private void drawHalftoneNames(Graphics2D graphics, int size, float center,
@@ -89,16 +90,33 @@ public class CircularVisualizer extends AbstractVisualizer {
 		double angleStep = 2 * Math.PI / HALFTONE_NAMES.length;
 		double angle = 9 * angleStep;
 		for (int i = 0; i < HALFTONE_NAMES.length; i++, angle += angleStep) {
-			float value = getMaxBinValue(i);
+			int index = (i * getPitchStep()) % 12;
+			float value = getMaxBinValue(index);
 			Color color = getColor(value);
 			graphics.setColor(color);
-			String str = HALFTONE_NAMES[i];
+			String str = HALFTONE_NAMES[index];
 			int offsetX = fm.stringWidth(str) / 2;
 			graphics.drawString(
 					str,
 					(int) (x + center + 0.43 * size * Math.cos(angle) - offsetX),
 					(int) (y + center + 0.43 * size * Math.sin(angle) + offsetY));
 		}
+	}
+
+	private void drawCentralPupil(Graphics2D graphics, int size, float x,
+			float y) {
+
+		float centerSizeFactor = 0.1f;
+		int centerSize = (int) (centerSizeFactor * size);
+		int centerOffset = (size - centerSize) / 2;
+
+		graphics.setColor(Color.DARK_GRAY);
+		graphics.fillOval((int) (x + centerOffset), (int) (y + centerOffset),
+				centerSize, centerSize);
+
+		graphics.setColor(Color.GRAY);
+		graphics.drawOval((int) (x + centerOffset), (int) (y + centerOffset),
+				centerSize, centerSize);
 	}
 
 	private float getMaxBinValue(int halftoneIndex) {

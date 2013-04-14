@@ -229,6 +229,11 @@ public class MusicAnalyzer implements SoundConsumer {
 		return signalBlockSize;
 	}
 
+	// TODO: should not be exposed
+	AbstractVisualizer getVisualizer() {
+		return visualizer;
+	}
+
 	public void paint(Graphics2D graphics) {
 		// long start = System.nanoTime();
 

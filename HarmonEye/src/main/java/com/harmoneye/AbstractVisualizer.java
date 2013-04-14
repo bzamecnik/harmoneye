@@ -12,6 +12,10 @@ abstract class AbstractVisualizer {
 	protected static final String[] HALFTONE_NAMES = { "C", "Db", "D", "Eb",
 			"E", "F", "Gb", "G", "Ab", "A", "Bb", "B" };
 
+	private static final int DEFAULT_PITCH_STEP = 1;
+
+	private int pitchStep = DEFAULT_PITCH_STEP;
+
 	protected int pitchBinCount;
 	protected int binsPerHalftone;
 
@@ -50,6 +54,14 @@ abstract class AbstractVisualizer {
 
 	public void setPitchClassProfile(double[] pitchClassProfile) {
 		this.pitchClassProfile = pitchClassProfile;
+	}
+
+	public int getPitchStep() {
+		return pitchStep;
+	}
+
+	public void setPitchStep(int pitchStep) {
+		this.pitchStep = pitchStep;
 	}
 
 }
