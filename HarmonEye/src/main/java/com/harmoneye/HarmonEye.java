@@ -1,30 +1,42 @@
 package com.harmoneye;
 
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
+
+import org.simplericity.macify.eawt.Application;
+import org.simplericity.macify.eawt.DefaultApplication;
 
 public class HarmonEye {
-	public static void main(String[] args) {
-		try {
-			System.setProperty("apple.laf.useScreenMenuBar", "true");
-			System.setProperty(
-					"com.apple.mrj.application.apple.menu.about.name",
-					"HarmonEye");
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		} catch (ClassNotFoundException e) {
-			System.out.println("ClassNotFoundException: " + e.getMessage());
-		} catch (InstantiationException e) {
-			System.out.println("InstantiationException: " + e.getMessage());
-		} catch (IllegalAccessException e) {
-			System.out.println("IllegalAccessException: " + e.getMessage());
-		} catch (UnsupportedLookAndFeelException e) {
-			System.out.println("UnsupportedLookAndFeelException: "
-					+ e.getMessage());
-		}
-		javax.swing.SwingUtilities.invokeLater(new Runnable() {
+	public static void main(String[] args) throws Exception {
+		// Must be before setLookAndFeel
+		macSetup("HarmonEye");
+		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
 			public void run() {
-				new CaptureHarmonEyeApp().start();
+				Application app = new DefaultApplication();
+
+				CaptureHarmonEyeApp captureHarmonEyeApp = new CaptureHarmonEyeApp();
+				captureHarmonEyeApp.start();
+
+				app.addApplicationListener(captureHarmonEyeApp.getApplicationListener());
+				app.addPreferencesMenuItem();
+				app.setEnabledPreferencesMenu(true);
 			}
 		});
 	}
+
+	private static void macSetup(String appName) {
+		String os = System.getProperty("os.name").toLowerCase();
+		boolean isMac = os.startsWith("mac os x");
+
+		if (!isMac) {
+			return;
+		}
+
+		System.setProperty("apple.laf.useScreenMenuBar", "true");
+		System.setProperty("com.apple.mrj.application.apple.menu.about.name", appName);
+	}
+
 }

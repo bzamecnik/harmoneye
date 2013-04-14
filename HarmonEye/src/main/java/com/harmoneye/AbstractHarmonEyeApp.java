@@ -16,8 +16,12 @@ import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.Timer;
+
+import org.simplericity.macify.eawt.ApplicationEvent;
+import org.simplericity.macify.eawt.ApplicationListener;
 
 public class AbstractHarmonEyeApp {
 
@@ -35,6 +39,8 @@ public class AbstractHarmonEyeApp {
 	private PauseAction pauseAction;
 	private JMenuItem pauseMenuItem;
 
+	private ApplicationListener appListener;
+
 	public AbstractHarmonEyeApp() {
 		timer = new Timer(TIME_PERIOD_MILLIS, new TimerActionListener());
 		timer.setInitialDelay(190);
@@ -49,11 +55,13 @@ public class AbstractHarmonEyeApp {
 			KeyEvent.VK_F));
 		pauseAction = new PauseAction("Pause", null, "", new Integer(KeyEvent.VK_P));
 
-		createFrame();
+		frame = createFrame();
+
+		appListener = new MyApplicationListener();
 	}
 
-	private void createFrame() {
-		frame = new JFrame(WINDOW_TITLE);
+	private JFrame createFrame() {
+		JFrame frame = new JFrame(WINDOW_TITLE);
 		frame.add(visualizerPanel);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setSize(512, 512);
@@ -62,6 +70,8 @@ public class AbstractHarmonEyeApp {
 		frame.setJMenuBar(createMenuBar());
 
 		frame.setVisible(true);
+
+		return frame;
 	}
 
 	private JMenuBar createMenuBar() {
@@ -179,5 +189,49 @@ public class AbstractHarmonEyeApp {
 		public void actionPerformed(ActionEvent e) {
 			toggle();
 		}
+	}
+
+	// Must be public!!
+	public class MyApplicationListener implements ApplicationListener {
+
+		private void handle(ApplicationEvent event, String message) {
+			JOptionPane.showMessageDialog(frame, message);
+			event.setHandled(true);
+		}
+
+		public void handleAbout(ApplicationEvent event) {
+			handle(event, "aboutAction");
+		}
+
+		public void handleOpenApplication(ApplicationEvent event) {
+			// Ok, we know our application started
+			// Not much to do about that..
+		}
+
+		public void handleOpenFile(ApplicationEvent event) {
+			handle(event, "openFileInEditor: " + event.getFilename());
+		}
+
+		public void handlePreferences(ApplicationEvent event) {
+			handle(event, "preferencesAction");
+		}
+
+		public void handlePrintFile(ApplicationEvent event) {
+			handle(event, "Sorry, printing not implemented");
+		}
+
+		public void handleQuit(ApplicationEvent event) {
+			//handle(event, "exitAction");
+			System.exit(0);
+		}
+
+		public void handleReOpenApplication(ApplicationEvent event) {
+			event.setHandled(true);
+			frame.setVisible(true);
+		}
+	}
+
+	public ApplicationListener getApplicationListener() {
+		return appListener;
 	}
 }
