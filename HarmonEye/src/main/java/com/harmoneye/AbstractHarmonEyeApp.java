@@ -1,18 +1,17 @@
 package com.harmoneye;
 
-import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
 public class AbstractHarmonEyeApp extends JPanel implements ActionListener {
-
 	private static final long serialVersionUID = 1L;
 
 	private static final int TIME_PERIOD_MILLIS = 20;
@@ -31,6 +30,9 @@ public class AbstractHarmonEyeApp extends JPanel implements ActionListener {
 		frame.setSize(512, 512);
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
+
+		// enable pausing
+		this.addMouseListener(new MouseClickListener());
 	}
 
 	public void start() {
@@ -48,4 +50,32 @@ public class AbstractHarmonEyeApp extends JPanel implements ActionListener {
 		soundAnalyzer.updateSignal();
 		repaint();
 	}
+
+	private final class MouseClickListener implements MouseListener {
+		@Override
+		public void mouseClicked(MouseEvent e) {
+			if (timer.isRunning()) {
+				timer.stop();
+			} else {
+				timer.restart();
+			}
+		}
+
+		@Override
+		public void mousePressed(MouseEvent e) {
+		}
+
+		@Override
+		public void mouseReleased(MouseEvent e) {
+		}
+
+		@Override
+		public void mouseEntered(MouseEvent e) {
+		}
+
+		@Override
+		public void mouseExited(MouseEvent e) {
+		}
+	}
+
 }
