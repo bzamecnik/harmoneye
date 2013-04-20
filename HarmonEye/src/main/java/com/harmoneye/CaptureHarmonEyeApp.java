@@ -2,7 +2,6 @@ package com.harmoneye;
 
 public class CaptureHarmonEyeApp extends AbstractHarmonEyeApp {
 
-	private static final long serialVersionUID = 1L;
 	private Capture capture;
 
 	public CaptureHarmonEyeApp() {
@@ -13,7 +12,7 @@ public class CaptureHarmonEyeApp extends AbstractHarmonEyeApp {
 		super.start();
 		capture.start();
 	}
-	
+
 	public void stop() {
 		super.stop();
 		capture.stop();

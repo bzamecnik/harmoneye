@@ -1,8 +1,10 @@
 package com.harmoneye;
 
+import com.harmoneye.AbstractHarmonEyeApp;
+import com.harmoneye.Playback;
+
 public class PlaybackHarmonEyeApp extends AbstractHarmonEyeApp {
 
-	private static final long serialVersionUID = 1L;
 	private static final String INPUT_FILE_NAME = "/Users/bzamecnik/dev/harmoneye/data/wav/04-Sla-Maria-do-klastera-simple.wav";
 	private Playback playback;
 
