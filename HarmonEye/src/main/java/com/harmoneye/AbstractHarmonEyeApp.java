@@ -207,7 +207,10 @@ public class AbstractHarmonEyeApp {
 		}
 
 		public void handleAbout(ApplicationEvent event) {
-			handle(event, "aboutAction");
+			JOptionPane.showMessageDialog(frame, "HarmonEye\n" + "A software that enables you to see what you hear.\n"
+				+ "Crafted with love by Bohumír Zámečník since 2012.\n\n" + "http://harmoneye.com/", "About HarmonEye",
+				JOptionPane.INFORMATION_MESSAGE);
+			event.setHandled(true);
 		}
 
 		public void handleOpenApplication(ApplicationEvent event) {
