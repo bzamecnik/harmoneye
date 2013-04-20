@@ -28,6 +28,10 @@ dependencies {
 	compile 'org.simplericity.macify:macify:1.6'
 
 	bundleapp ':appbundler:1.0'
+	
+	compile ':jna:3.5.1'
+	compile ':turboactivate:1.0'
+	
   	testCompile 'junit:junit:4.10'
 }
 
@@ -63,4 +67,7 @@ task bundleapp(dependsOn: 'jar') << {
     ) {
     	classpath(file: jar.archivePath)
     }
+	ant.copy(toDir: distDirPath + "/HarmonEye.app/Contents/Java/TurboActivate") {
+		fileset(dir: "lib/TurboActivate")
+	}
 }

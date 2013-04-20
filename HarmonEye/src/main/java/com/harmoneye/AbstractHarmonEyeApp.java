@@ -18,8 +18,12 @@ import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 import javax.swing.Timer;
 
+import org.apache.commons.lang3.StringUtils;
 import org.simplericity.macify.eawt.ApplicationEvent;
 import org.simplericity.macify.eawt.ApplicationListener;
+
+import com.harmoneye.licensing.LicenseDialogs;
+import com.harmoneye.licensing.LicenseManager;
 
 public class AbstractHarmonEyeApp {
 
@@ -39,7 +43,13 @@ public class AbstractHarmonEyeApp {
 
 	private ApplicationListener appListener;
 
+	private LicenseManager licenseManager;
+	private LicenseDialogs licenseDialogs;
+
 	public AbstractHarmonEyeApp() {
+		licenseManager = new LicenseManager();
+		licenseManager.init();
+
 		timer = new Timer(TIME_PERIOD_MILLIS, new TimerActionListener());
 		timer.setInitialDelay(190);
 
@@ -55,6 +65,36 @@ public class AbstractHarmonEyeApp {
 		frame = createFrame();
 
 		appListener = new MyApplicationListener(frame);
+
+		licenseDialogs = new LicenseDialogs(frame, licenseManager);
+
+		checkActivation();
+
+		frame.setVisible(true);
+	}
+
+	private void checkActivation() {
+		// TODO: show a dialog: activate/buy license
+		// TOOD: allow a trial mode
+
+		try {
+			licenseManager.checkActivation();
+			if (!licenseManager.isActivated()) {
+				String productKey = licenseDialogs.showActivationDialog();
+				if (StringUtils.isNotBlank(productKey)) {
+					licenseManager.activate(productKey);
+				}
+			}
+		} catch (Exception ex) {
+			String message = ex.getMessage();
+			if (ex.getCause() != null) {
+				message += "\n" + ex.getCause().getMessage();
+			}
+			JOptionPane.showMessageDialog(frame, message, "Problem with the activation", JOptionPane.ERROR_MESSAGE);
+		}
+		if (!licenseManager.isActivated()) {
+			System.exit(0);
+		}
 	}
 
 	private JFrame createFrame() {
@@ -65,8 +105,6 @@ public class AbstractHarmonEyeApp {
 		frame.setLocationRelativeTo(null);
 
 		frame.setJMenuBar(createMenuBar());
-
-		frame.setVisible(true);
 
 		return frame;
 	}
@@ -90,6 +128,46 @@ public class AbstractHarmonEyeApp {
 
 		menuBar.add(menu);
 
+		menu = new JMenu("License");
+
+		JMenuItem showLicenseMenuItem = new JMenuItem();
+		showLicenseMenuItem.setAction(new AbstractAction("Show license details") {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				licenseDialogs.showLicenseInfoDialog();
+			}
+		});
+		menu.add(showLicenseMenuItem);
+
+		JMenuItem deactivateMenuItem = new JMenuItem();
+		deactivateMenuItem.setAction(new AbstractAction("Deactivate") {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				boolean deactivate = licenseDialogs.showDeactivateDialog();
+				if (deactivate) {
+					try {
+						licenseManager.deactivate();
+						licenseDialogs.showDeactivatedDialog();
+						System.exit(0);
+					} catch (Exception ex) {
+						String message = ex.getMessage();
+						if (ex.getCause() != null) {
+							message += "\n" + ex.getCause().getMessage();
+						}
+						JOptionPane.showMessageDialog(frame, message, "Problem with the deactivation",
+							JOptionPane.ERROR_MESSAGE);
+					}
+				}
+			}
+		});
+		menu.add(deactivateMenuItem);
+
+		menuBar.add(menu);
+
 		menu = new JMenu("Window");
 
 		final JCheckBoxMenuItem alwaysOnTopMenuItem = new JCheckBoxMenuItem();
@@ -110,6 +188,10 @@ public class AbstractHarmonEyeApp {
 	}
 
 	public void start() {
+		if (!licenseManager.isActivated()) {
+			return;
+		}
+
 		timer.start();
 		pauseMenuItem.setText("Pause");
 		frame.setTitle(WINDOW_TITLE);
