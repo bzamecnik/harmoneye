@@ -33,11 +33,9 @@ public class AbstractHarmonEyeApp {
 	private JFrame frame;
 
 	private CircleOfFifthsEnabledAction circleOfFifthsEnabledAction;
-	private JCheckBoxMenuItem circleOfFifthsEnabledMenuItem;
 	private PauseAction pauseAction;
 	private JMenuItem pauseMenuItem;
 	private AccumulationEnabledAction accumulationEnabledAction;
-	private JCheckBoxMenuItem accumulationEnabledMenuItem;
 
 	private ApplicationListener appListener;
 
@@ -56,7 +54,7 @@ public class AbstractHarmonEyeApp {
 
 		frame = createFrame();
 
-		appListener = new MyApplicationListener();
+		appListener = new MyApplicationListener(frame);
 	}
 
 	private JFrame createFrame() {
@@ -82,11 +80,11 @@ public class AbstractHarmonEyeApp {
 		pauseMenuItem.setAccelerator(KeyStroke.getKeyStroke(' '));
 		menu.add(pauseMenuItem);
 
-		circleOfFifthsEnabledMenuItem = new JCheckBoxMenuItem(circleOfFifthsEnabledAction);
+		JCheckBoxMenuItem circleOfFifthsEnabledMenuItem = new JCheckBoxMenuItem(circleOfFifthsEnabledAction);
 		circleOfFifthsEnabledMenuItem.setAccelerator(KeyStroke.getKeyStroke('f'));
 		menu.add(circleOfFifthsEnabledMenuItem);
 
-		accumulationEnabledMenuItem = new JCheckBoxMenuItem(accumulationEnabledAction);
+		JCheckBoxMenuItem accumulationEnabledMenuItem = new JCheckBoxMenuItem(accumulationEnabledAction);
 		accumulationEnabledMenuItem.setAccelerator(KeyStroke.getKeyStroke('a'));
 		menu.add(accumulationEnabledMenuItem);
 
@@ -160,7 +158,6 @@ public class AbstractHarmonEyeApp {
 		}
 
 		public void actionPerformed(ActionEvent e) {
-			// boolean fifthsEnabled = circleOfFifthsEnabledMenuItem.getState();
 			fifthsEnabled = !fifthsEnabled;
 			soundAnalyzer.getVisualizer().setPitchStep(fifthsEnabled ? 7 : 1);
 			visualizerPanel.repaint();
@@ -196,7 +193,13 @@ public class AbstractHarmonEyeApp {
 	}
 
 	// Must be public!!
-	public class MyApplicationListener implements ApplicationListener {
+	public static class MyApplicationListener implements ApplicationListener {
+
+		private JFrame frame;
+
+		public MyApplicationListener(JFrame frame) {
+			this.frame = frame;
+		}
 
 		private void handle(ApplicationEvent event, String message) {
 			JOptionPane.showMessageDialog(frame, message);
@@ -217,6 +220,7 @@ public class AbstractHarmonEyeApp {
 		}
 
 		public void handlePreferences(ApplicationEvent event) {
+			// TODO
 			handle(event, "preferencesAction");
 		}
 
