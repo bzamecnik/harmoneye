@@ -36,9 +36,11 @@ public class MusicAnalyzer implements SoundConsumer {
 	// private ExpSmoother pcpSmoother = new ExpSmoother(12, 0.1);
 	// private ExpSmoother binMaxAvgSmoother = new ExpSmoother(2, 0.1);
 
+	private MovingAverageAccumulator accumulator = new MovingAverageAccumulator(PITCH_BIN_COUNT);
+	private boolean accumulatorEnabled = false;
+
 	private HarmonicPatternPitchClassDetector pcDetector = cqt.new HarmonicPatternPitchClassDetector();
-	private DoubleCircularBuffer amplitudeBuffer = new DoubleCircularBuffer(
-			signalBlockSize);
+	private DoubleCircularBuffer amplitudeBuffer = new DoubleCircularBuffer(signalBlockSize);
 
 	private AbstractVisualizer visualizer;
 
@@ -71,8 +73,7 @@ public class MusicAnalyzer implements SoundConsumer {
 		for (int i = 0; i < amplitudeSpectrumDb.length; i++) {
 			double amplitude = cqSpectrum[i].abs();
 			double referenceAmplitude = 1;
-			double amplitudeDb = 20 * Math
-					.log10(amplitude / referenceAmplitude);
+			double amplitudeDb = 20 * Math.log10(amplitude / referenceAmplitude);
 			if (amplitudeDb < DB_THRESHOLD) {
 				amplitudeDb = DB_THRESHOLD;
 			}
@@ -110,8 +111,7 @@ public class MusicAnalyzer implements SoundConsumer {
 			octaveBinsDb[i] = value;
 		}
 
-		double[] pitchClassBinsDb = pcDetector
-				.detectPitchClasses(amplitudeSpectrumDb);
+		double[] pitchClassBinsDb = pcDetector.detectPitchClasses(amplitudeSpectrumDb);
 		double max = 0;
 		for (int i = 0; i < amplitudeSpectrumDb.length; i++) {
 			max = Math.max(max, amplitudeSpectrumDb[i]);
@@ -183,10 +183,18 @@ public class MusicAnalyzer implements SoundConsumer {
 
 		// smoothedOctaveBinsDb =
 		// binSmoother.smooth(normalizedOctaveBinsDb);
-		smoothedOctaveBinsDb = binSmoother.smooth(octaveBinsDb);
+		//smoothedOctaveBinsDb = binSmoother.smooth(octaveBinsDb);
 		// smoothedOctaveBinsDb = normalizedOctaveBinsDb;
 		//
-		pitchClassProfileDb = smoothedOctaveBinsDb;
+		//pitchClassProfileDb = smoothedOctaveBinsDb;
+
+		if (accumulatorEnabled) {
+			accumulator.add(octaveBinsDb);
+			pitchClassProfileDb = accumulator.getAverage();
+		} else {
+			binSmoother.smooth(octaveBinsDb);
+			pitchClassProfileDb = binSmoother.smooth(octaveBinsDb);
+		}
 
 		// for (int pitchClass = 0; pitchClass < pitchClassProfileDb.length;
 		// pitchClass++) {
@@ -258,10 +266,47 @@ public class MusicAnalyzer implements SoundConsumer {
 			assert data.length == currentFrame.length;
 
 			for (int i = 0; i < data.length; i++) {
-				data[i] = previousWeight * data[i] + currentWeight
-						* currentFrame[i];
+				data[i] = previousWeight * data[i] + currentWeight * currentFrame[i];
 			}
 			return data;
+		}
+	}
+
+	private static class MovingAverageAccumulator {
+		double[] data;
+		int frameCount;
+
+		public MovingAverageAccumulator(int size) {
+			data = new double[size];
+		}
+
+		public double[] getAverage() {
+			return data;
+		}
+
+		public double[] add(double[] currentFrame) {
+			assert data.length == currentFrame.length;
+
+			frameCount++;
+
+			double weight = 1.0 / frameCount;
+
+			for (int i = 0; i < data.length; i++) {
+				data[i] = (1 - weight) * data[i] + weight * currentFrame[i];
+			}
+
+			return data;
+		}
+
+		public void reset() {
+			frameCount = 0;
+		}
+	}
+
+	public void toggleAccumulatorEnabled() {
+		accumulatorEnabled = !accumulatorEnabled;
+		if (accumulatorEnabled) {
+			accumulator.reset();
 		}
 	}
 }

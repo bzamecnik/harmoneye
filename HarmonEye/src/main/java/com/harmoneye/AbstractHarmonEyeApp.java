@@ -39,6 +39,8 @@ public class AbstractHarmonEyeApp {
 	private JCheckBoxMenuItem circleOfFifthsEnabledMenuItem;
 	private PauseAction pauseAction;
 	private JMenuItem pauseMenuItem;
+	private AccumulationEnabledAction accumulationEnabledAction;
+	private JCheckBoxMenuItem accumulationEnabledMenuItem;
 
 	private ApplicationListener appListener;
 
@@ -55,6 +57,7 @@ public class AbstractHarmonEyeApp {
 		circleOfFifthsEnabledAction = new CircleOfFifthsEnabledAction("Circle of fifths", null, "", new Integer(
 			KeyEvent.VK_F));
 		pauseAction = new PauseAction("Pause", null, "", new Integer(KeyEvent.VK_P));
+		accumulationEnabledAction = new AccumulationEnabledAction("Accumulate", null, "", new Integer(KeyEvent.VK_A));
 
 		frame = createFrame();
 
@@ -87,6 +90,10 @@ public class AbstractHarmonEyeApp {
 		circleOfFifthsEnabledMenuItem = new JCheckBoxMenuItem(circleOfFifthsEnabledAction);
 		circleOfFifthsEnabledMenuItem.setAccelerator(KeyStroke.getKeyStroke('f'));
 		menu.add(circleOfFifthsEnabledMenuItem);
+
+		accumulationEnabledMenuItem = new JCheckBoxMenuItem(accumulationEnabledAction);
+		accumulationEnabledMenuItem.setAccelerator(KeyStroke.getKeyStroke('a'));
+		menu.add(accumulationEnabledMenuItem);
 
 		menuBar.add(menu);
 		
@@ -199,6 +206,20 @@ public class AbstractHarmonEyeApp {
 
 		public void actionPerformed(ActionEvent e) {
 			toggle();
+		}
+	}
+
+	public class AccumulationEnabledAction extends AbstractAction {
+		private static final long serialVersionUID = 1L;
+
+		public AccumulationEnabledAction(String text, ImageIcon icon, String desc, Integer mnemonic) {
+			super(text, icon);
+			putValue(SHORT_DESCRIPTION, desc);
+			putValue(MNEMONIC_KEY, mnemonic);
+		}
+
+		public void actionPerformed(ActionEvent e) {
+			soundAnalyzer.toggleAccumulatorEnabled();
 		}
 	}
 
