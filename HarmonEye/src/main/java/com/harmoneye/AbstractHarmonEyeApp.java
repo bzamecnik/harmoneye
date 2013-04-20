@@ -96,7 +96,7 @@ public class AbstractHarmonEyeApp {
 		menu.add(accumulationEnabledMenuItem);
 
 		menuBar.add(menu);
-		
+
 		menu = new JMenu("Window");
 
 		final JCheckBoxMenuItem alwaysOnTopMenuItem = new JCheckBoxMenuItem();
@@ -108,6 +108,7 @@ public class AbstractHarmonEyeApp {
 				frame.setAlwaysOnTop(alwaysOnTopMenuItem.getState());
 			}
 		});
+		alwaysOnTopMenuItem.setAccelerator(KeyStroke.getKeyStroke('t'));
 		menu.add(alwaysOnTopMenuItem);
 
 		menuBar.add(menu);
