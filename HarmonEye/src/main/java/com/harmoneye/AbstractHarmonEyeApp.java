@@ -5,9 +5,6 @@ import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.util.Date;
 
 import javax.swing.AbstractAction;
 import javax.swing.ImageIcon;
@@ -49,8 +46,6 @@ public class AbstractHarmonEyeApp {
 		timer.setInitialDelay(190);
 
 		visualizerPanel = new VisualizerPanel();
-		// enable pausing
-		visualizerPanel.addMouseListener(new MouseClickListener());
 
 		soundAnalyzer = new MusicAnalyzer(visualizerPanel);
 
@@ -150,30 +145,6 @@ public class AbstractHarmonEyeApp {
 		public void actionPerformed(ActionEvent e) {
 			soundAnalyzer.updateSignal();
 			visualizerPanel.repaint();
-		}
-	}
-
-	private final class MouseClickListener implements MouseListener {
-		@Override
-		public void mouseClicked(MouseEvent e) {
-			pauseAction.actionPerformed(new ActionEvent(e.getSource(), ActionEvent.ACTION_PERFORMED, "Pause",
-				new Date().getTime(), 0));
-		}
-
-		@Override
-		public void mousePressed(MouseEvent e) {
-		}
-
-		@Override
-		public void mouseReleased(MouseEvent e) {
-		}
-
-		@Override
-		public void mouseEntered(MouseEvent e) {
-		}
-
-		@Override
-		public void mouseExited(MouseEvent e) {
 		}
 	}
 
