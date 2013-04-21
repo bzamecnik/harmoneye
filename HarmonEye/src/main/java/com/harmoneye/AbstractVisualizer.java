@@ -7,6 +7,9 @@ import java.awt.geom.Rectangle2D;
 
 import javax.swing.JPanel;
 
+import com.harmoneye.viz.ColorFunction;
+import com.harmoneye.viz.TemperatureColorFunction;
+
 abstract class AbstractVisualizer {
 
 	protected static final String[] HALFTONE_NAMES = { "C", "Db", "D", "Eb",
@@ -24,6 +27,8 @@ abstract class AbstractVisualizer {
 	protected JPanel panel;
 	protected Rectangle2D.Float line = new Rectangle2D.Float();
 
+	private ColorFunction colorFunction = new TemperatureColorFunction();
+	
 	public AbstractVisualizer(JPanel panel) {
 		this.panel = panel;
 	}
@@ -39,9 +44,7 @@ abstract class AbstractVisualizer {
 	}
 
 	Color getColor(float value) {
-		float hue = (1.8f - value) % 1.0f;
-		return Color.getHSBColor(hue, 0.25f + 0.75f * value,
-				0.25f + 0.75f * value);
+		return colorFunction.toColor(value);
 	}
 
 	public void setPitchBinCount(int pitchBinCount) {
