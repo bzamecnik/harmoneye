@@ -1,9 +1,5 @@
 package com.harmoneye;
 
-import java.awt.Graphics2D;
-
-import javax.swing.JPanel;
-
 import org.apache.commons.math3.complex.Complex;
 
 import com.harmoneye.cqt.AbstractCqt.HarmonicPatternPitchClassDetector;
@@ -20,6 +16,7 @@ public class MusicAnalyzer implements SoundConsumer {
 	private final double DB_THRESHOLD = -(20 * Math.log10(2 << (16 - 1)));
 	private final int BINS_PER_HALFTONE = cqt.getBinsPerHalftone();
 	private final int PITCH_BIN_COUNT = cqt.getBinsPerOctave();
+	private final int HALFTONE_PER_OCTAVE_COUNT = cqt.getHalftonesPerOctave();
 
 	// in samples
 	private int signalBlockSize = cqt.getSignalBlockSize();
@@ -30,22 +27,18 @@ public class MusicAnalyzer implements SoundConsumer {
 	private double[] octaveBinsDb = new double[PITCH_BIN_COUNT];
 
 	private DoubleCircularBuffer amplitudeBuffer = new DoubleCircularBuffer(signalBlockSize);
-	
+
 	private HarmonicPatternPitchClassDetector pcDetector = cqt.new HarmonicPatternPitchClassDetector();
-	
+
 	private ExpSmoother binSmoother = new ExpSmoother(PITCH_BIN_COUNT, SMOOTHING_FACTOR);
 
 	private MovingAverageAccumulator accumulator = new MovingAverageAccumulator(PITCH_BIN_COUNT);
 	private boolean accumulatorEnabled = false;
 
-	
-	
-	private AbstractVisualizer visualizer;
+	private Visualizer<PitchClassProfile> visualizer;
 
-	public MusicAnalyzer(JPanel panel) {
-		visualizer = new CircularVisualizer(panel);
-		visualizer.setBinsPerHalftone(BINS_PER_HALFTONE);
-		visualizer.setPitchBinCount(PITCH_BIN_COUNT);
+	public MusicAnalyzer(Visualizer<PitchClassProfile> visualizer) {
+		this.visualizer = visualizer;
 	}
 
 	@Override
@@ -58,7 +51,8 @@ public class MusicAnalyzer implements SoundConsumer {
 		// long start = System.nanoTime();
 		computeAmplitudeSpectrum(amplitudes);
 		double[] pitchClassProfileDb = computePitchClassProfile();
-		visualizer.setPitchClassProfile(pitchClassProfileDb);
+		PitchClassProfile pcProfile = new PitchClassProfile(pitchClassProfileDb, HALFTONE_PER_OCTAVE_COUNT, BINS_PER_HALFTONE);
+		visualizer.update(pcProfile);
 		// long stop = System.nanoTime();
 		// System.out.println("update: " + (stop - start) / 1000000.0);
 	}
@@ -122,20 +116,6 @@ public class MusicAnalyzer implements SoundConsumer {
 
 	public int getSignalBlockSize() {
 		return signalBlockSize;
-	}
-
-	// TODO: should not be exposed
-	AbstractVisualizer getVisualizer() {
-		return visualizer;
-	}
-
-	public void paint(Graphics2D graphics) {
-		// long start = System.nanoTime();
-
-		visualizer.paint(graphics);
-
-		// long stop = System.nanoTime();
-		// System.out.println("update: " + (stop - start) / 1000000.0);
 	}
 
 	private static class ExpSmoother {

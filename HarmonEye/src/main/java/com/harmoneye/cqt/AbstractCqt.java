@@ -16,7 +16,8 @@ public abstract class AbstractCqt implements Cqt {
 
 	protected final int binsPerHalftone = 5;
 	protected final int binsPerHalftoneHalf = binsPerHalftone / 2;
-	protected final int binsPerOctave = 12 * binsPerHalftone;
+	protected final int halftonesPerOctave = 12;
+	protected final int binsPerOctave = halftonesPerOctave * binsPerHalftone;
 	protected final double binsPerOctaveInv = 1.0 / binsPerOctave;
 
 	protected final double q = 1 / (FastMath.pow(2, binsPerOctaveInv) - 1);
@@ -70,6 +71,10 @@ public abstract class AbstractCqt implements Cqt {
 
 	public int getBinsPerOctave() {
 		return binsPerOctave;
+	}
+
+	public int getHalftonesPerOctave() {
+		return halftonesPerOctave;
 	}
 
 	public class HarmonicPatternPitchClassDetector {

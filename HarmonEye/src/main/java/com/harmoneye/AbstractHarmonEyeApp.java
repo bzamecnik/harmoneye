@@ -1,7 +1,5 @@
 package com.harmoneye;
 
-import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -14,7 +12,6 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 import javax.swing.Timer;
 
@@ -33,7 +30,6 @@ public class AbstractHarmonEyeApp {
 	private Timer timer;
 	protected MusicAnalyzer soundAnalyzer;
 
-	private VisualizerPanel visualizerPanel;
 	private JFrame frame;
 
 	private CircleOfFifthsEnabledAction circleOfFifthsEnabledAction;
@@ -45,6 +41,7 @@ public class AbstractHarmonEyeApp {
 
 	private LicenseManager licenseManager;
 	private LicenseDialogs licenseDialogs;
+	private SwingVisualizer<PitchClassProfile> visualizer;
 
 	public AbstractHarmonEyeApp() {
 		licenseManager = new LicenseManager();
@@ -53,9 +50,10 @@ public class AbstractHarmonEyeApp {
 		timer = new Timer(TIME_PERIOD_MILLIS, new TimerActionListener());
 		timer.setInitialDelay(190);
 
-		visualizerPanel = new VisualizerPanel();
-
-		soundAnalyzer = new MusicAnalyzer(visualizerPanel);
+//		visualizer = new Java2dCircularVisualizer();
+		visualizer = new OpenGlCircularVisualizer();
+		
+		soundAnalyzer = new MusicAnalyzer(visualizer);
 
 		circleOfFifthsEnabledAction = new CircleOfFifthsEnabledAction("Circle of fifths", null, "", new Integer(
 			KeyEvent.VK_F));
@@ -99,7 +97,7 @@ public class AbstractHarmonEyeApp {
 
 	private JFrame createFrame() {
 		JFrame frame = new JFrame(WINDOW_TITLE);
-		frame.add(visualizerPanel);
+		frame.add(visualizer.getComponent());
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setSize(512, 512);
 		frame.setLocationRelativeTo(null);
@@ -211,20 +209,12 @@ public class AbstractHarmonEyeApp {
 		}
 	}
 
-	private class VisualizerPanel extends JPanel {
-		private static final long serialVersionUID = 1L;
-
-		public void paint(Graphics g) {
-			super.paintComponent(g);
-			soundAnalyzer.paint((Graphics2D) g);
-		}
-	}
 
 	private final class TimerActionListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			soundAnalyzer.updateSignal();
-			visualizerPanel.repaint();
+			//visualizer.getPanel().repaint();
 		}
 	}
 
@@ -241,8 +231,8 @@ public class AbstractHarmonEyeApp {
 
 		public void actionPerformed(ActionEvent e) {
 			fifthsEnabled = !fifthsEnabled;
-			soundAnalyzer.getVisualizer().setPitchStep(fifthsEnabled ? 7 : 1);
-			visualizerPanel.repaint();
+			visualizer.setPitchStep(fifthsEnabled ? 7 : 1);
+			//visualizer.getPanel().repaint();
 		}
 	}
 
