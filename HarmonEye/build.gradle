@@ -29,6 +29,11 @@ dependencies {
 
 	bundleapp ':appbundler:1.0'
 	
+	compile ':jogl-all:'
+	compile ':jogl-all-natives-macosx-universal:'
+	compile ':gluegen-rt:'
+	compile ':gluegen-rt-natives-macosx-universal:'
+	
 	compile ':jna:3.5.1'
 	compile ':turboactivate:1.0'
 	
