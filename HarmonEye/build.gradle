@@ -4,6 +4,15 @@ apply plugin: 'eclipse'
 //version = "1.0-${new Date().format('yyyyMMdd-HHmmss')}"
 version = "1.0-" + "git describe --always --long".execute().text.trim()
 
+buildscript {
+	repositories {
+		mavenCentral()
+	}
+    dependencies {
+        classpath 'net.sf.proguard:proguard-gradle:4.9'
+    }
+}
+
 repositories {
 	mavenCentral()
 	flatDir {
@@ -52,6 +61,16 @@ jar {
 	}
 }
 
+task macProguardJar(type: proguard.gradle.ProGuardTask, dependsOn: 'jar') {
+	injars jar.archivePath
+	outjars "${jar.destinationDir}/proguard/${jar.archiveName}"
+	libraryjars configurations.compile
+	libraryjars "<java.home>/lib/rt.jar"
+	keepclasseswithmembers 'public class * { \
+	    public static void main(java.lang.String[]); \
+	}'
+}
+
 ant {
 	taskdef(
 		name: 'bundleapp',
@@ -60,7 +79,7 @@ ant {
 	)
 }
 
-task macBundleApp(dependsOn: 'jar') << {
+task macBundleApp(dependsOn: 'macProguardJar') << {
 	def distDirPath = "dist"
 	def distDir = new File(distDirPath)
 	distDir.mkdirs()
@@ -74,7 +93,7 @@ task macBundleApp(dependsOn: 'jar') << {
 		applicationCategory: "public.app-category.music",
 		icon: "src/main/resources/HarmonEye.icns"
 	) {
-		classpath(file: jar.archivePath)
+		classpath(file: "${jar.destinationDir}/proguard/${jar.archiveName}")
 		configurations.compile.each {
 			classpath(file: it)
 		}
