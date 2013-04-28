@@ -208,7 +208,7 @@ public class AbstractHarmonEyeApp {
 		pauseMenuItem.setText("Play");
 		frame.setTitle("= " + WINDOW_TITLE + " =");
 	}
-
+	
 	public void init() {
 		soundAnalyzer.init();
 		initialized = true;
@@ -291,6 +291,7 @@ public class AbstractHarmonEyeApp {
 		}
 
 		public void handleAbout(ApplicationEvent event) {
+			// TODO: application version!
 			JOptionPane.showMessageDialog(frame, "HarmonEye\n" + "A software that enables you to see what you hear.\n"
 				+ "Crafted with love by Bohumír Zámečník since 2012.\n\n" + "http://harmoneye.com/", "About HarmonEye",
 				JOptionPane.INFORMATION_MESSAGE);
@@ -308,7 +309,7 @@ public class AbstractHarmonEyeApp {
 
 		public void handlePreferences(ApplicationEvent event) {
 			// TODO
-			handle(event, "preferencesAction");
+			handle(event, "For now there are no preferences.");
 		}
 
 		public void handlePrintFile(ApplicationEvent event) {
