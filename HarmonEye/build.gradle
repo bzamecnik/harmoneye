@@ -1,7 +1,8 @@
 apply plugin: 'java'
 apply plugin: 'eclipse'
 
-version = "1.0-${new Date().format('yyyyMMdd-HHmmss')}"
+//version = "1.0-${new Date().format('yyyyMMdd-HHmmss')}"
+version = "1.0-" + "git describe --always --long".execute().text.trim()
 
 repositories {
 	mavenCentral()
