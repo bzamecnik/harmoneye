@@ -9,7 +9,7 @@ import com.harmoneye.util.DoubleCircularBuffer;
 public class MusicAnalyzer implements SoundConsumer {
 
 	/** [0.0; 1.0] 1.0 = no smooting */
-	private static final double SMOOTHING_FACTOR = 0.3;
+	private static final double SMOOTHING_FACTOR = 0.25;
 
 	private FastCqt cqt = new FastCqt();
 
@@ -48,13 +48,13 @@ public class MusicAnalyzer implements SoundConsumer {
 
 	public void updateSignal() {
 		amplitudeBuffer.readLast(amplitudes, amplitudes.length);
-		// long start = System.nanoTime();
+//		 long start = System.nanoTime();
 		computeAmplitudeSpectrum(amplitudes);
 		double[] pitchClassProfileDb = computePitchClassProfile();
 		PitchClassProfile pcProfile = new PitchClassProfile(pitchClassProfileDb, HALFTONE_PER_OCTAVE_COUNT, BINS_PER_HALFTONE);
 		visualizer.update(pcProfile);
-		// long stop = System.nanoTime();
-		// System.out.println("update: " + (stop - start) / 1000000.0);
+//		 long stop = System.nanoTime();
+//		 System.out.println("update: " + (stop - start) / 1000000.0);
 	}
 
 	private void computeAmplitudeSpectrum(double[] signal) {

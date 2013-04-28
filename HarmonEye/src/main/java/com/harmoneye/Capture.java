@@ -27,7 +27,7 @@ public class Capture implements Runnable {
 		this.soundConsumer = soundConsumer;
 
 		AudioFormat.Encoding encoding = AudioFormat.Encoding.PCM_SIGNED;
-		float sampleRate = 11025.0f;
+		float sampleRate = 2 * 11025.0f;
 		int channelCount = 1;
 		int sampleSizeBytes = 2;
 		int sampleSizeBits = 8 * sampleSizeBytes;

@@ -24,7 +24,7 @@ import com.harmoneye.licensing.LicenseManager;
 
 public class AbstractHarmonEyeApp {
 
-	private static final int TIME_PERIOD_MILLIS = 20;
+	private static final int TIME_PERIOD_MILLIS = 25;
 	private static final String WINDOW_TITLE = "HarmonEye";
 
 	private Timer timer;

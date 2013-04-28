@@ -12,7 +12,7 @@ public abstract class AbstractCqt implements Cqt {
 
 	protected final double baseFreq = 65.4063913251;
 	protected final double maxFreq = Math.pow(2, octaveCount) * baseFreq;
-	protected final double samplingFreq = 11025;
+	protected final double samplingFreq = 2 * 11025;
 
 	protected final int binsPerHalftone = 5;
 	protected final int binsPerHalftoneHalf = binsPerHalftone / 2;
