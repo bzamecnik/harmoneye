@@ -112,9 +112,10 @@ public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfi
 		drawCircle(gl, 0.9, 100);
 
 		// lines between bins
+		double halfToneCountInv = 1.0 / HALFTONE_NAMES.length;
 		gl.glBegin(GL.GL_LINES);
-		for (int i = 0; i < halftoneCount; i++) {
-			double angle = 2 * Math.PI * ((i - 0.5) / halftoneCount);
+		for (int i = 0; i < HALFTONE_NAMES.length; i++) {
+			double angle = 2 * Math.PI * ((i - 0.5) * halfToneCountInv);
 			double x = 0.9 * Math.sin(angle);
 			double y = 0.9 * Math.cos(angle);
 			gl.glVertex2d(x, y);

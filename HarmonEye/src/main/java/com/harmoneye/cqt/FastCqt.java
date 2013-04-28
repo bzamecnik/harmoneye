@@ -26,7 +26,7 @@ public class FastCqt extends AbstractCqt {
 	private Complex normalizationFactor;
 
 	public FastCqt() {
-		computeSpectralKernels();
+		
 //		System.out.println(spectralKernels);
 //		System.out.println("kernel: " + spectralKernels.getColumnDimension() + " x " + spectralKernels.getRowDimension());
 		
@@ -37,6 +37,9 @@ public class FastCqt extends AbstractCqt {
 	
 	@Override
 	public Complex[] transform(double[] signal) {
+		if (spectralKernels == null) {
+			computeSpectralKernels();
+		}
 		signal = padRight(signal, signalBlockSize);
 		Complex[] spectrum = fft.transform(signal, TransformType.FORWARD);
 		ArrayFieldVector<Complex> spectrumVector = new ArrayFieldVector<Complex>(spectrum);
