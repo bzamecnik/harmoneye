@@ -37,8 +37,15 @@ public class MusicAnalyzer implements SoundConsumer {
 
 	private Visualizer<PitchClassProfile> visualizer;
 
+	private boolean initialized;
+
 	public MusicAnalyzer(Visualizer<PitchClassProfile> visualizer) {
 		this.visualizer = visualizer;
+	}
+
+	public void init() {
+		cqt.init();
+		initialized = true;
 	}
 
 	@Override
@@ -47,6 +54,9 @@ public class MusicAnalyzer implements SoundConsumer {
 	}
 
 	public void updateSignal() {
+		if (!initialized) {
+			return;
+		}
 		amplitudeBuffer.readLast(amplitudes, amplitudes.length);
 //		 long start = System.nanoTime();
 		computeAmplitudeSpectrum(amplitudes);
@@ -176,4 +186,5 @@ public class MusicAnalyzer implements SoundConsumer {
 			accumulator.reset();
 		}
 	}
+
 }

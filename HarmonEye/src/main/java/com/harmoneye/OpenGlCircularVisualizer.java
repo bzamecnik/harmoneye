@@ -67,10 +67,10 @@ public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfi
 
 		values = pcProfile.getPitchClassBins();
 
-//		values = new double[60];
-//		for (int i = 0; i < halftoneCount; i++) {
-//				values[(i * binsPerHalftone + (binsPerHalftone/2)) % pcProfile.getTotalBinCount()] = 1;
-//		}
+		//		values = new double[60];
+		//		for (int i = 0; i < halftoneCount; i++) {
+		//				values[(i * binsPerHalftone + (binsPerHalftone/2)) % pcProfile.getTotalBinCount()] = 1;
+		//		}
 
 		//		if (borderRadii == null) {
 		//			borderRadii = new double[values.length];
@@ -102,6 +102,37 @@ public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfi
 		drawPitchClassBins(gl);
 		drawHalftoneNames(drawable);
 		drawCentralPupil(gl);
+		if (!isDataAvailable()) {
+			drawWaitingAnimation(gl);
+		}
+	}
+
+	private void drawWaitingAnimation(GL2 gl) {
+		long millis = System.currentTimeMillis();
+		long millisInSecond = millis % 1000;
+		float phaseOffset = (float) (millisInSecond * 0.001);
+
+		gl.glLineWidth(1.5f);
+		double halfToneCountInv = 1.0 / HALFTONE_NAMES.length;
+		double maxRadius = 0.09;
+		double innerRadius = maxRadius * 0.25;
+		double outerRadius = maxRadius * 0.75;
+		gl.glBegin(GL.GL_LINES);
+		for (int i = 0; i < HALFTONE_NAMES.length; i++) {
+			double unitAngle = (i - 0.5) * halfToneCountInv;
+			double angle = 2 * Math.PI * unitAngle;
+
+			float value = (float) (0.25 + 0.5 * ((1 - unitAngle + phaseOffset) % 1.0));
+			Color color = colorFunction.toColor((float) value);
+			gl.glColor3ub((byte) color.getRed(), (byte) color.getGreen(), (byte) color.getBlue());
+
+			double x = Math.sin(angle);
+			double y = Math.cos(angle);
+			gl.glVertex2d(innerRadius * x, innerRadius * y);
+			gl.glVertex2d(outerRadius * x, outerRadius * y);
+		}
+		gl.glEnd();
+		gl.glLineWidth(0.5f);
 	}
 
 	private void drawPitchClassFrame(GL2 gl) {
@@ -137,7 +168,7 @@ public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfi
 	}
 
 	private void drawPitchClassBins(GL2 gl) {
-		if (values == null) {
+		if (!isDataAvailable()) {
 			return;
 		}
 
@@ -167,6 +198,10 @@ public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfi
 			gl.glVertex2d(endRadius * Math.sin(endAngle), endRadius * Math.cos(endAngle));
 		}
 		gl.glEnd();
+	}
+
+	private boolean isDataAvailable() {
+		return values != null;
 	}
 
 	private void drawHalftoneNames(GLAutoDrawable drawable) {

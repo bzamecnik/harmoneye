@@ -26,29 +26,35 @@ public class FastCqt extends AbstractCqt {
 	private Complex normalizationFactor;
 
 	public FastCqt() {
-		
-//		System.out.println(spectralKernels);
-//		System.out.println("kernel: " + spectralKernels.getColumnDimension() + " x " + spectralKernels.getRowDimension());
-		
 		signalBlockSize = nextPowerOf2(bandWidth(0));
-//		System.out.println("signalBlockSize:" + signalBlockSize);
+		//		System.out.println("signalBlockSize:" + signalBlockSize);
 		normalizationFactor = new Complex(2 / (signalBlockSize * windowIntegral));
 	}
-	
+
+	public void init() {
+		if (spectralKernels == null) {
+//			long start = System.nanoTime();
+
+			computeSpectralKernels();
+
+//			long stop = System.nanoTime();
+//			System.out.println("kernels computed in: " + (stop - start) / 1000000.0 + " ms");
+			//			System.out.println(spectralKernels);
+			//			System.out.println("kernel: " + spectralKernels.getColumnDimension() + " x " + spectralKernels.getRowDimension());
+		}
+	}
+
 	@Override
 	public Complex[] transform(double[] signal) {
-		if (spectralKernels == null) {
-			computeSpectralKernels();
-		}
 		signal = padRight(signal, signalBlockSize);
 		Complex[] spectrum = fft.transform(signal, TransformType.FORWARD);
 		ArrayFieldVector<Complex> spectrumVector = new ArrayFieldVector<Complex>(spectrum);
-		
-//		long start = System.nanoTime();
+
+		//		long start = System.nanoTime();
 		FieldVector<Complex> product = spectralKernels.operate(spectrumVector);
-//		long end = System.nanoTime();
-//		System.out.println("total: " + (end - start) / 1e6 + " ms");
-		
+		//		long end = System.nanoTime();
+		//		System.out.println("total: " + (end - start) / 1e6 + " ms");
+
 		product.mapMultiplyToSelf(normalizationFactor);
 		Complex[] productArray = product.toArray();
 		return productArray;
@@ -59,7 +65,7 @@ public class FastCqt extends AbstractCqt {
 			return;
 		}
 		ComplexField field = ComplexField.getInstance();
-//		spectralKernels = new SparseFieldMatrix<Complex>(field, totalBins, nextPowerOf2(bandWidth(0)));
+		//		spectralKernels = new SparseFieldMatrix<Complex>(field, totalBins, nextPowerOf2(bandWidth(0)));
 		spectralKernels = new NonZeroSparseFieldMatrix<Complex>(field, totalBins, nextPowerOf2(bandWidth(0)));
 		for (int k = 0; k < totalBins; k++) {
 			spectralKernels.setRow(k, conjugate(spectralKernel(k)));
@@ -86,7 +92,7 @@ public class FastCqt extends AbstractCqt {
 		}
 		return padded;
 	}
-	
+
 	private Complex[] padLeft(Complex[] values, int totalSize) {
 		Complex[] padded = new Complex[totalSize];
 		int dataSize = Math.min(values.length, totalSize);
@@ -97,7 +103,7 @@ public class FastCqt extends AbstractCqt {
 		for (int i = paddingSize; i < totalSize; i++) {
 			padded[i] = values[i - paddingSize];
 		}
-		
+
 		return padded;
 	}
 
@@ -140,9 +146,7 @@ public class FastCqt extends AbstractCqt {
 		return value;
 	}
 
-
 	public int getSignalBlockSize() {
 		return signalBlockSize;
 	}
-	
 }

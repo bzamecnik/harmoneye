@@ -42,6 +42,7 @@ public class AbstractHarmonEyeApp {
 	private LicenseManager licenseManager;
 	private LicenseDialogs licenseDialogs;
 	private SwingVisualizer<PitchClassProfile> visualizer;
+	private boolean initialized;
 
 	public AbstractHarmonEyeApp() {
 		licenseManager = new LicenseManager();
@@ -189,6 +190,9 @@ public class AbstractHarmonEyeApp {
 		if (!licenseManager.isActivated()) {
 			return;
 		}
+		if (!initialized) {
+			return;
+		}
 
 		timer.start();
 		pauseMenuItem.setText("Pause");
@@ -196,9 +200,18 @@ public class AbstractHarmonEyeApp {
 	}
 
 	public void stop() {
+		if (!initialized) {
+			return;
+		}
+		
 		timer.stop();
 		pauseMenuItem.setText("Play");
 		frame.setTitle("= " + WINDOW_TITLE + " =");
+	}
+
+	public void init() {
+		soundAnalyzer.init();
+		initialized = true;
 	}
 
 	private void toggle() {
@@ -208,7 +221,6 @@ public class AbstractHarmonEyeApp {
 			start();
 		}
 	}
-
 
 	private final class TimerActionListener implements ActionListener {
 		@Override

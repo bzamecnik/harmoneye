@@ -1,6 +1,7 @@
 package com.harmoneye;
 
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 
 import org.simplericity.macify.eawt.Application;
@@ -40,8 +41,17 @@ public class HarmonEye {
 		public void run() {
 			Application app = new DefaultApplication();
 
-			CaptureHarmonEyeApp captureHarmonEyeApp = new CaptureHarmonEyeApp();
-			captureHarmonEyeApp.start();
+			final CaptureHarmonEyeApp captureHarmonEyeApp = new CaptureHarmonEyeApp();
+			class Initializer extends SwingWorker<String, Object> {
+				@Override
+				public String doInBackground() {
+					captureHarmonEyeApp.init();
+					captureHarmonEyeApp.start();
+					return null;
+				}
+			}
+
+			new Initializer().execute();
 
 			app.addApplicationListener(captureHarmonEyeApp.getApplicationListener());
 			app.addPreferencesMenuItem();
