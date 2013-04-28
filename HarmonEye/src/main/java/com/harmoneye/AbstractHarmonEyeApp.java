@@ -51,9 +51,9 @@ public class AbstractHarmonEyeApp {
 		timer = new Timer(TIME_PERIOD_MILLIS, new TimerActionListener());
 		timer.setInitialDelay(190);
 
-//		visualizer = new Java2dCircularVisualizer();
+		//		visualizer = new Java2dCircularVisualizer();
 		visualizer = new OpenGlCircularVisualizer();
-		
+
 		soundAnalyzer = new MusicAnalyzer(visualizer);
 
 		circleOfFifthsEnabledAction = new CircleOfFifthsEnabledAction("Circle of fifths", null, "", new Integer(
@@ -203,12 +203,12 @@ public class AbstractHarmonEyeApp {
 		if (!initialized) {
 			return;
 		}
-		
+
 		timer.stop();
 		pauseMenuItem.setText("Play");
 		frame.setTitle("= " + WINDOW_TITLE + " =");
 	}
-	
+
 	public void init() {
 		soundAnalyzer.init();
 		initialized = true;
@@ -291,11 +291,29 @@ public class AbstractHarmonEyeApp {
 		}
 
 		public void handleAbout(ApplicationEvent event) {
-			// TODO: application version!
-			JOptionPane.showMessageDialog(frame, "HarmonEye\n" + "A software that enables you to see what you hear.\n"
-				+ "Crafted with love by Bohumír Zámečník since 2012.\n\n" + "http://harmoneye.com/", "About HarmonEye",
-				JOptionPane.INFORMATION_MESSAGE);
+			String message = prepareAboutMessage();
+			JOptionPane.showMessageDialog(frame, message, "About HarmonEye", JOptionPane.INFORMATION_MESSAGE);
 			event.setHandled(true);
+		}
+
+		private String prepareAboutMessage() {
+			Package p = getClass().getPackage();
+			String title = p.getImplementationTitle();
+			if (title == null) {
+				title = "HarmonEye";
+			}
+			String version = p.getImplementationVersion();
+			if (version == null) {
+				version = "";
+			}
+
+			StringBuilder m = new StringBuilder();
+			m.append(title).append("\n");
+			m.append("Version: ").append(version).append("\n\n");
+			m.append("A software that enables you to see what you hear.\n");
+			m.append("Crafted with love by Bohumír Zámečník since 2012.\n\n");
+			m.append("http://harmoneye.com/");
+			return m.toString();
 		}
 
 		public void handleOpenApplication(ApplicationEvent event) {
