@@ -80,7 +80,7 @@ ant {
 }
 
 task macBundleApp(dependsOn: 'macProguardJar') << {
-	def distDirPath = "dist"
+	def distDirPath = "dist/mac"
 	def distDir = new File(distDirPath)
 	distDir.mkdirs()
 	ant.bundleapp(
