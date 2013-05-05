@@ -2,7 +2,10 @@ apply plugin: 'java'
 apply plugin: 'eclipse'
 
 //version = "1.0-${new Date().format('yyyyMMdd-HHmmss')}"
-version = "1.0-" + "git describe --always --long".execute().text.trim()
+def numericVersion = "1.0"
+def gitCommit = "git describe --always --long".execute().text.trim()
+//version = "${numericVersion}-SNAPSHOT-${gitCommit}"
+version = numericVersion
 
 buildscript {
 	repositories {
