@@ -1,8 +1,9 @@
 package com.harmoneye;
 
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.swing.AbstractAction;
 import javax.swing.ImageIcon;
@@ -13,7 +14,6 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
-import javax.swing.Timer;
 
 import org.apache.commons.lang3.StringUtils;
 import org.simplericity.macify.eawt.ApplicationEvent;
@@ -27,7 +27,6 @@ public class AbstractHarmonEyeApp {
 	private static final int TIME_PERIOD_MILLIS = 25;
 	private static final String WINDOW_TITLE = "HarmonEye";
 
-	private Timer timer;
 	protected MusicAnalyzer soundAnalyzer;
 
 	private JFrame frame;
@@ -43,13 +42,12 @@ public class AbstractHarmonEyeApp {
 	private LicenseDialogs licenseDialogs;
 	private SwingVisualizer<PitchClassProfile> visualizer;
 	private boolean initialized;
+	
+	private Timer updateTimer;
 
 	public AbstractHarmonEyeApp() {
 		licenseManager = new LicenseManager();
 		licenseManager.init();
-
-		timer = new Timer(TIME_PERIOD_MILLIS, new TimerActionListener());
-		timer.setInitialDelay(190);
 
 		visualizer = new OpenGlCircularVisualizer();
 
@@ -193,7 +191,14 @@ public class AbstractHarmonEyeApp {
 			return;
 		}
 
-		timer.start();
+		updateTimer = new Timer("update timer");
+		TimerTask updateTask = new TimerTask() {
+			@Override
+			public void run() {
+				soundAnalyzer.updateSignal();
+			}
+		};
+		updateTimer.scheduleAtFixedRate(updateTask, 200, TIME_PERIOD_MILLIS);
 		pauseMenuItem.setText("Pause");
 		frame.setTitle(WINDOW_TITLE);
 	}
@@ -203,7 +208,8 @@ public class AbstractHarmonEyeApp {
 			return;
 		}
 
-		timer.stop();
+		updateTimer.cancel();
+		updateTimer = null;
 		pauseMenuItem.setText("Play");
 		frame.setTitle("= " + WINDOW_TITLE + " =");
 	}
@@ -214,18 +220,10 @@ public class AbstractHarmonEyeApp {
 	}
 
 	private void toggle() {
-		if (timer.isRunning()) {
+		if (updateTimer != null) {
 			stop();
 		} else {
 			start();
-		}
-	}
-
-	private final class TimerActionListener implements ActionListener {
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			soundAnalyzer.updateSignal();
-			//visualizer.getPanel().repaint();
 		}
 	}
 
