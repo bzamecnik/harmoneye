@@ -9,7 +9,8 @@ import org.apache.commons.math3.exception.DimensionMismatchException;
 import org.apache.commons.math3.linear.AbstractFieldMatrix;
 import org.apache.commons.math3.linear.FieldMatrix;
 
-public class LinkedListNonZeroSparseFieldMatrix<T extends FieldElement<T>> extends AbstractFieldMatrix<T> {
+public final class LinkedListNonZeroSparseFieldMatrix<T extends FieldElement<T>> extends AbstractFieldMatrix<T>
+	implements InPlaceFieldMatrix<T> {
 
 	private final List<List<SparseEntry<T>>> rows;
 	private final int rowCount;
@@ -36,27 +37,30 @@ public class LinkedListNonZeroSparseFieldMatrix<T extends FieldElement<T>> exten
 	}
 
 	@Override
-	public T[] operate(final T[] vector) {
-		final int rowCount = getRowDimension();
-		final int columnCount = getColumnDimension();
+	public T[] operate(T[] vector) {
+		T[] resultVector = buildArray(getField(), rowCount);
+		operate(vector, resultVector);
+		return resultVector;
+	}
+
+	@Override
+	public void operate(T[] vector, T[] resultVector) {
 		if (vector.length != columnCount) {
 			throw new DimensionMismatchException(vector.length, columnCount);
 		}
 
 		T zero = getField().getZero();
-		final T[] out = buildArray(getField(), rowCount);
-		for (int rowIndex = 0; rowIndex < rowCount; ++rowIndex) {
+		int rowIndex = 0;
+		for (List<SparseEntry<T>> row : rows) {
 			T sum = zero;
-			List<SparseEntry<T>> row = rows.get(rowIndex);
 			for (SparseEntry<T> columnEntry : row) {
 				T entry = columnEntry.getEntry();
 				int columnIndex = columnEntry.getIndex();
 				sum = sum.add(entry.multiply(vector[columnIndex]));
 			}
-			out[rowIndex] = sum;
+			resultVector[rowIndex] = sum;
+			rowIndex++;
 		}
-
-		return out;
 	}
 
 	@Override
