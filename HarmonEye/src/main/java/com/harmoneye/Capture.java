@@ -1,13 +1,9 @@
 package com.harmoneye;
 
-import java.io.IOException;
-
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
-import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.TargetDataLine;
-import javax.sound.sampled.UnsupportedAudioFileException;
 
 import com.harmoneye.util.ByteConverter;
 
@@ -16,6 +12,7 @@ public class Capture implements Runnable {
 	private static final int DEFAULT_READ_BUFFER_SIZE_SAMPLES = 256;
 
 	private Thread thread;
+	private volatile boolean isRunning;
 
 	private int readBufferSizeInSamples;
 	private AudioFormat format;
@@ -34,8 +31,8 @@ public class Capture implements Runnable {
 		int frameSizeBytes = channelCount * sampleSizeBytes;
 		boolean bigEndian = false;
 
-		format = new AudioFormat(encoding, sampleRate, sampleSizeBits,
-				channelCount, frameSizeBytes, sampleRate, bigEndian);
+		format = new AudioFormat(encoding, sampleRate, sampleSizeBits, channelCount, frameSizeBytes, sampleRate,
+			bigEndian);
 
 		readBufferSizeInSamples = DEFAULT_READ_BUFFER_SIZE_SAMPLES;
 		bufferSize = sampleSizeBytes * readBufferSizeInSamples;
@@ -45,10 +42,11 @@ public class Capture implements Runnable {
 		thread = new Thread(this);
 		thread.setName("Capture");
 		thread.start();
+		isRunning = true;
 	}
 
 	public void stop() {
-		thread = null;
+		isRunning = false;
 	}
 
 	public void run() {
@@ -60,8 +58,7 @@ public class Capture implements Runnable {
 		}
 	}
 
-	private void capture() throws UnsupportedAudioFileException,
-			IOException, Exception, LineUnavailableException {
+	private void capture() throws Exception {
 
 		DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
 
@@ -74,7 +71,7 @@ public class Capture implements Runnable {
 
 		line.start();
 
-		while (isCaptureEnabled()) {
+		while (isRunning) {
 			int readBytesCount = line.read(data, 0, bufferSize);
 			if (readBytesCount == -1) {
 				break;
@@ -88,10 +85,5 @@ public class Capture implements Runnable {
 		// stop and close the line.
 		line.stop();
 		line.close();
-	}
-
-	private boolean isCaptureEnabled() {
-		// TODO: use a thread-safe boolean status variable
-		return thread != null;
 	}
 }
