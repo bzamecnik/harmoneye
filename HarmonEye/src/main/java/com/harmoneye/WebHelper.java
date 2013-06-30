@@ -8,6 +8,8 @@ public class WebHelper {
 	// TODO: utm params
 	// TODO: the buy page
 	public static final String BUY_APP_URL = "http://harmoneye.com/#buy?utm_campaign=buy_from_app&utm_medium=macosxapp";
+	// TODO: the help page!
+	public static final String HELP_URL = "http://harmoneye.com/?utm_campaign=help&utm_medium=macosxapp";
 
 	public static void openWebpage(String uri) {
 		if (!Desktop.isDesktopSupported()) {

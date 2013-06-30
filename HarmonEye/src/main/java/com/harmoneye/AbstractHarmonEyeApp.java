@@ -208,7 +208,20 @@ public class AbstractHarmonEyeApp {
 		return menu;
 	}
 
+	private JMenu createHelpMenu() {
+		JMenu menu = new JMenu("Help");
 
+		final JCheckBoxMenuItem helpMenuItem = new JCheckBoxMenuItem();
+		helpMenuItem.setAction(new AbstractAction("Open website") {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				WebHelper.openWebpage(WebHelper.HELP_URL);
+			}
+		});
+		menu.add(helpMenuItem);
+		return menu;
 	}
 
 	public void start() {
