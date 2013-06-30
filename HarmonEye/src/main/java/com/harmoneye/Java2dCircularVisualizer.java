@@ -51,15 +51,10 @@ public class Java2dCircularVisualizer extends AbstractJava2dVisualizer {
 		
 		float arcAngleStep = 360.0f / pitchBinCount;
 		for (int i = 0; i < pitchBinCount; i++) {
-			// int index = i;
 			int pitchClass = i / binsPerHalftone;
 			int binInPitchClass = i % binsPerHalftone;
 			int movedPitchClass = (pitchClass * getPitchStep()) % 12;
 			int index = movedPitchClass * binsPerHalftone + binInPitchClass;
-			// System.out.println("pitchClass: " + pitchClass
-			// + ", binInPitchClass: " + binInPitchClass
-			// + ", movedPitchClass: " + movedPitchClass + ", index: "
-			// + index);
 			
 			float value = (float) pcBins[index];
 			Color color = getColor(value);

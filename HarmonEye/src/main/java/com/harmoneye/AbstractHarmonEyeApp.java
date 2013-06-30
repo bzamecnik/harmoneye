@@ -51,7 +51,6 @@ public class AbstractHarmonEyeApp {
 		timer = new Timer(TIME_PERIOD_MILLIS, new TimerActionListener());
 		timer.setInitialDelay(190);
 
-		//		visualizer = new Java2dCircularVisualizer();
 		visualizer = new OpenGlCircularVisualizer();
 
 		soundAnalyzer = new MusicAnalyzer(visualizer);

@@ -22,11 +22,9 @@ public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfi
 
 	protected static final String[] HALFTONE_NAMES = { "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B" };
 
-	private PitchClassProfile pcProfile;
 	private int pitchStep = 1;
 
 	private double[] values;
-	//	private double[] borderRadii;
 
 	private ColorFunction colorFunction = new TemperatureColorFunction();
 	private Component component;
@@ -42,7 +40,6 @@ public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfi
 		GLCapabilities caps = new GLCapabilities(glp);
 
 		caps.setSampleBuffers(true);
-		//caps.setNumSamples(1);
 
 		GLCanvas canvas = new GLCanvas(caps);
 
@@ -57,7 +54,6 @@ public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfi
 
 	@Override
 	public void update(PitchClassProfile pcProfile) {
-		this.pcProfile = pcProfile;
 		if (pcProfile == null) {
 			return;
 		}
@@ -66,18 +62,6 @@ public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfi
 		halftoneCount = pcProfile.getHalftoneCount();
 
 		values = pcProfile.getPitchClassBins();
-
-		//		values = new double[60];
-		//		for (int i = 0; i < halftoneCount; i++) {
-		//				values[(i * binsPerHalftone + (binsPerHalftone/2)) % pcProfile.getTotalBinCount()] = 1;
-		//		}
-
-		//		if (borderRadii == null) {
-		//			borderRadii = new double[values.length];
-		//		}
-		//		for (int i = 0; i < values.length; i++) {
-		//			borderRadii[i] = getAverageValue(i);
-		//		}
 
 		segmentCountInv = 1.0 / values.length;
 		stepAngle = 2 * Math.PI * segmentCountInv;
@@ -187,12 +171,10 @@ public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfi
 
 			gl.glVertex2d(0, 0);
 
-			// double startRadius = radius * borderRadii[index];
 			double startRadius = radius * values[index];
 			double startAngle = angle - 0.5 * stepAngle;
 			gl.glVertex2d(startRadius * Math.sin(startAngle), startRadius * Math.cos(startAngle));
 
-			// double endRadius = radius * borderRadii[(index + 1) % borderRadii.length];
 			double endRadius = radius * values[index];
 			double endAngle = angle + 0.5 * stepAngle;
 			gl.glVertex2d(endRadius * Math.sin(endAngle), endRadius * Math.cos(endAngle));
