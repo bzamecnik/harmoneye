@@ -1,5 +1,6 @@
 package com.harmoneye.util;
 
+// TODO: use locking for thread safety!
 public class DoubleCircularBuffer {
 
 	private int bufferSize;
@@ -41,9 +42,6 @@ public class DoubleCircularBuffer {
 	}
 
 	private int incrementIndex(int value, int increment) {
-		if (increment < 0) {
-			increment += bufferSize;
-		}
-		return (value + increment) % bufferSize;
+		return (value + increment + bufferSize) % bufferSize;
 	}
 }
