@@ -1,14 +1,15 @@
 package com.harmoneye.cqt;
 
+import java.util.Arrays;
+
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.complex.ComplexField;
-import org.apache.commons.math3.linear.ArrayFieldVector;
-import org.apache.commons.math3.linear.FieldMatrix;
-import org.apache.commons.math3.linear.FieldVector;
 import org.apache.commons.math3.transform.DftNormalization;
 import org.apache.commons.math3.transform.FastFourierTransformer;
 import org.apache.commons.math3.transform.TransformType;
+import org.apache.commons.math3.transform.TransformUtils;
 
+import com.harmoneye.util.InPlaceFieldMatrix;
 import com.harmoneye.util.LinkedListNonZeroSparseFieldMatrix;
 import com.harmoneye.util.NonZeroSparseFieldMatrix;
 
@@ -19,11 +20,15 @@ public class FastCqt extends AbstractCqt {
 	FastFourierTransformer fft = new FastFourierTransformer(DftNormalization.STANDARD);
 
 	// spectral kernels - already Hermite-conjugated (conjugated and transposed) for the transform
-	FieldMatrix<Complex> spectralKernels;
+	InPlaceFieldMatrix<Complex> spectralKernels;
 
 	private int signalBlockSize;
 
 	private Complex normalizationFactor;
+
+	private Complex[] transformedSignal;
+
+	private double[][] dataRI;
 
 	public FastCqt() {
 		signalBlockSize = nextPowerOf2(bandWidth(0));
@@ -34,19 +39,28 @@ public class FastCqt extends AbstractCqt {
 		if (spectralKernels == null) {
 			computeSpectralKernels();
 		}
+
+		dataRI = new double[][] { new double[signalBlockSize], new double[signalBlockSize] };
+		transformedSignal = new Complex[spectralKernels.getRowDimension()];
 	}
 
 	@Override
 	public Complex[] transform(double[] signal) {
-		signal = padRight(signal, signalBlockSize);
-		Complex[] spectrum = fft.transform(signal, TransformType.FORWARD);
-		ArrayFieldVector<Complex> spectrumVector = new ArrayFieldVector<Complex>(spectrum);
+		padRight(signal, dataRI[0]);
+		Arrays.fill(dataRI[1], 0);
 
-		FieldVector<Complex> product = spectralKernels.operate(spectrumVector);
+		FastFourierTransformer.transformInPlace(dataRI, DftNormalization.STANDARD, TransformType.FORWARD);
 
-		product.mapMultiplyToSelf(normalizationFactor);
-		Complex[] productArray = product.toArray();
-		return productArray;
+		// TODO: in-place toComplexArray 
+		Complex[] spectrum = TransformUtils.createComplexArray(dataRI);
+
+		spectralKernels.operate(spectrum, transformedSignal);
+
+		for (int i = 0; i < transformedSignal.length; i++) {
+			transformedSignal[i] = transformedSignal[i].multiply(normalizationFactor);
+		}
+
+		return transformedSignal;
 	}
 
 	protected void computeSpectralKernels() {
@@ -54,57 +68,45 @@ public class FastCqt extends AbstractCqt {
 			return;
 		}
 		ComplexField field = ComplexField.getInstance();
-		spectralKernels = new NonZeroSparseFieldMatrix<Complex>(field, totalBins, nextPowerOf2(bandWidth(0)));
+		NonZeroSparseFieldMatrix<Complex> kernels = new NonZeroSparseFieldMatrix<Complex>(field, totalBins,
+			nextPowerOf2(bandWidth(0)));
 		for (int k = 0; k < totalBins; k++) {
-			spectralKernels.setRow(k, conjugate(spectralKernel(k)));
+			kernels.setRow(k, conjugate(spectralKernel(k)));
 		}
-		spectralKernels.transpose();
-		spectralKernels = new LinkedListNonZeroSparseFieldMatrix<>(spectralKernels);
+		kernels.transpose();
+		spectralKernels = new LinkedListNonZeroSparseFieldMatrix<>(kernels);
 	}
 
 	protected Complex[] spectralKernel(int k) {
 		Complex[] temporalKernel = padLeft(temporalKernel(k), nextPowerOf2(bandWidth(0)));
 		Complex[] spectrum = fft.transform(temporalKernel, TransformType.FORWARD);
+
 		chop(spectrum);
 		return spectrum;
-	}
-
-	private Complex[] padRight(Complex[] values, int totalSize) {
-		Complex[] padded = new Complex[totalSize];
-		int size = Math.min(values.length, totalSize);
-		for (int i = 0; i < size; i++) {
-			padded[i] = values[i];
-		}
-		for (int i = values.length; i < totalSize; i++) {
-			padded[i] = Complex.ZERO;
-		}
-		return padded;
 	}
 
 	private Complex[] padLeft(Complex[] values, int totalSize) {
 		Complex[] padded = new Complex[totalSize];
 		int dataSize = Math.min(values.length, totalSize);
 		int paddingSize = totalSize - dataSize;
+
 		for (int i = 0; i < paddingSize; i++) {
 			padded[i] = Complex.ZERO;
 		}
-		for (int i = paddingSize; i < totalSize; i++) {
-			padded[i] = values[i - paddingSize];
-		}
+
+		System.arraycopy(values, 0, padded, paddingSize, dataSize);
 
 		return padded;
 	}
 
-	private double[] padRight(double[] values, int totalSize) {
-		double[] padded = new double[totalSize];
-		int size = Math.min(values.length, totalSize);
-		for (int i = 0; i < size; i++) {
-			padded[i] = values[i];
-		}
-		for (int i = values.length; i < totalSize; i++) {
+	private void padRight(double[] in, double[] padded) {
+		int dataSize = Math.min(in.length, padded.length);
+
+		System.arraycopy(in, 0, padded, 0, dataSize);
+
+		for (int i = dataSize; i < padded.length; i++) {
 			padded[i] = 0;
 		}
-		return padded;
 	}
 
 	private void chop(Complex[] values) {
