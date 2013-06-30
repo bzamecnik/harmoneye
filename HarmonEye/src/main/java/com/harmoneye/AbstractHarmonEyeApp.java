@@ -15,7 +15,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 
-import org.apache.commons.lang3.StringUtils;
 import org.simplericity.macify.eawt.ApplicationEvent;
 import org.simplericity.macify.eawt.ApplicationListener;
 
@@ -42,12 +41,12 @@ public class AbstractHarmonEyeApp {
 	private LicenseDialogs licenseDialogs;
 	private SwingVisualizer<PitchClassProfile> visualizer;
 	private boolean initialized;
-	
+
 	private Timer updateTimer;
 
 	public AbstractHarmonEyeApp() {
 		licenseManager = new LicenseManager();
-		licenseManager.init();
+		initializeLicenseManager();
 
 		visualizer = new OpenGlCircularVisualizer();
 
@@ -64,33 +63,33 @@ public class AbstractHarmonEyeApp {
 
 		licenseDialogs = new LicenseDialogs(frame, licenseManager);
 
-		checkActivation();
+		if (!licenseManager.isActivated()) {
+			boolean canContinue = licenseDialogs.offerOptionsWithoutActivation();
+			if (!canContinue) {
+				System.exit(0);
+			}
+		}
 
 		frame.setVisible(true);
 	}
 
-	private void checkActivation() {
-		// TODO: show a dialog: activate/buy license
-		// TOOD: allow a trial mode
-
+	private void initializeLicenseManager() {
 		try {
+			licenseManager.init();
+			licenseManager.useTrialMode();
 			licenseManager.checkActivation();
-			if (!licenseManager.isActivated()) {
-				String productKey = licenseDialogs.showActivationDialog();
-				if (StringUtils.isNotBlank(productKey)) {
-					licenseManager.activate(productKey);
-				}
-			}
 		} catch (Exception ex) {
-			String message = ex.getMessage();
-			if (ex.getCause() != null) {
-				message += "\n" + ex.getCause().getMessage();
-			}
-			JOptionPane.showMessageDialog(frame, message, "Problem with the activation", JOptionPane.ERROR_MESSAGE);
+			showErrorMessage(ex);
 		}
-		if (!licenseManager.isActivated()) {
-			System.exit(0);
+	}
+
+	private void showErrorMessage(Exception ex) {
+		String title = "HarmonEye - error";
+		String message = ex.getMessage();
+		if (ex.getCause() != null) {
+			message += "\n" + ex.getCause().getMessage();
 		}
+		JOptionPane.showMessageDialog(frame, message, title, JOptionPane.ERROR_MESSAGE);
 	}
 
 	private JFrame createFrame() {
@@ -108,6 +107,15 @@ public class AbstractHarmonEyeApp {
 	private JMenuBar createMenuBar() {
 		JMenuBar menuBar = new JMenuBar();
 
+		menuBar.add(createVisualizationMenu());
+		menuBar.add(createLicenseMenu());
+		menuBar.add(createWindowMenu());
+		menuBar.add(createHelpMenu());
+
+		return menuBar;
+	}
+
+	private JMenu createVisualizationMenu() {
 		JMenu menu = new JMenu("Visualization");
 
 		pauseMenuItem = new JMenuItem(pauseAction);
@@ -121,10 +129,11 @@ public class AbstractHarmonEyeApp {
 		JCheckBoxMenuItem accumulationEnabledMenuItem = new JCheckBoxMenuItem(accumulationEnabledAction);
 		accumulationEnabledMenuItem.setAccelerator(KeyStroke.getKeyStroke('a'));
 		menu.add(accumulationEnabledMenuItem);
+		return menu;
+	}
 
-		menuBar.add(menu);
-
-		menu = new JMenu("License");
+	private JMenu createLicenseMenu() {
+		final JMenu menu = new JMenu("License");
 
 		JMenuItem showLicenseMenuItem = new JMenuItem();
 		showLicenseMenuItem.setAction(new AbstractAction("Show license details") {
@@ -137,34 +146,53 @@ public class AbstractHarmonEyeApp {
 		});
 		menu.add(showLicenseMenuItem);
 
-		JMenuItem deactivateMenuItem = new JMenuItem();
+		final JMenuItem deactivateMenuItem = new JMenuItem();
+		final JMenuItem activateMenuItem = new JMenuItem();
+		final JMenuItem buyMenuItem = new JMenuItem();
+
 		deactivateMenuItem.setAction(new AbstractAction("Deactivate") {
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				boolean deactivate = licenseDialogs.showDeactivateDialog();
-				if (deactivate) {
-					try {
-						licenseManager.deactivate();
-						licenseDialogs.showDeactivatedDialog();
-						System.exit(0);
-					} catch (Exception ex) {
-						String message = ex.getMessage();
-						if (ex.getCause() != null) {
-							message += "\n" + ex.getCause().getMessage();
-						}
-						JOptionPane.showMessageDialog(frame, message, "Problem with the deactivation",
-							JOptionPane.ERROR_MESSAGE);
-					}
+				licenseDialogs.deactivate();
+			}
+		});
+
+		activateMenuItem.setAction(new AbstractAction("Activate") {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				boolean activated = licenseDialogs.activate();
+				if (activated) {
+					menu.remove(buyMenuItem);
+					menu.remove(activateMenuItem);
+					menu.add(deactivateMenuItem);
 				}
 			}
 		});
-		menu.add(deactivateMenuItem);
 
-		menuBar.add(menu);
+		buyMenuItem.setAction(new AbstractAction("Buy") {
+			private static final long serialVersionUID = 1L;
 
-		menu = new JMenu("Window");
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				licenseDialogs.buy();
+			}
+		});
+
+		if (licenseManager.isActivated()) {
+			menu.add(deactivateMenuItem);
+		} else {
+			menu.add(buyMenuItem);
+			menu.add(activateMenuItem);
+		}
+		return menu;
+	}
+
+	private JMenu createWindowMenu() {
+		JMenu menu = new JMenu("Window");
 
 		final JCheckBoxMenuItem alwaysOnTopMenuItem = new JCheckBoxMenuItem();
 		alwaysOnTopMenuItem.setAction(new AbstractAction("Always on top") {
@@ -177,14 +205,14 @@ public class AbstractHarmonEyeApp {
 		});
 		alwaysOnTopMenuItem.setAccelerator(KeyStroke.getKeyStroke('t'));
 		menu.add(alwaysOnTopMenuItem);
+		return menu;
+	}
 
-		menuBar.add(menu);
 
-		return menuBar;
 	}
 
 	public void start() {
-		if (!licenseManager.isActivated()) {
+		if (!licenseManager.isActivated() && licenseManager.isTrialPeriodExpired()) {
 			return;
 		}
 		if (!initialized) {
@@ -297,7 +325,7 @@ public class AbstractHarmonEyeApp {
 			Package p = getClass().getPackage();
 			String title = p.getImplementationTitle();
 			if (title == null) {
-				title = "HarmonEye";
+				title = WINDOW_TITLE;
 			}
 			String version = p.getImplementationVersion();
 			if (version == null) {

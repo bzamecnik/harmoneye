@@ -2,6 +2,8 @@ package com.harmoneye.licensing;
 
 import java.util.EnumSet;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.wyday.turboactivate.IsGenuineResult;
 import com.wyday.turboactivate.TurboActivate;
 import com.wyday.turboactivate.TurboActivateException;
@@ -23,6 +25,8 @@ public class LicenseManager {
 	//@formatter:on
 
 	private boolean isActivated;
+	private boolean trialPeriodExpired;
+	private int remainingTrialDays;
 
 	public void init() {
 		TurboActivate.VersionGUID = PRODUCT_VERSION_GUID;
@@ -56,12 +60,26 @@ public class LicenseManager {
 		}
 	}
 
+	public void useTrialMode() {
+		try {
+			TurboActivate.UseTrial();
+			remainingTrialDays = TurboActivate.TrialDaysRemaining();
+			trialPeriodExpired = remainingTrialDays <= 0;
+		} catch (TurboActivateException e) {
+			throw new RuntimeException("Failed to check the trial mode.", e);
+		}
+	}
+
 	public boolean isActivated() {
 		return isActivated;
 	}
 
-	public void setActivated(boolean isActivated) {
-		this.isActivated = isActivated;
+	public boolean isTrialPeriodExpired() {
+		return trialPeriodExpired;
+	}
+
+	public int getRemainingTrialDays() {
+		return remainingTrialDays;
 	}
 
 	public String getExistingProductKey() {
@@ -70,12 +88,15 @@ public class LicenseManager {
 				return TurboActivate.GetPKey();
 			}
 		} catch (Exception ex) {
-			// TODO
+			throw new RuntimeException(ex);
 		}
 		return "";
 	}
 
 	public void activate(String productKey) {
+		if (StringUtils.isBlank(productKey)) {
+			return;
+		}
 		try {
 			saveProductKey(productKey);
 			TurboActivate.Activate();
