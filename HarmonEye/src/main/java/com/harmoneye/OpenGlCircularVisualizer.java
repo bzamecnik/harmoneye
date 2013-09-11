@@ -125,6 +125,7 @@ public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfi
 		// outer circle
 		gl.glBegin(GL.GL_LINE_LOOP);
 		drawCircle(gl, 0.9, 100);
+		gl.glEnd();
 
 		// lines between bins
 		double halfToneCountInv = 1.0 / HALFTONE_NAMES.length;
@@ -148,7 +149,6 @@ public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfi
 			double y = radius * Math.sin(angle);
 			gl.glVertex2d(x, y);
 		}
-		gl.glEnd();
 	}
 
 	private void drawPitchClassBins(GL2 gl) {
@@ -235,10 +235,12 @@ public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfi
 		gl.glColor3f(0.25f, 0.25f, 0.25f);
 		gl.glBegin(GL.GL_TRIANGLE_FAN);
 		drawCircle(gl, radius, steps);
+		gl.glEnd();
 
 		gl.glColor3f(0.5f, 0.5f, 0.5f);
 		gl.glBegin(GL.GL_LINE_LOOP);
 		drawCircle(gl, radius, steps);
+		gl.glEnd();
 	}
 
 	private void setConstantAspectRatio(GLAutoDrawable drawable) {
