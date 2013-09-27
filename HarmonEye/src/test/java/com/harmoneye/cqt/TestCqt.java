@@ -25,7 +25,9 @@ public class TestCqt {
 	public void testFastCqt() {
 		double[] expectedCqBins = { 0.286063, 0.984672, 0.487545, 0.0407473, 0.00292965, 0.00356335, 0.00322763,
 			0.00277204, 0.00246763, 0.00251696, 0.00224605, 0.00248127 };
-		testCqt(new FastCqt(), expectedCqBins);
+		FastCqt cqt = new FastCqt();
+		cqt.init();
+		testCqt(cqt, expectedCqBins);
 	}
 
 	private void testCqt(Cqt cqt, double[] expectedCqBins) {
@@ -41,7 +43,7 @@ public class TestCqt {
 		Complex[] cqBins = cqt.transform(signal);
 
 		System.out.println("cq bins:");
-		System.out.println(Formatter.formatArray(abs(cqBins)));
+//		System.out.println(Formatter.formatArray(abs(cqBins)));
 		System.out.println();
 
 		for (int i = 0; i < cqBins.length; i++) {

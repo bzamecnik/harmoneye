@@ -38,11 +38,13 @@ public class FastCqt extends AbstractCqt {
 	public void init() {
 		if (spectralKernels == null) {
 			computeSpectralKernels();
+			//printSpectralKernels();
 		}
 
 		dataRI = new double[][] { new double[signalBlockSize], new double[signalBlockSize] };
 		transformedSignal = new Complex[spectralKernels.getRowDimension()];
 	}
+
 
 	@Override
 	public Complex[] transform(double[] signal) {
@@ -76,6 +78,10 @@ public class FastCqt extends AbstractCqt {
 		kernels.transpose();
 		spectralKernels = new LinkedListNonZeroSparseFieldMatrix<>(kernels);
 	}
+	
+//	private void printSpectralKernels() {
+//		System.out.println(spectralKernels);
+//	}
 
 	protected Complex[] spectralKernel(int k) {
 		Complex[] temporalKernel = padLeft(temporalKernel(k), nextPowerOf2(bandWidth(0)));

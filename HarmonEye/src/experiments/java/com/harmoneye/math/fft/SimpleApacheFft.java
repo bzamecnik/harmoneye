@@ -13,7 +13,7 @@ public class SimpleApacheFft {
 	public static void main(String[] args) {
 		double[] data = generateCosineWave();
 
-		System.out.println("Original values: " + print(data));
+		//System.out.println("Original values: " + print(data));
 
 		FastFourierTransformer fft = new FastFourierTransformer(DftNormalization.STANDARD);
 
