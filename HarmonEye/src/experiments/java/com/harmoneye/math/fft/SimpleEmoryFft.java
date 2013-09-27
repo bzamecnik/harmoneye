@@ -3,17 +3,17 @@ package com.harmoneye.math.fft;
 import java.util.Arrays;
 import java.util.Date;
 
-import edu.emory.mathcs.jtransforms.fft.FloatFFT_1D;
+import edu.emory.mathcs.jtransforms.fft.DoubleFFT_1D;
 
 public class SimpleEmoryFft {
-	private static final int DATA_SIZE = 4 * 1024;
+	private static final int DATA_SIZE = 8 * 1024;
 
 	public static void main(String[] args) {
-		float[] data = generateCosineWave();
+		double[] data = generateCosineWave();
 
-		System.out.println("Original values: " + print(data));
+		//System.out.println("Original values: " + print(data));
 
-		FloatFFT_1D fft = new FloatFFT_1D(DATA_SIZE);
+		DoubleFFT_1D fft = new DoubleFFT_1D(DATA_SIZE);
 		
 
 		System.out.println(new Date());
@@ -22,7 +22,7 @@ public class SimpleEmoryFft {
 		int iterations = 10000;
 		
 		for (int i = 0; i < iterations; i++) {
-			float[] dataCopy = Arrays.copyOf(data, data.length);
+			double[] dataCopy = Arrays.copyOf(data, data.length);
 			long start = System.nanoTime();
 			fft.realForward(dataCopy);
 			long end = System.nanoTime();
@@ -42,27 +42,27 @@ public class SimpleEmoryFft {
 //		System.out.println("FFT-transformed values: " + print(data));
 	}
 
-	private static void normalize(float[] spectrum) {
-		float sizeInverse = 1.0f / DATA_SIZE;
+	private static void normalize(double[] spectrum) {
+		double sizeInverse = 1.0f / DATA_SIZE;
 		for (int i = 0; i < spectrum.length; i++) {
 			spectrum[i] = 2 * spectrum[i] * sizeInverse;
 		}
 		spectrum[0] *= 0.5; // DC component (zero frequency)
 	}
 
-	private static float[] generateCosineWave() {
-		float[] data = new float[DATA_SIZE];
+	private static double[] generateCosineWave() {
+		double[] data = new double[DATA_SIZE];
 		for (int i = 0; i < data.length; i++) {
-			data[i] = (float) Math.cos(2 * Math.PI * i / (double) DATA_SIZE);
+			data[i] = (double) Math.cos(2 * Math.PI * i / (double) DATA_SIZE);
 		}
 		return data;
 	}
 
-	private static void chop(float[] data) {
+	private static void chop(double[] data) {
 		chop(data, 10e-8f);
 	}
 	
-	private static void chop(float[] data, float threshold) {
+	private static void chop(double[] data, double threshold) {
 		for (int i = 0; i < data.length; i++) {
 			if (Math.abs(data[i]) < threshold) {
 				data[i] = 0;
@@ -70,7 +70,7 @@ public class SimpleEmoryFft {
 		}
 	}
 	
-	private static String print(float[] array) {
+	private static String print(double[] array) {
 		StringBuilder sb = new StringBuilder("[");
 		for (int i = 0; i < array.length; i++) {
 			if (i > 0) {
