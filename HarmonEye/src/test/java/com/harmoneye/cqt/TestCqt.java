@@ -7,25 +7,24 @@ import java.util.Date;
 import org.apache.commons.math3.complex.Complex;
 import org.junit.Test;
 
-import com.harmoneye.util.Formatter;
-
 public class TestCqt {
 
 	private static final double EPSILON = 1e-3;
+	private CqtContext ctx = CqtContext.create().build();
 
 	@Test
 	public void testDirectCqt() {
 		double expectedCqBins[] = { 0.28298965934681874, 0.9851996110068437, 0.48715254189231394, 0.0413224865910265,
 			0.0027093561554847757, 0.005415844293418445, 9.444203347283641E-4, 0.004322391461315617,
 			0.00880780790995201, 0.00402135826523725, 0.00425143658788258, 0.006013506365593061 };
-		testCqt(new DirectCqt(), expectedCqBins);
+		testCqt(new DirectCqt(ctx), expectedCqBins);
 	}
 
 	@Test
 	public void testFastCqt() {
 		double[] expectedCqBins = { 0.286063, 0.984672, 0.487545, 0.0407473, 0.00292965, 0.00356335, 0.00322763,
 			0.00277204, 0.00246763, 0.00251696, 0.00224605, 0.00248127 };
-		FastCqt cqt = new FastCqt();
+		FastCqt cqt = new FastCqt(ctx);
 		cqt.init();
 		testCqt(cqt, expectedCqBins);
 	}
@@ -58,9 +57,9 @@ public class TestCqt {
 
 	public void testFastCqtSpeed() {
 
-		FastSparseVectorCqt cqt = new FastSparseVectorCqt();
+		FastSparseVectorCqt cqt = new FastSparseVectorCqt(ctx);
 		
-		double signal[] = new double[cqt.getSignalBlockSize()];
+		double signal[] = new double[ctx.getSignalBlockSize()];
 
 		
 

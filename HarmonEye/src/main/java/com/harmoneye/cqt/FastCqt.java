@@ -13,42 +13,34 @@ import com.harmoneye.util.InPlaceFieldMatrix;
 import com.harmoneye.util.LinkedListNonZeroSparseFieldMatrix;
 import com.harmoneye.util.NonZeroSparseFieldMatrix;
 
-public class FastCqt extends AbstractCqt {
+public class FastCqt implements Cqt {
 
-	private static final double CHOP_THRESHOLD = 0.005;
-
-	FastFourierTransformer fft = new FastFourierTransformer(DftNormalization.STANDARD);
+	protected CqtContext ctx;
+	protected CqtCalculator calc;
 
 	// spectral kernels - already Hermite-conjugated (conjugated and transposed) for the transform
-	InPlaceFieldMatrix<Complex> spectralKernels;
-
-	private int signalBlockSize;
-
-	private Complex normalizationFactor;
-
+	private InPlaceFieldMatrix<Complex> spectralKernels;
 	private Complex[] transformedSignal;
-
 	private double[][] dataRI;
 
-	public FastCqt() {
-		signalBlockSize = nextPowerOf2(bandWidth(0));
-		normalizationFactor = new Complex(2 / (signalBlockSize * windowIntegral));
+	public FastCqt(CqtContext ctx) {
+		this.ctx = ctx;
+		this.calc = new CqtCalculator(ctx);
 	}
 
 	public void init() {
 		if (spectralKernels == null) {
 			computeSpectralKernels();
-			//printSpectralKernels();
 		}
 
+		int signalBlockSize = ctx.getSignalBlockSize();
 		dataRI = new double[][] { new double[signalBlockSize], new double[signalBlockSize] };
 		transformedSignal = new Complex[spectralKernels.getRowDimension()];
 	}
 
-
 	@Override
 	public Complex[] transform(double[] signal) {
-		padRight(signal, dataRI[0]);
+		calc.padRight(signal, dataRI[0]);
 		Arrays.fill(dataRI[1], 0);
 
 		FastFourierTransformer.transformInPlace(dataRI, DftNormalization.STANDARD, TransformType.FORWARD);
@@ -58,6 +50,7 @@ public class FastCqt extends AbstractCqt {
 
 		spectralKernels.operate(spectrum, transformedSignal);
 
+		Complex normalizationFactor = ctx.getNormalizationFactor();
 		for (int i = 0; i < transformedSignal.length; i++) {
 			transformedSignal[i] = transformedSignal[i].multiply(normalizationFactor);
 		}
@@ -70,79 +63,17 @@ public class FastCqt extends AbstractCqt {
 			return;
 		}
 		ComplexField field = ComplexField.getInstance();
+		int totalBins = ctx.getTotalBins();
 		NonZeroSparseFieldMatrix<Complex> kernels = new NonZeroSparseFieldMatrix<Complex>(field, totalBins,
-			nextPowerOf2(bandWidth(0)));
+			calc.nextPowerOf2(calc.bandWidth(0)));
 		for (int k = 0; k < totalBins; k++) {
-			kernels.setRow(k, conjugate(spectralKernel(k)));
+			kernels.setRow(k, calc.conjugate(calc.spectralKernel(k)));
 		}
 		kernels.transpose();
 		spectralKernels = new LinkedListNonZeroSparseFieldMatrix<>(kernels);
 	}
-	
-//	private void printSpectralKernels() {
-//		System.out.println(spectralKernels);
-//	}
 
-	protected Complex[] spectralKernel(int k) {
-		Complex[] temporalKernel = padLeft(temporalKernel(k), nextPowerOf2(bandWidth(0)));
-		Complex[] spectrum = fft.transform(temporalKernel, TransformType.FORWARD);
-
-		chop(spectrum);
-		return spectrum;
-	}
-
-	private Complex[] padLeft(Complex[] values, int totalSize) {
-		Complex[] padded = new Complex[totalSize];
-		int dataSize = Math.min(values.length, totalSize);
-		int paddingSize = totalSize - dataSize;
-
-		for (int i = 0; i < paddingSize; i++) {
-			padded[i] = Complex.ZERO;
-		}
-
-		System.arraycopy(values, 0, padded, paddingSize, dataSize);
-
-		return padded;
-	}
-
-	private void padRight(double[] in, double[] padded) {
-		int dataSize = Math.min(in.length, padded.length);
-
-		System.arraycopy(in, 0, padded, 0, dataSize);
-
-		for (int i = dataSize; i < padded.length; i++) {
-			padded[i] = 0;
-		}
-	}
-
-	private void chop(Complex[] values) {
-		for (int i = 0; i < values.length; i++) {
-			if (values[i].abs() < CHOP_THRESHOLD) {
-				values[i] = Complex.ZERO;
-			}
-		}
-	}
-
-	private Complex[] conjugate(Complex[] values) {
-		for (int i = 0; i < values.length; i++) {
-			values[i] = values[i].conjugate();
-		}
-		return values;
-	}
-
-	// http://acius2.blogspot.cz/2007/11/calculating-next-power-of-2.html
-	private int nextPowerOf2(int value) {
-		value--;
-		value |= (value >> 1);
-		value |= (value >> 2);
-		value |= (value >> 4);
-		value |= (value >> 8);
-		value |= (value >> 16);
-		value++;
-		return value;
-	}
-
-	public int getSignalBlockSize() {
-		return signalBlockSize;
+	public CqtContext getContext() {
+		return ctx;
 	}
 }
