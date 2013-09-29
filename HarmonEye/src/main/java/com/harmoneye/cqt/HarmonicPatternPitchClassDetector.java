@@ -46,7 +46,7 @@ public class HarmonicPatternPitchClassDetector {
 		// normalize
 		double max = 0;
 		for (int i = 0; i < octaveBins.length; i++) {
-			max = Math.max(max, octaveBins[i]);
+			max = FastMath.max(max, octaveBins[i]);
 		}
 		if (max > 0) {
 			for (int i = 0; i < octaveBins.length; i++) {

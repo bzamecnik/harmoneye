@@ -36,7 +36,7 @@ public final class CqtContext {
 		maxFreq = FastMath.pow(2, octaveCount) * baseFreq;
 		binsPerOctave = halftonesPerOctave * binsPerHalftone;
 		binsPerOctaveInv = 1.0 / binsPerOctave;
-		totalBins = (int) Math.ceil(binsPerOctave * FastMath.log(2, maxFreq / baseFreq));
+		totalBins = (int) FastMath.ceil(binsPerOctave * FastMath.log(2, maxFreq / baseFreq));
 		q = 1 / (FastMath.pow(2, binsPerOctaveInv) - 1);
 		windowIntegral = calc.windowIntegral(window);
 

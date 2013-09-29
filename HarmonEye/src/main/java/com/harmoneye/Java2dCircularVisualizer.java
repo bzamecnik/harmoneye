@@ -7,6 +7,8 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 
+import org.apache.commons.math3.util.FastMath;
+
 public class Java2dCircularVisualizer extends AbstractJava2dVisualizer {
 
 	private static final long serialVersionUID = 1L;
@@ -74,11 +76,11 @@ public class Java2dCircularVisualizer extends AbstractJava2dVisualizer {
 
 		// lines between bins
 		for (int i = 0; i < 12; i++) {
-			double angle = 2 * Math.PI * ((i - 0.5) / 12.0);
+			double angle = 2 * FastMath.PI * ((i - 0.5) / 12.0);
 			int startX = (int) (x + center);
 			int startY = (int) (y + center);
-			graphics.drawLine(startX, startY, (int) (x + center + 0.5 * size * Math.cos(angle)),
-				(int) (y + center + 0.5 * size * Math.sin(angle)));
+			graphics.drawLine(startX, startY, (int) (x + center + 0.5 * size * FastMath.cos(angle)),
+				(int) (y + center + 0.5 * size * FastMath.sin(angle)));
 		}
 	}
 
@@ -87,7 +89,7 @@ public class Java2dCircularVisualizer extends AbstractJava2dVisualizer {
 		graphics.setFont(font);
 		FontMetrics fm = graphics.getFontMetrics();
 		int offsetY = fm.getAscent() / 2;
-		double angleStep = 2 * Math.PI / HALFTONE_NAMES.length;
+		double angleStep = 2 * FastMath.PI / HALFTONE_NAMES.length;
 		double angle = 9 * angleStep;
 		for (int i = 0; i < HALFTONE_NAMES.length; i++, angle += angleStep) {
 			int index = (i * getPitchStep()) % 12;
@@ -96,8 +98,8 @@ public class Java2dCircularVisualizer extends AbstractJava2dVisualizer {
 			graphics.setColor(color);
 			String str = HALFTONE_NAMES[index];
 			int offsetX = fm.stringWidth(str) / 2;
-			graphics.drawString(str, (int) (x + center + 0.43 * size * Math.cos(angle) - offsetX), (int) (y + center
-				+ 0.43 * size * Math.sin(angle) + offsetY));
+			graphics.drawString(str, (int) (x + center + 0.43 * size * FastMath.cos(angle) - offsetX), (int) (y + center
+				+ 0.43 * size * FastMath.sin(angle) + offsetY));
 		}
 	}
 
@@ -119,7 +121,7 @@ public class Java2dCircularVisualizer extends AbstractJava2dVisualizer {
 		int baseIndex = binsPerHalftone * halftoneIndex;
 		for (int i = 0; i < binsPerHalftone; i++) {
 			float value = (float) pcBins[baseIndex + i];
-			max = Math.max(max, value);
+			max = FastMath.max(max, value);
 		}
 		return max;
 	}

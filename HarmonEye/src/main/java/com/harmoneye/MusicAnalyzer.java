@@ -1,6 +1,7 @@
 package com.harmoneye;
 
 import org.apache.commons.math3.complex.Complex;
+import org.apache.commons.math3.util.FastMath;
 
 import com.harmoneye.cqt.CqtContext;
 import com.harmoneye.cqt.FastCqt;
@@ -15,7 +16,7 @@ public class MusicAnalyzer implements SoundConsumer {
 	private CqtContext ctx = CqtContext.create().build();
 	private FastCqt cqt = new FastCqt(ctx);
 
-	private final double DB_THRESHOLD = -(20 * Math.log10(2 << (16 - 1)));
+	private final double DB_THRESHOLD = -(20 * FastMath.log10(2 << (16 - 1)));
 	private final int BINS_PER_HALFTONE = ctx.getBinsPerHalftone();
 	private final int PITCH_BIN_COUNT = ctx.getBinsPerOctave();
 	private final int HALFTONE_PER_OCTAVE_COUNT = ctx.getHalftonesPerOctave();
@@ -75,7 +76,7 @@ public class MusicAnalyzer implements SoundConsumer {
 		for (int i = 0; i < amplitudeSpectrumDb.length; i++) {
 			double amplitude = cqSpectrum[i].abs();
 			double referenceAmplitude = 1;
-			double amplitudeDb = 20 * Math.log10(amplitude / referenceAmplitude);
+			double amplitudeDb = 20 * FastMath.log10(amplitude / referenceAmplitude);
 			if (amplitudeDb < DB_THRESHOLD) {
 				amplitudeDb = DB_THRESHOLD;
 			}
@@ -89,7 +90,7 @@ public class MusicAnalyzer implements SoundConsumer {
 			// maximum over octaves:
 			double value = 0;
 			for (int j = i; j < amplitudeSpectrumDb.length; j += PITCH_BIN_COUNT) {
-				value = Math.max(value, amplitudeSpectrumDb[j]);
+				value = FastMath.max(value, amplitudeSpectrumDb[j]);
 			}
 			octaveBinsDb[i] = value;
 		}
@@ -97,11 +98,11 @@ public class MusicAnalyzer implements SoundConsumer {
 		double[] pitchClassBinsDb = pcDetector.detectPitchClasses(amplitudeSpectrumDb);
 		double max = 0;
 		for (int i = 0; i < amplitudeSpectrumDb.length; i++) {
-			max = Math.max(max, amplitudeSpectrumDb[i]);
+			max = FastMath.max(max, amplitudeSpectrumDb[i]);
 		}
 		// just an ad hoc reduction of noise and equalization
 		for (int i = 0; i < pitchClassBinsDb.length; i++) {
-			pitchClassBinsDb[i] = Math.pow(pitchClassBinsDb[i], 3);
+			pitchClassBinsDb[i] = FastMath.pow(pitchClassBinsDb[i], 3);
 		}
 		for (int i = 0; i < pitchClassBinsDb.length; i++) {
 			pitchClassBinsDb[i] *= max;
@@ -110,7 +111,7 @@ public class MusicAnalyzer implements SoundConsumer {
 			octaveBinsDb[i] *= pitchClassBinsDb[i];
 		}
 		for (int i = 0; i < octaveBinsDb.length; i++) {
-			octaveBinsDb[i] = Math.pow(octaveBinsDb[i], 1 / 3.0);
+			octaveBinsDb[i] = FastMath.pow(octaveBinsDb[i], 1 / 3.0);
 		}
 
 		double[] pitchClassProfileDb = null;

@@ -13,6 +13,8 @@ import javax.media.opengl.GLEventListener;
 import javax.media.opengl.GLProfile;
 import javax.media.opengl.awt.GLCanvas;
 
+import org.apache.commons.math3.util.FastMath;
+
 import com.harmoneye.viz.ColorFunction;
 import com.harmoneye.viz.TemperatureColorFunction;
 import com.jogamp.opengl.util.Animator;
@@ -64,7 +66,7 @@ public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfi
 		values = pcProfile.getPitchClassBins();
 
 		segmentCountInv = 1.0 / values.length;
-		stepAngle = 2 * Math.PI * segmentCountInv;
+		stepAngle = 2 * FastMath.PI * segmentCountInv;
 	}
 
 	@Override
@@ -104,14 +106,14 @@ public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfi
 		gl.glBegin(GL.GL_LINES);
 		for (int i = 0; i < HALFTONE_NAMES.length; i++) {
 			double unitAngle = (i - 0.5) * halfToneCountInv;
-			double angle = 2 * Math.PI * unitAngle;
+			double angle = 2 * FastMath.PI * unitAngle;
 
 			float value = (float) (0.25 + 0.5 * ((1 - unitAngle + phaseOffset) % 1.0));
 			Color color = colorFunction.toColor((float) value);
 			gl.glColor3ub((byte) color.getRed(), (byte) color.getGreen(), (byte) color.getBlue());
 
-			double x = Math.sin(angle);
-			double y = Math.cos(angle);
+			double x = FastMath.sin(angle);
+			double y = FastMath.cos(angle);
 			gl.glVertex2d(innerRadius * x, innerRadius * y);
 			gl.glVertex2d(outerRadius * x, outerRadius * y);
 		}
@@ -131,9 +133,9 @@ public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfi
 		double halfToneCountInv = 1.0 / HALFTONE_NAMES.length;
 		gl.glBegin(GL.GL_LINES);
 		for (int i = 0; i < HALFTONE_NAMES.length; i++) {
-			double angle = 2 * Math.PI * ((i - 0.5) * halfToneCountInv);
-			double x = 0.9 * Math.sin(angle);
-			double y = 0.9 * Math.cos(angle);
+			double angle = 2 * FastMath.PI * ((i - 0.5) * halfToneCountInv);
+			double x = 0.9 * FastMath.sin(angle);
+			double y = 0.9 * FastMath.cos(angle);
 			gl.glVertex2d(x, y);
 			gl.glVertex2d(-x, -y);
 		}
@@ -141,12 +143,12 @@ public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfi
 	}
 
 	private void drawCircle(GL2 gl, double radius, int steps) {
-		double angleStep = 2 * Math.PI / steps;
+		double angleStep = 2 * FastMath.PI / steps;
 		double angle = 0;
 
 		for (int i = 0; i <= steps; i++, angle += angleStep) {
-			double x = radius * Math.cos(angle);
-			double y = radius * Math.sin(angle);
+			double x = radius * FastMath.cos(angle);
+			double y = radius * FastMath.sin(angle);
 			gl.glVertex2d(x, y);
 		}
 	}
@@ -173,11 +175,11 @@ public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfi
 
 			double startRadius = radius * values[index];
 			double startAngle = angle - 0.5 * stepAngle;
-			gl.glVertex2d(startRadius * Math.sin(startAngle), startRadius * Math.cos(startAngle));
+			gl.glVertex2d(startRadius * FastMath.sin(startAngle), startRadius * FastMath.cos(startAngle));
 
 			double endRadius = radius * values[index];
 			double endAngle = angle + 0.5 * stepAngle;
-			gl.glVertex2d(endRadius * Math.sin(endAngle), endRadius * Math.cos(endAngle));
+			gl.glVertex2d(endRadius * FastMath.sin(endAngle), endRadius * FastMath.cos(endAngle));
 		}
 		gl.glEnd();
 	}
@@ -192,8 +194,8 @@ public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfi
 
 		double centerX = width / 2;
 		double centerY = height / 2;
-		double size = 0.9 * Math.min(width, height);
-		double angleStep = 2 * Math.PI / HALFTONE_NAMES.length;
+		double size = 0.9 * FastMath.min(width, height);
+		double angleStep = 2 * FastMath.PI / HALFTONE_NAMES.length;
 		double angle = 0;
 		float scaleFactor = (float) (0.0015f * size);
 
@@ -209,8 +211,8 @@ public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfi
 			int offsetX = (int) (scaleFactor * 0.5f * bounds.getWidth());
 			int offsetY = (int) (scaleFactor * 0.5f * bounds.getHeight());
 			double radius = 0.43;
-			int x = (int) (centerX + radius * size * Math.sin(angle) - offsetX);
-			int y = (int) (centerY + radius * size * Math.cos(angle) - offsetY);
+			int x = (int) (centerX + radius * size * FastMath.sin(angle) - offsetX);
+			int y = (int) (centerY + radius * size * FastMath.cos(angle) - offsetY);
 
 			renderer.draw3D(str, x, y, 0, scaleFactor);
 		}
@@ -223,7 +225,7 @@ public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfi
 		int baseIndex = binsPerHalftone * halftoneIndex;
 		for (int i = 0; i < binsPerHalftone; i++) {
 			float value = (float) values[baseIndex + i];
-			max = Math.max(max, value);
+			max = FastMath.max(max, value);
 		}
 		return max;
 	}

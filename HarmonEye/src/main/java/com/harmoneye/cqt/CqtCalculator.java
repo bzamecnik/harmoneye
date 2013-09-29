@@ -28,14 +28,14 @@ public class CqtCalculator {
 	}
 
 	public int bandWidth(int k) {
-		return (int) Math.ceil(ctx.getQ() * ctx.getSamplingFreq() / centerFreq(k));
+		return (int) FastMath.ceil(ctx.getQ() * ctx.getSamplingFreq() / centerFreq(k));
 	}
 
 	protected Complex[] temporalKernel(int k) {
 		int size = bandWidth(k);
 		Complex[] coeffs = new Complex[size];
 		double sizeInv = 1.0 / size;
-		double factor = 2 * Math.PI * ctx.getQ() * sizeInv;
+		double factor = 2 * FastMath.PI * ctx.getQ() * sizeInv;
 		for (int i = 0; i < size; i++) {
 			Complex value = ComplexUtils.polar2Complex(ctx.getWindow().value(i * sizeInv) * sizeInv, i * factor);
 			coeffs[i] = value;
@@ -85,7 +85,7 @@ public class CqtCalculator {
 
 	public Complex[] padLeft(Complex[] values, int totalSize) {
 		Complex[] padded = new Complex[totalSize];
-		int dataSize = Math.min(values.length, totalSize);
+		int dataSize = FastMath.min(values.length, totalSize);
 		int paddingSize = totalSize - dataSize;
 
 		for (int i = 0; i < paddingSize; i++) {
@@ -98,7 +98,7 @@ public class CqtCalculator {
 	}
 
 	public void padRight(double[] in, double[] padded) {
-		int dataSize = Math.min(in.length, padded.length);
+		int dataSize = FastMath.min(in.length, padded.length);
 
 		System.arraycopy(in, 0, padded, 0, dataSize);
 
@@ -110,7 +110,7 @@ public class CqtCalculator {
 	@Deprecated
 	public Complex[] padRight(Complex[] values, int totalSize) {
 		Complex[] padded = new Complex[totalSize];
-		int size = Math.min(values.length, totalSize);
+		int size = FastMath.min(values.length, totalSize);
 		for (int i = 0; i < size; i++) {
 			padded[i] = values[i];
 		}
@@ -123,7 +123,7 @@ public class CqtCalculator {
 	@Deprecated
 	public double[] padRight(double[] values, int totalSize) {
 		double[] padded = new double[totalSize];
-		int size = Math.min(values.length, totalSize);
+		int size = FastMath.min(values.length, totalSize);
 		for (int i = 0; i < size; i++) {
 			padded[i] = values[i];
 		}
