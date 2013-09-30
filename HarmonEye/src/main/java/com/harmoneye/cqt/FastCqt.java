@@ -63,10 +63,11 @@ public class FastCqt implements Cqt {
 			return;
 		}
 		ComplexField field = ComplexField.getInstance();
-		int totalBins = ctx.getTotalBins();
-		NonZeroSparseFieldMatrix<Complex> kernels = new NonZeroSparseFieldMatrix<Complex>(field, totalBins,
-			calc.nextPowerOf2(calc.bandWidth(0)));
-		for (int k = 0; k < totalBins; k++) {
+		int rows = ctx.getTotalBins();
+		int columns = ctx.getSignalBlockSize();
+		//System.out.println("rows x columns: " + rows + "x" + columns + ", total: " + rows * columns);
+		NonZeroSparseFieldMatrix<Complex> kernels = new NonZeroSparseFieldMatrix<Complex>(field, rows, columns);
+		for (int k = 0; k < rows; k++) {
 			kernels.setRow(k, calc.conjugate(calc.spectralKernel(k)));
 		}
 		kernels.transpose();
