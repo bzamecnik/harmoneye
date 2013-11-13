@@ -45,9 +45,6 @@ dependencies {
 	compile ':gluegen-rt:'
 	macRuntime ':gluegen-rt-natives-macosx-universal:'
 	
-	compile ':jna:3.5.1'
-	compile ':turboactivate:1.0'
-
 	testCompile 'junit:junit:4.10'
 }
 
@@ -99,14 +96,5 @@ task macBundleApp(dependsOn: 'macProguardJar') << {
 		configurations.macRuntime.each {
 			classpath(file: it)
 		}
-	}
-
-	def turboActivateSrcDir = "lib/TurboActivate" 
-	def turboActivateDestDir = distDirPath + "/HarmonEye.app/Contents/Java/TurboActivate"
-	ant.copy(toDir: turboActivateDestDir) {
-		fileset(dir: turboActivateSrcDir, includes: "TurboActivate.dat")
-	}
-	ant.copy(toDir: turboActivateDestDir + "/mac") {
-		fileset(dir: turboActivateSrcDir + "/mac")
 	}
 }

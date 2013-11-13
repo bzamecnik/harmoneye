@@ -18,9 +18,6 @@ import javax.swing.KeyStroke;
 import org.simplericity.macify.eawt.ApplicationEvent;
 import org.simplericity.macify.eawt.ApplicationListener;
 
-import com.harmoneye.licensing.LicenseDialogs;
-import com.harmoneye.licensing.LicenseManager;
-
 public class AbstractHarmonEyeApp {
 
 	private static final int TIME_PERIOD_MILLIS = 25;
@@ -37,17 +34,12 @@ public class AbstractHarmonEyeApp {
 
 	private ApplicationListener appListener;
 
-	private LicenseManager licenseManager;
-	private LicenseDialogs licenseDialogs;
 	private SwingVisualizer<PitchClassProfile> visualizer;
 	private boolean initialized;
 
 	private Timer updateTimer;
 
 	public AbstractHarmonEyeApp() {
-		licenseManager = new LicenseManager();
-		initializeLicenseManager();
-
 		visualizer = new OpenGlCircularVisualizer();
 
 		soundAnalyzer = new MusicAnalyzer(visualizer);
@@ -61,35 +53,7 @@ public class AbstractHarmonEyeApp {
 
 		appListener = new MyApplicationListener(frame);
 
-		licenseDialogs = new LicenseDialogs(frame, licenseManager);
-
-		if (!licenseManager.isActivated()) {
-			boolean canContinue = licenseDialogs.offerOptionsWithoutActivation();
-			if (!canContinue) {
-				System.exit(0);
-			}
-		}
-
 		frame.setVisible(true);
-	}
-
-	private void initializeLicenseManager() {
-		try {
-			licenseManager.init();
-			licenseManager.useTrialMode();
-			licenseManager.checkActivation();
-		} catch (Exception ex) {
-			showErrorMessage(ex);
-		}
-	}
-
-	private void showErrorMessage(Exception ex) {
-		String title = "HarmonEye - error";
-		String message = ex.getMessage();
-		if (ex.getCause() != null) {
-			message += "\n" + ex.getCause().getMessage();
-		}
-		JOptionPane.showMessageDialog(frame, message, title, JOptionPane.ERROR_MESSAGE);
 	}
 
 	private JFrame createFrame() {
@@ -108,7 +72,6 @@ public class AbstractHarmonEyeApp {
 		JMenuBar menuBar = new JMenuBar();
 
 		menuBar.add(createVisualizationMenu());
-		menuBar.add(createLicenseMenu());
 		menuBar.add(createWindowMenu());
 		menuBar.add(createHelpMenu());
 
@@ -129,65 +92,6 @@ public class AbstractHarmonEyeApp {
 		JCheckBoxMenuItem accumulationEnabledMenuItem = new JCheckBoxMenuItem(accumulationEnabledAction);
 		accumulationEnabledMenuItem.setAccelerator(KeyStroke.getKeyStroke('a'));
 		menu.add(accumulationEnabledMenuItem);
-		return menu;
-	}
-
-	private JMenu createLicenseMenu() {
-		final JMenu menu = new JMenu("License");
-
-		JMenuItem showLicenseMenuItem = new JMenuItem();
-		showLicenseMenuItem.setAction(new AbstractAction("Show license details") {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				licenseDialogs.showLicenseInfoDialog();
-			}
-		});
-		menu.add(showLicenseMenuItem);
-
-		final JMenuItem deactivateMenuItem = new JMenuItem();
-		final JMenuItem activateMenuItem = new JMenuItem();
-		final JMenuItem buyMenuItem = new JMenuItem();
-
-		deactivateMenuItem.setAction(new AbstractAction("Deactivate") {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				licenseDialogs.deactivate();
-			}
-		});
-
-		activateMenuItem.setAction(new AbstractAction("Activate") {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				boolean activated = licenseDialogs.activate();
-				if (activated) {
-					menu.remove(buyMenuItem);
-					menu.remove(activateMenuItem);
-					menu.add(deactivateMenuItem);
-				}
-			}
-		});
-
-		buyMenuItem.setAction(new AbstractAction("Buy") {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				licenseDialogs.buy();
-			}
-		});
-
-		if (licenseManager.isActivated()) {
-			menu.add(deactivateMenuItem);
-		} else {
-			menu.add(buyMenuItem);
-			menu.add(activateMenuItem);
-		}
 		return menu;
 	}
 
@@ -225,9 +129,6 @@ public class AbstractHarmonEyeApp {
 	}
 
 	public void start() {
-		if (!licenseManager.isActivated() && licenseManager.isTrialPeriodExpired()) {
-			return;
-		}
 		if (!initialized) {
 			return;
 		}
