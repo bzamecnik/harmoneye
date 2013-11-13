@@ -1,7 +1,7 @@
 apply plugin: 'java'
 apply plugin: 'eclipse'
 
-version = appVersion + "-" + "git describe --always --long".execute().text.trim()
+version = appVersion// + "-" + "git describe --always --long".execute().text.trim()
 
 buildscript {
 	repositories {
@@ -44,7 +44,7 @@ dependencies {
 	macRuntime ':jogl-all-natives-macosx-universal:'
 	compile ':gluegen-rt:'
 	macRuntime ':gluegen-rt-natives-macosx-universal:'
-	
+
 	testCompile 'junit:junit:4.10'
 }
 
