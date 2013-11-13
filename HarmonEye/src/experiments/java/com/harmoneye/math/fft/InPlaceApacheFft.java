@@ -1,29 +1,32 @@
 package com.harmoneye.math.fft;
 
+import java.util.Arrays;
 import java.util.Date;
 
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.transform.DftNormalization;
 import org.apache.commons.math3.transform.FastFourierTransformer;
 import org.apache.commons.math3.transform.TransformType;
+import org.apache.commons.math3.transform.TransformUtils;
 
-public class SimpleApacheFft {
+public class InPlaceApacheFft {
 	private static final int DATA_SIZE = 8 * 1024;
 
 	public static void main(String[] args) {
 		double[] data = generateCosineWave();
+		double[][] dataRI = new double[][] { new double[DATA_SIZE], new double[DATA_SIZE] };
 
-		//System.out.println("Original values: " + print(data));
-
-		FastFourierTransformer fft = new FastFourierTransformer(DftNormalization.STANDARD);
-
+		padRight(data, dataRI[0]);
+		Arrays.fill(dataRI[1], 0);
+		
+		System.out.println("Original values: " + print(data));
+		
+		int iterations = 10000;
+		
 		System.out.println(new Date());
 		long start = System.nanoTime();
-		
-		Complex[] spectrum = null;
-		int iterations = 10000;
 		for (int i = 0; i < iterations; i++) {
-			spectrum = fft.transform(data, TransformType.FORWARD);
+			FastFourierTransformer.transformInPlace(dataRI, DftNormalization.STANDARD, TransformType.FORWARD);
 		}
 		
 		long end = System.nanoTime();
@@ -32,6 +35,7 @@ public class SimpleApacheFft {
 		System.out.println("average: " + (end - start) / (iterations * 1e6) + " ms");
 		System.out.println("average: " + (iterations * 1e9) / (end - start) + " per sec");
 
+		Complex[] spectrum = TransformUtils.createComplexArray(dataRI);
 		double[] amplitudeSpectrum = abs(spectrum);
 
 		normalize(amplitudeSpectrum);
@@ -76,6 +80,18 @@ public class SimpleApacheFft {
 		}
 	}
 
+
+	private static void padRight(double[] in, double[] padded) {
+		int dataSize = Math.min(in.length, padded.length);
+
+		System.arraycopy(in, 0, padded, 0, dataSize);
+
+		for (int i = dataSize; i < padded.length; i++) {
+			padded[i] = 0;
+		}
+	}
+
+	
 	private static String print(double[] array) {
 		StringBuilder sb = new StringBuilder("[");
 		for (int i = 0; i < array.length; i++) {

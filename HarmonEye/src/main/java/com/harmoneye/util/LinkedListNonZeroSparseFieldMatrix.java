@@ -15,6 +15,7 @@ public final class LinkedListNonZeroSparseFieldMatrix<T extends FieldElement<T>>
 	private final List<List<SparseEntry<T>>> rows;
 	private final int rowCount;
 	private final int columnCount;
+	private final int nonzeroEntryCount;
 
 	public LinkedListNonZeroSparseFieldMatrix(FieldMatrix<T> other) {
 		super(other.getField(), other.getRowDimension(), other.getColumnDimension());
@@ -24,16 +25,19 @@ public final class LinkedListNonZeroSparseFieldMatrix<T extends FieldElement<T>>
 
 		rows = new ArrayList<List<SparseEntry<T>>>();
 		T zero = getField().getZero();
+		int nonzeroEntryCount = 0;
 		for (int i = 0; i < rowCount; i++) {
 			List<SparseEntry<T>> sparseColumns = new LinkedList<SparseEntry<T>>();
 			for (int j = 0; j < columnCount; j++) {
 				T entry = other.getEntry(i, j);
 				if (!zero.equals(entry)) {
 					sparseColumns.add(new SparseEntry<T>(entry, j));
+					++nonzeroEntryCount;
 				}
 			}
 			rows.add(sparseColumns);
 		}
+		this.nonzeroEntryCount = nonzeroEntryCount;
 	}
 
 	@Override
@@ -120,6 +124,26 @@ public final class LinkedListNonZeroSparseFieldMatrix<T extends FieldElement<T>>
 		public int getIndex() {
 			return index;
 		}
+	}
 
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("LinkedListNonZeroSparseFieldMatrix[");
+		sb.append("rows=").append(rowCount);
+		sb.append(", columns=").append(rowCount);
+		sb.append(", nonZeroEntryCount=").append(nonzeroEntryCount).append("\n");
+		sb.append("entries=[\n");
+//		for (List<SparseEntry<T>> columns : rows) {
+//			sb.append("[");
+//			for (SparseEntry<T> entry : columns) {
+//				sb.append("(").append(entry.getIndex()).append(") ").append(entry.getEntry()).append(", ");
+//			}
+//			sb.append("]");
+//			sb.append("\n");
+//		}
+		sb.append("]\n");
+		sb.append("]");
+		return sb.toString();
 	}
 }

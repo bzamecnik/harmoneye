@@ -1,4 +1,6 @@
-package com.harmoneye.cqt;
+package com.harmoneye.cqt.window;
+
+import com.harmoneye.cqt.window.WindowFunction;
 
 public class RectangularWindow implements WindowFunction {
 

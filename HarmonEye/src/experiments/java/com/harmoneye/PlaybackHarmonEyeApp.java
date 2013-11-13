@@ -5,7 +5,7 @@ import com.harmoneye.Playback;
 
 public class PlaybackHarmonEyeApp extends AbstractHarmonEyeApp {
 
-	private static final String INPUT_FILE_NAME = "/Users/bzamecnik/dev/harmoneye/data/wav/04-Sla-Maria-do-klastera-simple.wav";
+	private static final String INPUT_FILE_NAME = "/Users/bzamecnik/Documents/harmoneye-labs/harmoneye/data/wav/04-Sla-Maria-do-klastera-simple.wav";
 	private Playback playback;
 
 	public PlaybackHarmonEyeApp() {
