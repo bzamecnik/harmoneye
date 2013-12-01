@@ -50,7 +50,6 @@ public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfi
 		component = canvas;
 
 		Animator animator = new Animator(canvas);
-		animator.add(canvas);
 		animator.start();
 	}
 
