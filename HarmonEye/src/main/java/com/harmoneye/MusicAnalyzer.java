@@ -10,7 +10,7 @@ import com.harmoneye.util.DoubleCircularBuffer;
 
 public class MusicAnalyzer implements SoundConsumer {
 
-	/** [0.0; 1.0] 1.0 = no smooting */
+	/** [0.0; 1.0] 1.0 = no smoothing */
 	private static final double SMOOTHING_FACTOR = 0.25;
 
 	private CqtContext ctx = CqtContext.create().build();
@@ -80,8 +80,9 @@ public class MusicAnalyzer implements SoundConsumer {
 			if (amplitudeDb < DB_THRESHOLD) {
 				amplitudeDb = DB_THRESHOLD;
 			}
-			double scaledAmplitudeDb = 1 + amplitudeDb / -DB_THRESHOLD;
-			amplitudeSpectrumDb[i] = scaledAmplitudeDb;
+			// rescale: [DB_THRESHOLD; 0] -> [-1; 0] -> [0; 1]
+			double scaledAmplitudeDb = amplitudeDb / DB_THRESHOLD;
+			amplitudeSpectrumDb[i] = 1 - scaledAmplitudeDb;
 		}
 	}
 
