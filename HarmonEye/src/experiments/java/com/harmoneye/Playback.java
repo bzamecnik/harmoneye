@@ -51,8 +51,7 @@ public class Playback implements Runnable {
 	private void play() throws UnsupportedAudioFileException, IOException,
 			Exception, LineUnavailableException {
 		File file = new File(inputFileName);
-		AudioInputStream audioInputStream = AudioSystem
-				.getAudioInputStream(file);
+		AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(file);
 
 		AudioFormat format = audioInputStream.getFormat();
 		DataLine.Info info = new DataLine.Info(SourceDataLine.class, format);
@@ -71,8 +70,10 @@ public class Playback implements Runnable {
 		int readBytesCount = 0;
 		while (thread != null && readBytesCount >= 0) {
 			readBytesCount = audioInputStream.read(readBuffer);
-			ByteConverter
-					.littleEndianBytesToDoubles(readBuffer, amplitudes);
+			if (readBytesCount < 0) {
+				break;
+			}
+			ByteConverter.littleEndianBytesToDoubles(readBuffer, amplitudes);
 			soundAnalyzer.consume(amplitudes);
 
 			// long start = System.nanoTime();
