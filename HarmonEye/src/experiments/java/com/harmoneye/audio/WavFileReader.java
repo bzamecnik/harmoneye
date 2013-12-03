@@ -9,14 +9,17 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
+import com.harmoneye.Config;
+
 public class WavFileReader {
 	private static final int BUFFER_SIZE = 4 * 1024;
-	private static final String INPUT_FILE_NAME = "/Users/bzamecnik/dev/harmoneye/data/wav/c-scale-sin-mono.wav";
 
 	public static void main(String[] args) throws UnsupportedAudioFileException, IOException {
+		Config config = Config.fromDefault();
+		String inputFileName = config.get("inputFile");
 		AudioInputStream inputStream = null;
 		try {
-			inputStream = AudioSystem.getAudioInputStream(new File(INPUT_FILE_NAME));
+			inputStream = AudioSystem.getAudioInputStream(new File(inputFileName));
 
 			System.out.println("format: " + inputStream.getFormat());
 			System.out.println("frame length: " + inputStream.getFrameLength());

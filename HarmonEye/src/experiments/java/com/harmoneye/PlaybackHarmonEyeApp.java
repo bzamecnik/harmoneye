@@ -7,11 +7,12 @@ import com.harmoneye.Playback;
 
 public class PlaybackHarmonEyeApp extends AbstractHarmonEyeApp {
 
-	private static final String INPUT_FILE_NAME = "/Users/bzamecnik/Documents/harmoneye-labs/harmoneye/data/wav/04-Sla-Maria-do-klastera-simple.wav";
 	private Playback playback;
 
 	public PlaybackHarmonEyeApp() {
-		playback = new Playback(soundAnalyzer, INPUT_FILE_NAME);
+		Config config = Config.fromDefault();
+		String inputFileName = config.get("inputFile");
+		playback = new Playback(soundAnalyzer, inputFileName);
 	}
 
 	public void start() {

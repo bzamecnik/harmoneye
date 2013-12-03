@@ -48,6 +48,8 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.SourceDataLine;
 
+import com.harmoneye.Config;
+
 /**
  * SimpleSoundCapture Example. This is a simple program to record sounds and
  * play them back. It uses some methods from the CapturePlayback program in the
@@ -57,11 +59,16 @@ import javax.sound.sampled.SourceDataLine;
  */
 public class SimpleFilePlayer {
 
-	private static final String INPUT_FILE_NAME = "/Users/bzamecnik/dev/harmoneye/data/wav/097_1.WAV";
 	private static final int BUFFER_SIZE = 16384;
 
+	private String inputFileName;
+
+	public SimpleFilePlayer(String inputFileName) {
+		this.inputFileName = inputFileName;
+	}
+
 	public void play() throws Exception {
-		File file = new File(INPUT_FILE_NAME);
+		File file = new File(inputFileName);
 		AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(file);
 
 		AudioFormat format = audioInputStream.getFormat();
@@ -96,7 +103,9 @@ public class SimpleFilePlayer {
 	}
 
 	public static void main(String s[]) throws Exception {
-		SimpleFilePlayer player = new SimpleFilePlayer();
+		Config config = Config.fromDefault();
+		String inputFileName = config.get("inputFile");
+		SimpleFilePlayer player = new SimpleFilePlayer(inputFileName);
 		player.play();
 	}
 }

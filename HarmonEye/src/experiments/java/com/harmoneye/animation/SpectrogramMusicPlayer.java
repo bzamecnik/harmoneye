@@ -24,6 +24,8 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
+import com.harmoneye.Config;
+
 import edu.emory.mathcs.jtransforms.fft.FloatFFT_1D;
 
 public class SpectrogramMusicPlayer extends JPanel implements ActionListener {
@@ -32,7 +34,6 @@ public class SpectrogramMusicPlayer extends JPanel implements ActionListener {
 
 	private static final int TIME_PERIOD_MILLIS = 100;
 
-	private static final String INPUT_FILE_NAME = "/Users/bzamecnik/dev/harmoneye/data/wav/c-scale-piano-mono.wav";
 	private static final int BUFFER_SIZE = 4 * 1024;
 	private static final int SAMPLE_COUNT = BUFFER_SIZE / 4;
 
@@ -42,11 +43,14 @@ public class SpectrogramMusicPlayer extends JPanel implements ActionListener {
 	private float[] amplitudes;
 
 	public SpectrogramMusicPlayer() {
+		Config config = Config.fromDefault();
+		String inputFileName = config.get("inputFile");
+
 		timer = new Timer(TIME_PERIOD_MILLIS, this);
 		timer.setInitialDelay(190);
 		timer.start();
 
-		playback = new Playback();
+		playback = new Playback(inputFileName);
 		playback.start();
 	}
 
@@ -54,7 +58,8 @@ public class SpectrogramMusicPlayer extends JPanel implements ActionListener {
 		super.paintComponent(g);
 		Graphics2D g2 = (Graphics2D) g;
 
-		RenderingHints rh = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		RenderingHints rh = new RenderingHints(RenderingHints.KEY_ANTIALIASING,
+				RenderingHints.VALUE_ANTIALIAS_ON);
 
 		rh.put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 
@@ -102,7 +107,7 @@ public class SpectrogramMusicPlayer extends JPanel implements ActionListener {
 		private void computeAmplitudeSpectrum(float[] signal) {
 			if (sampleCount != signal.length) {
 				throw new IllegalArgumentException("expected sample count was " + sampleCount + ", not "
-					+ signal.length);
+						+ signal.length);
 			}
 			fft.realForward(signal);
 			// NOTE: now signalValues contain the transformed values
@@ -143,6 +148,12 @@ public class SpectrogramMusicPlayer extends JPanel implements ActionListener {
 		Thread thread;
 		private byte[] buffer;
 
+		private String inputFileName;
+
+		public Playback(String inputFileName) {
+			this.inputFileName = inputFileName;
+		}
+
 		public void start() {
 			thread = new Thread(this);
 			thread.setName("Playback");
@@ -162,8 +173,9 @@ public class SpectrogramMusicPlayer extends JPanel implements ActionListener {
 			}
 		}
 
-		private void play() throws UnsupportedAudioFileException, IOException, Exception, LineUnavailableException {
-			File file = new File(INPUT_FILE_NAME);
+		private void play() throws UnsupportedAudioFileException, IOException, Exception,
+				LineUnavailableException {
+			File file = new File(inputFileName);
 			AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(file);
 
 			AudioFormat format = audioInputStream.getFormat();
@@ -195,14 +207,14 @@ public class SpectrogramMusicPlayer extends JPanel implements ActionListener {
 		}
 
 		public float[] getFrameAmplitudes(float[] amplitudes) {
-			//			printByteArray(buffer);
+			// printByteArray(buffer);
 			byte[] monoSignal = stereoToMono(buffer);
-			//			printByteArray(monoSignal);
+			// printByteArray(monoSignal);
 			if (amplitudes == null) {
 				amplitudes = new float[monoSignal.length / 2];
 			}
 			littleEndianBytesToFloats(monoSignal, amplitudes);
-			//			printFloatArray(amplitudes);
+			// printFloatArray(amplitudes);
 			return amplitudes;
 		}
 
