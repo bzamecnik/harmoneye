@@ -175,7 +175,10 @@ public class GuiFilePlayer extends JPanel implements ActionListener {
 				try {
 					audioInputStream = AudioSystem
 							.getAudioInputStream(new File(INPUT_FILE_NAME));
-				} catch (UnsupportedAudioFileException | IOException e) {
+				} catch (UnsupportedAudioFileException e) {
+					e.printStackTrace();
+					return;
+				} catch (IOException e) {
 					e.printStackTrace();
 					return;
 				}

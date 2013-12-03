@@ -71,7 +71,7 @@ public class FastCqt implements Cqt {
 			kernels.setRow(k, calc.conjugate(calc.spectralKernel(k)));
 		}
 		kernels.transpose();
-		spectralKernels = new LinkedListNonZeroSparseFieldMatrix<>(kernels);
+		spectralKernels = new LinkedListNonZeroSparseFieldMatrix<Complex>(kernels);
 	}
 
 	public CqtContext getContext() {
