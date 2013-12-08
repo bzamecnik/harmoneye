@@ -22,6 +22,9 @@ import com.jogamp.opengl.util.awt.TextRenderer;
 
 public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfile>, GLEventListener {
 
+	private static final float DEFAULT_LINE_WIDTH = 1f;
+	private static final float WAIT_SCROBBLER_LINE_WIDTH = 1.5f;
+
 	protected static final String[] HALFTONE_NAMES = { "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B" };
 
 	private int pitchStep = 1;
@@ -97,7 +100,7 @@ public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfi
 		long millisInSecond = millis % 1000;
 		float phaseOffset = (float) (millisInSecond * 0.001);
 
-		gl.glLineWidth(1.5f);
+		gl.glLineWidth(WAIT_SCROBBLER_LINE_WIDTH);
 		double halfToneCountInv = 1.0 / HALFTONE_NAMES.length;
 		double maxRadius = 0.09;
 		double innerRadius = maxRadius * 0.25;
@@ -117,7 +120,7 @@ public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfi
 			gl.glVertex2d(outerRadius * x, outerRadius * y);
 		}
 		gl.glEnd();
-		gl.glLineWidth(0.5f);
+		gl.glLineWidth(DEFAULT_LINE_WIDTH);
 	}
 
 	private void drawPitchClassFrame(GL2 gl) {
