@@ -11,7 +11,10 @@ import com.harmoneye.util.ByteConverter;
 
 public class Capture implements Runnable {
 
-	private static final int DEFAULT_READ_BUFFER_SIZE_SAMPLES = 256;
+	// TODO: Automatically find out minimum usable buffer size.
+	// If its too small, buffer underruns make weird artifacts!!!
+	
+	private static final int DEFAULT_READ_BUFFER_SIZE_SAMPLES = 1024;
 
 	private Thread thread;
 	private AtomicBoolean isRunning = new AtomicBoolean();
