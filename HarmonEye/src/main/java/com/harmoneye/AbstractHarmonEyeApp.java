@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.AbstractAction;
 import javax.swing.ImageIcon;
@@ -35,7 +36,7 @@ public class AbstractHarmonEyeApp {
 	private ApplicationListener appListener;
 
 	private SwingVisualizer<PitchClassProfile> visualizer;
-	private boolean initialized;
+	private AtomicBoolean initialized = new AtomicBoolean();
 
 	private Timer updateTimer;
 
@@ -129,7 +130,7 @@ public class AbstractHarmonEyeApp {
 	}
 
 	public void start() {
-		if (!initialized) {
+		if (!initialized.get()) {
 			return;
 		}
 
@@ -146,7 +147,7 @@ public class AbstractHarmonEyeApp {
 	}
 
 	public void stop() {
-		if (!initialized) {
+		if (!initialized.get()) {
 			return;
 		}
 
@@ -158,7 +159,7 @@ public class AbstractHarmonEyeApp {
 
 	public void init() {
 		soundAnalyzer.init();
-		initialized = true;
+		initialized.set(true);
 	}
 
 	private void toggle() {

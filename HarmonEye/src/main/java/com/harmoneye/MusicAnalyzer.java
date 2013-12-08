@@ -1,5 +1,7 @@
 package com.harmoneye;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.util.FastMath;
 
@@ -36,11 +38,11 @@ public class MusicAnalyzer implements SoundConsumer {
 	private ExpSmoother binSmoother = new ExpSmoother(PITCH_BIN_COUNT, SMOOTHING_FACTOR);
 
 	private MovingAverageAccumulator accumulator = new MovingAverageAccumulator(PITCH_BIN_COUNT);
-	private boolean accumulatorEnabled = false;
+	private AtomicBoolean accumulatorEnabled = new AtomicBoolean();
 
 	private Visualizer<PitchClassProfile> visualizer;
 
-	private boolean initialized;
+	private AtomicBoolean initialized = new AtomicBoolean();
 
 	public MusicAnalyzer(Visualizer<PitchClassProfile> visualizer) {
 		this.visualizer = visualizer;
@@ -48,7 +50,7 @@ public class MusicAnalyzer implements SoundConsumer {
 
 	public void init() {
 		cqt.init();
-		initialized = true;
+		initialized.set(true);
 	}
 
 	@Override
@@ -57,7 +59,7 @@ public class MusicAnalyzer implements SoundConsumer {
 	}
 
 	public void updateSignal() {
-		if (!initialized) {
+		if (!initialized.get()) {
 			return;
 		}
 		amplitudeBuffer.readLast(amplitudes, amplitudes.length);
@@ -116,7 +118,7 @@ public class MusicAnalyzer implements SoundConsumer {
 		}
 
 		double[] pitchClassProfileDb = null;
-		if (accumulatorEnabled) {
+		if (accumulatorEnabled.get()) {
 			accumulator.add(octaveBinsDb);
 			pitchClassProfileDb = accumulator.getAverage();
 		} else {
@@ -131,8 +133,8 @@ public class MusicAnalyzer implements SoundConsumer {
 	}
 
 	public void toggleAccumulatorEnabled() {
-		accumulatorEnabled = !accumulatorEnabled;
-		if (accumulatorEnabled) {
+		accumulatorEnabled.set(!accumulatorEnabled.get());
+		if (accumulatorEnabled.get()) {
 			accumulator.reset();
 		}
 	}

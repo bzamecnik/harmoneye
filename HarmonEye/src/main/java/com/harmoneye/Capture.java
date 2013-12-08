@@ -1,5 +1,7 @@
 package com.harmoneye;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
@@ -12,7 +14,7 @@ public class Capture implements Runnable {
 	private static final int DEFAULT_READ_BUFFER_SIZE_SAMPLES = 256;
 
 	private Thread thread;
-	private volatile boolean isRunning;
+	private AtomicBoolean isRunning = new AtomicBoolean();
 
 	private int readBufferSizeInSamples;
 	private AudioFormat format;
@@ -42,11 +44,11 @@ public class Capture implements Runnable {
 		thread = new Thread(this);
 		thread.setName("Capture");
 		thread.start();
-		isRunning = true;
+		isRunning.set(true);
 	}
 
 	public void stop() {
-		isRunning = false;
+		isRunning.set(false);
 	}
 
 	public void run() {
@@ -71,7 +73,7 @@ public class Capture implements Runnable {
 
 		line.start();
 
-		while (isRunning) {
+		while (isRunning.get()) {
 			int readBytesCount = line.read(data, 0, bufferSize);
 			if (readBytesCount == -1) {
 				break;
