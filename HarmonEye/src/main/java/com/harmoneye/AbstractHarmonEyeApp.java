@@ -24,6 +24,9 @@ public class AbstractHarmonEyeApp {
 	private static final int TIME_PERIOD_MILLIS = 25;
 	private static final String WINDOW_TITLE = "HarmonEye";
 
+	protected static final float AUDIO_SAMPLE_RATE = 22050.0f;
+	protected static final int AUDIO_BITS_PER_SAMPLE = 16;
+
 	protected MusicAnalyzer soundAnalyzer;
 
 	private JFrame frame;
@@ -43,7 +46,7 @@ public class AbstractHarmonEyeApp {
 	public AbstractHarmonEyeApp() {
 		visualizer = new OpenGlCircularVisualizer();
 
-		soundAnalyzer = new MusicAnalyzer(visualizer);
+		soundAnalyzer = new MusicAnalyzer(visualizer, AUDIO_SAMPLE_RATE, AUDIO_BITS_PER_SAMPLE);
 
 		circleOfFifthsEnabledAction = new CircleOfFifthsEnabledAction("Circle of fifths", null, "", new Integer(
 			KeyEvent.VK_F));

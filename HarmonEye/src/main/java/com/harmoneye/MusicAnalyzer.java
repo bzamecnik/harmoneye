@@ -15,37 +15,47 @@ public class MusicAnalyzer implements SoundConsumer {
 	/** [0.0; 1.0] 1.0 = no smoothing */
 	private static final double SMOOTHING_FACTOR = 0.25;
 
-	private CqtContext ctx = CqtContext.create().build();
-	private FastCqt cqt = new FastCqt(ctx);
+	private CqtContext ctx;
 
-	private final double DB_THRESHOLD = -(20 * FastMath.log10(2 << (16 - 1)));
-	private final int BINS_PER_HALFTONE = ctx.getBinsPerHalftone();
-	private final int PITCH_BIN_COUNT = ctx.getBinsPerOctave();
-	private final int HALFTONE_PER_OCTAVE_COUNT = ctx.getHalftonesPerOctave();
+	private FastCqt cqt;
+	private DoubleCircularBuffer amplitudeBuffer;
+	private HarmonicPatternPitchClassDetector pcDetector;
+	private Visualizer<PitchClassProfile> visualizer;
+	private ExpSmoother binSmoother;
 
-	// in samples
-	private int signalBlockSize = ctx.getSignalBlockSize();
-
-	private double[] amplitudes = new double[signalBlockSize];
+	private double[] amplitudes;
 	/** peak amplitude spectrum */
 	private double[] amplitudeSpectrumDb;
-	private double[] octaveBinsDb = new double[PITCH_BIN_COUNT];
+	private double[] octaveBinsDb;
 
-	private DoubleCircularBuffer amplitudeBuffer = new DoubleCircularBuffer(signalBlockSize);
-
-	private HarmonicPatternPitchClassDetector pcDetector = new HarmonicPatternPitchClassDetector(ctx);
-
-	private ExpSmoother binSmoother = new ExpSmoother(PITCH_BIN_COUNT, SMOOTHING_FACTOR);
-
-	private MovingAverageAccumulator accumulator = new MovingAverageAccumulator(PITCH_BIN_COUNT);
-	private AtomicBoolean accumulatorEnabled = new AtomicBoolean();
-
-	private Visualizer<PitchClassProfile> visualizer;
+	private double dbThreshold;
+	private double dbThresholdInv;
 
 	private AtomicBoolean initialized = new AtomicBoolean();
 
-	public MusicAnalyzer(Visualizer<PitchClassProfile> visualizer) {
+	private MovingAverageAccumulator accumulator;
+	private AtomicBoolean accumulatorEnabled = new AtomicBoolean();
+
+	public MusicAnalyzer(Visualizer<PitchClassProfile> visualizer,
+		float sampleRate, int bitsPerSample) {
 		this.visualizer = visualizer;
+
+		dbThreshold = -(20 * FastMath.log10(2 << (bitsPerSample - 1)));
+		dbThresholdInv = 1.0 / dbThreshold;
+
+		//@formatter:off
+		ctx = CqtContext.create()
+			.build();
+		//@formatter:on
+
+		amplitudes = new double[ctx.getSignalBlockSize()];
+		octaveBinsDb = new double[ctx.getBinsPerOctave()];
+		amplitudeBuffer = new DoubleCircularBuffer(ctx.getSignalBlockSize());
+		pcDetector = new HarmonicPatternPitchClassDetector(ctx);
+		binSmoother = new ExpSmoother(ctx.getBinsPerOctave(), SMOOTHING_FACTOR);
+		accumulator = new MovingAverageAccumulator(ctx.getBinsPerOctave());
+
+		cqt = new FastCqt(ctx);
 	}
 
 	public void init() {
@@ -65,8 +75,8 @@ public class MusicAnalyzer implements SoundConsumer {
 		amplitudeBuffer.readLast(amplitudes, amplitudes.length);
 		computeAmplitudeSpectrum(amplitudes);
 		double[] pitchClassProfileDb = computePitchClassProfile();
-		PitchClassProfile pcProfile = new PitchClassProfile(pitchClassProfileDb, HALFTONE_PER_OCTAVE_COUNT,
-			BINS_PER_HALFTONE);
+		PitchClassProfile pcProfile = new PitchClassProfile(pitchClassProfileDb,
+			ctx.getHalftonesPerOctave(), ctx.getBinsPerHalftone());
 		visualizer.update(pcProfile);
 	}
 
@@ -79,20 +89,21 @@ public class MusicAnalyzer implements SoundConsumer {
 			double amplitude = cqSpectrum[i].abs();
 			double referenceAmplitude = 1;
 			double amplitudeDb = 20 * FastMath.log10(amplitude / referenceAmplitude);
-			if (amplitudeDb < DB_THRESHOLD) {
-				amplitudeDb = DB_THRESHOLD;
+			if (amplitudeDb < dbThreshold) {
+				amplitudeDb = dbThreshold;
 			}
 			// rescale: [DB_THRESHOLD; 0] -> [-1; 0] -> [0; 1]
-			double scaledAmplitudeDb = amplitudeDb / DB_THRESHOLD;
+			double scaledAmplitudeDb = amplitudeDb * dbThresholdInv;
 			amplitudeSpectrumDb[i] = 1 - scaledAmplitudeDb;
 		}
 	}
 
 	private double[] computePitchClassProfile() {
-		for (int i = 0; i < PITCH_BIN_COUNT; i++) {
+		int binsPerOctave = ctx.getBinsPerOctave();
+		for (int i = 0; i < binsPerOctave; i++) {
 			// maximum over octaves:
 			double value = 0;
-			for (int j = i; j < amplitudeSpectrumDb.length; j += PITCH_BIN_COUNT) {
+			for (int j = i; j < amplitudeSpectrumDb.length; j += binsPerOctave) {
 				value = FastMath.max(value, amplitudeSpectrumDb[j]);
 			}
 			octaveBinsDb[i] = value;
@@ -126,10 +137,6 @@ public class MusicAnalyzer implements SoundConsumer {
 			pitchClassProfileDb = binSmoother.smooth(octaveBinsDb);
 		}
 		return pitchClassProfileDb;
-	}
-
-	public int getSignalBlockSize() {
-		return signalBlockSize;
 	}
 
 	public void toggleAccumulatorEnabled() {

@@ -22,14 +22,12 @@ public class Capture implements Runnable {
 
 	private SoundConsumer soundConsumer;
 
-	public Capture(SoundConsumer soundConsumer) {
+	public Capture(SoundConsumer soundConsumer, float sampleRate, int sampleSizeBits) {
 		this.soundConsumer = soundConsumer;
 
 		AudioFormat.Encoding encoding = AudioFormat.Encoding.PCM_SIGNED;
-		float sampleRate = 2 * 11025.0f;
 		int channelCount = 1;
-		int sampleSizeBytes = 2;
-		int sampleSizeBits = 8 * sampleSizeBytes;
+		int sampleSizeBytes = sampleSizeBits / 8;
 		int frameSizeBytes = channelCount * sampleSizeBytes;
 		boolean bigEndian = false;
 

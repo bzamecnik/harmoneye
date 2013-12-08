@@ -5,7 +5,7 @@ public class CaptureHarmonEyeApp extends AbstractHarmonEyeApp {
 	private Capture capture;
 
 	public CaptureHarmonEyeApp() {
-		capture = new Capture(soundAnalyzer);
+		capture = new Capture(soundAnalyzer, AUDIO_SAMPLE_RATE, AUDIO_BITS_PER_SAMPLE);
 	}
 
 	public void start() {
