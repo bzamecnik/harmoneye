@@ -16,7 +16,7 @@ public class ButterworthFilterTest {
 		printSignal(signal);
 
 		ButterworthFilter filter = new ButterworthFilter();
-		double[] filteredSignal = filter.filter(signal, null);
+		double[] filteredSignal = filter.filter(signal);
 
 		System.out.println("low-pass filtered signal");
 		printSignal(filteredSignal);
@@ -27,11 +27,11 @@ public class ButterworthFilterTest {
 		double[] signal = generateSinWave(5.0f, 20.0f, 2.0f);
 
 		ButterworthFilter filter = new ButterworthFilter();
-		filter.filter(signal, signal);
+		filter.filter(signal);
 
 		double[] signal2 = generateSinWave(5.0f, 20.0f, 2.0f);
 
-		filter.filter(signal2, signal2);
+		filter.filter(signal2);
 
 		assertTrue(Arrays.equals(signal, signal2));
 	}
@@ -43,12 +43,9 @@ public class ButterworthFilterTest {
 			double frequency = i * 0.5f;
 			double[] signal = generateSinWave(frequency, 20.0f, 2.0f);
 
-			filter.filter(signal, signal);
+			double[] lowPassSignal = filter.filter(signal);
 
-			System.out.println("freq: " + frequency + ", RMS: " + computeRms(signal));
+			System.out.println("freq: " + frequency + ", RMS: " + computeRms(lowPassSignal));
 		}
 	}
-
-
-
 }

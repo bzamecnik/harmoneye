@@ -8,7 +8,7 @@ public class DownsamplerTest {
 
 	@Test
 	public void downsampleSomeSignal() {
-		double freq = 20.0f;
+		double freq = 2.0f;
 		double sampleFreq = 100.0f;
 		double duration = 2.0f;
 		double[] signal = generateSinWave(freq, sampleFreq, duration);
@@ -19,7 +19,7 @@ public class DownsamplerTest {
 		printSignal(signal);
 
 		Decimator downsampler = Decimator.withDefaultFilter();
-		double[] downsampledSignal = downsampler.decimate(signal, null);
+		double[] downsampledSignal = downsampler.decimate(signal);
 
 		System.out.println("Decimated signal:");
 		System.out.println("RMS: " + computeRms(downsampledSignal));

@@ -13,9 +13,9 @@ public class ZeroPhaseButterworthFilterTest {
 			double frequency = i * 0.5f;
 			double[] signal = generateSinWave(frequency, 20.0f, 2.0f);
 
-			filter.filter(signal, signal);
+			double[] lowPassSignal = filter.filter(signal);
 
-			System.out.println("freq: " + frequency + ", RMS: " + computeRms(signal));
+			System.out.println("freq: " + frequency + ", RMS: " + computeRms(lowPassSignal));
 		}
 	}
 
@@ -30,12 +30,12 @@ public class ZeroPhaseButterworthFilterTest {
 		System.out.println("Original signal - spike:");
 		printSignal(signal);
 		
-		double[] bwFiltered = butterworthFilter.filter(signal, null);
+		double[] bwFiltered = butterworthFilter.filter(signal);
 
 		System.out.println("Single-pass Butterworth:");
 		printSignal(bwFiltered);
 
-		double[] zpFiltered = zeroPhasefilter.filter(signal, null);
+		double[] zpFiltered = zeroPhasefilter.filter(signal);
 
 		System.out.println("Forward-and-reverse two-pass Butterworth:");
 		printSignal(zpFiltered);

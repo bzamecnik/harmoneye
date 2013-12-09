@@ -10,6 +10,8 @@ public class Decimator {
 
 	private Filter lowPassFilter;
 
+	private double decimatedSignal[];
+
 	public Decimator(Filter lowPassFilter) {
 		this.lowPassFilter = lowPassFilter;
 	}
@@ -18,25 +20,21 @@ public class Decimator {
 		return new Decimator(new ZeroPhaseFilter(new ButterworthFilter()));
 	}
 
-	public double[] decimate(double[] signal, double[] decimatedSignal) {
-		int halfLength = signal.length / 2;
-		if (decimatedSignal == null) {
-			decimatedSignal = new double[halfLength];
-		} else if (decimatedSignal.length != halfLength) {
-			throw new IllegalArgumentException(
-				"The downsampled signal must be half as long as the original.");
-		}
-
-		// TODO: reuse some existing array
-		double[] lowPassSignal = lowPassFilter.filter(signal, null);
-		return downsample(lowPassSignal, decimatedSignal);
+	public double[] decimate(double[] signal) {
+		double[] lowPassSignal = lowPassFilter.filter(signal);
+		return downsample(lowPassSignal);
 	}
 
 	// downsample by factor of two
-	private double[] downsample(double[] signal, double[] downsampledSignal) {
-		for (int to = 0, from = 0; to < downsampledSignal.length; to++, from += 2) {
-			downsampledSignal[to] = signal[from];
+	private double[] downsample(double[] signal) {
+		int halfLength = signal.length / 2;
+		if (decimatedSignal == null || decimatedSignal.length != halfLength) {
+			decimatedSignal = new double[halfLength];
 		}
-		return downsampledSignal;
+
+		for (int to = 0, from = 0; to < decimatedSignal.length; to++, from += 2) {
+			decimatedSignal[to] = signal[from];
+		}
+		return decimatedSignal;
 	}
 }

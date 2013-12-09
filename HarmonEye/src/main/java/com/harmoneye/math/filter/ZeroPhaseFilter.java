@@ -18,10 +18,10 @@ public class ZeroPhaseFilter implements Filter {
 	}
 
 	@Override
-	public double[] filter(double[] signal, double[] filteredSignal) {
-		filteredSignal = decoratedFilter.filter(signal, filteredSignal);
+	public double[] filter(double[] signal) {
+		double[] filteredSignal = decoratedFilter.filter(signal);
 		reverse(filteredSignal);
-		filteredSignal = decoratedFilter.filter(filteredSignal, filteredSignal);
+		filteredSignal = decoratedFilter.filter(filteredSignal);
 		reverse(filteredSignal);
 		
 		return filteredSignal;

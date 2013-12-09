@@ -1,5 +1,7 @@
 package com.harmoneye.math.filter;
 
+import java.util.Arrays;
+
 public class ButterworthFilter implements Filter {
 	/*
 	 * Digital filter designed by mkfilter/mkshape/gencode by A.J. Fisher
@@ -14,11 +16,21 @@ public class ButterworthFilter implements Filter {
 
 	private static final double INPUT_COEFFS[] = new double[] { 1, 6, 15, 20, 15,
 		6, 1 };
-	private static final double OUTPUT_COEFFS[] = new double[] { -0.0017509260f, 0,
-		-0.1141994251f, 0, -0.7776959619f, 0, 0 };
+	private static final double OUTPUT_COEFFS[] = new double[] { -0.0017509260f,
+		0, -0.1141994251f, 0, -0.7776959619f, 0, 0 };
 
 	private double inputSamples[] = new double[NZEROS + 1];
 	private double outputSamples[] = new double[NPOLES + 1];
+
+	private double filteredSignal[];
+
+	private boolean streamingEnabled;
+
+	public static ButterworthFilter newStreamingFilter() {
+		ButterworthFilter filter = new ButterworthFilter();
+		filter.streamingEnabled = true;
+		return filter;
+	}
 
 	/**
 	 * Low-pass filters the time-domain signal in place by a 6th order Butterworth
@@ -27,13 +39,15 @@ public class ButterworthFilter implements Filter {
 	 * 
 	 * This function is not thead-safe.
 	 */
-	public double[] filter(double[] signal, double[] filteredSignal) {
-		if (filteredSignal == null) {
+	public double[] filter(double[] signal) {
+		if (filteredSignal == null || filteredSignal.length != signal.length) {
 			filteredSignal = new double[signal.length];
 		}
 
-		clean(inputSamples);
-		clean(outputSamples);
+		if (!streamingEnabled) {
+			clean(inputSamples);
+			clean(outputSamples);
+		}
 
 		for (int i = 0; i < signal.length; i++) {
 			// TODO: instead of shifting use a "pointer" - like in a ring buffer
@@ -63,8 +77,6 @@ public class ButterworthFilter implements Filter {
 	}
 
 	private void clean(double[] values) {
-		for (int i = 0; i < values.length; i++) {
-			values[i] = 0;
-		}
+		Arrays.fill(values, 0);
 	}
 }
