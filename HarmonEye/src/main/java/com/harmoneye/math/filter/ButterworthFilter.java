@@ -10,15 +10,15 @@ public class ButterworthFilter implements Filter {
 
 	private static final int NZEROS = 6;
 	private static final int NPOLES = 6;
-	private static final float GAIN_INV = 1.0f / 3.379723001e+01f;
+	private static final double GAIN_INV = 1.0f / 3.379723001e+01f;
 
-	private static final float INPUT_COEFFS[] = new float[] { 1, 6, 15, 20, 15,
+	private static final double INPUT_COEFFS[] = new double[] { 1, 6, 15, 20, 15,
 		6, 1 };
-	private static final float OUTPUT_COEFFS[] = new float[] { -0.0017509260f, 0,
+	private static final double OUTPUT_COEFFS[] = new double[] { -0.0017509260f, 0,
 		-0.1141994251f, 0, -0.7776959619f, 0, 0 };
 
-	private float inputSamples[] = new float[NZEROS + 1];
-	private float outputSamples[] = new float[NPOLES + 1];
+	private double inputSamples[] = new double[NZEROS + 1];
+	private double outputSamples[] = new double[NPOLES + 1];
 
 	/**
 	 * Low-pass filters the time-domain signal in place by a 6th order Butterworth
@@ -27,9 +27,9 @@ public class ButterworthFilter implements Filter {
 	 * 
 	 * This function is not thead-safe.
 	 */
-	public float[] filter(float[] signal, float[] filteredSignal) {
+	public double[] filter(double[] signal, double[] filteredSignal) {
 		if (filteredSignal == null) {
-			filteredSignal = new float[signal.length];
+			filteredSignal = new double[signal.length];
 		}
 
 		clean(inputSamples);
@@ -48,21 +48,21 @@ public class ButterworthFilter implements Filter {
 		return filteredSignal;
 	}
 
-	private void shift(float[] values) {
+	private void shift(double[] values) {
 		for (int i = 0; i < values.length - 1; i++) {
 			values[i] = values[i + 1];
 		}
 	}
 
-	private float dot(float[] a, float[] b) {
-		float sum = 0;
+	private double dot(double[] a, double[] b) {
+		double sum = 0;
 		for (int i = 0; i < a.length; i++) {
 			sum += a[i] * b[i];
 		}
 		return sum;
 	}
 
-	private void clean(float[] values) {
+	private void clean(double[] values) {
 		for (int i = 0; i < values.length; i++) {
 			values[i] = 0;
 		}

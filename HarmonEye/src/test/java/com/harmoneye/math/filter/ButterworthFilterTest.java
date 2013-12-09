@@ -11,12 +11,12 @@ public class ButterworthFilterTest {
 
 	@Test
 	public void filterSomeSignal() {
-		float[] signal = generateSinWave(5.0f, 20.0f, 2.0f);
+		double[] signal = generateSinWave(5.0f, 20.0f, 2.0f);
 
 		printSignal(signal);
 
 		ButterworthFilter filter = new ButterworthFilter();
-		float[] filteredSignal = filter.filter(signal, null);
+		double[] filteredSignal = filter.filter(signal, null);
 
 		System.out.println("low-pass filtered signal");
 		printSignal(filteredSignal);
@@ -24,12 +24,12 @@ public class ButterworthFilterTest {
 
 	@Test
 	public void filterIsStateless() {
-		float[] signal = generateSinWave(5.0f, 20.0f, 2.0f);
+		double[] signal = generateSinWave(5.0f, 20.0f, 2.0f);
 
 		ButterworthFilter filter = new ButterworthFilter();
 		filter.filter(signal, signal);
 
-		float[] signal2 = generateSinWave(5.0f, 20.0f, 2.0f);
+		double[] signal2 = generateSinWave(5.0f, 20.0f, 2.0f);
 
 		filter.filter(signal2, signal2);
 
@@ -40,8 +40,8 @@ public class ButterworthFilterTest {
 	public void filterFrequencyRange() {
 		ButterworthFilter filter = new ButterworthFilter();
 		for (int i = 0; i < 20; i++) {
-			float frequency = i * 0.5f;
-			float[] signal = generateSinWave(frequency, 20.0f, 2.0f);
+			double frequency = i * 0.5f;
+			double[] signal = generateSinWave(frequency, 20.0f, 2.0f);
 
 			filter.filter(signal, signal);
 

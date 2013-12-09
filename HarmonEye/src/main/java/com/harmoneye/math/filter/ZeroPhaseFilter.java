@@ -18,7 +18,7 @@ public class ZeroPhaseFilter implements Filter {
 	}
 
 	@Override
-	public float[] filter(float[] signal, float[] filteredSignal) {
+	public double[] filter(double[] signal, double[] filteredSignal) {
 		filteredSignal = decoratedFilter.filter(signal, filteredSignal);
 		reverse(filteredSignal);
 		filteredSignal = decoratedFilter.filter(filteredSignal, filteredSignal);
@@ -30,9 +30,9 @@ public class ZeroPhaseFilter implements Filter {
 	// TODO: The reversing could be eliminated if the decorated filter could be
 	// told to run in reverse or the signal would have a reverse iterator.
 
-	private void reverse(float[] signal) {
+	private void reverse(double[] signal) {
 		// swap the first half of elements with the second half
-		float swapped;
+		double swapped;
 		for (int i = 0, j = signal.length - 1; i < j; i++, j--) {
 			swapped = signal[i];
 			signal[i] = signal[j];

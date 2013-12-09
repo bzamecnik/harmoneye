@@ -8,17 +8,17 @@ public class SignalUtils {
 	 * @param length in seconds
 	 * @return
 	 */
-	public static float[] generateSinWave(float frequency, float samplingFreq,
-		float length) {
+	public static double[] generateSinWave(double frequency, double samplingFreq,
+		double length) {
 		int sampleCount = (int) Math.ceil(length * samplingFreq);
-		float[] signal = new float[sampleCount];
+		double[] signal = new double[sampleCount];
 		for (int i = 0; i < signal.length; i++) {
-			signal[i] = (float) Math.sin(i * 2 * Math.PI * frequency / samplingFreq);
+			signal[i] = (double) Math.sin(i * 2 * Math.PI * frequency / samplingFreq);
 		}
 		return signal;
 	}
 
-	public static void printSignal(float[] signal) {
+	public static void printSignal(double[] signal) {
 		System.out.println("signal:");
 		System.out.println("length: " + signal.length);
 		for (int i = 0; i < signal.length; i++) {
@@ -27,16 +27,16 @@ public class SignalUtils {
 		System.out.println();
 	}
 
-	public static float computeRms(float[] samples) {
-		float sum = 0;
-		for (float amplitude : samples) {
+	public static double computeRms(double[] samples) {
+		double sum = 0;
+		for (double amplitude : samples) {
 			sum += amplitude * amplitude;
 		}
-		return (float) Math.sqrt(sum / (float) samples.length);
+		return (double) Math.sqrt(sum / (double) samples.length);
 	}
 	
 
-	private static String toStars(float amplitude) {
+	private static String toStars(double amplitude) {
 		StringBuilder sb = new StringBuilder();
 		int totalSize = 80;
 		int starCount = (int) Math.round(0.5 * Math.abs(amplitude) * totalSize + 1);

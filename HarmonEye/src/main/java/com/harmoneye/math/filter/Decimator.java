@@ -18,22 +18,22 @@ public class Decimator {
 		return new Decimator(new ZeroPhaseFilter(new ButterworthFilter()));
 	}
 
-	public float[] decimate(float[] signal, float[] decimatedSignal) {
+	public double[] decimate(double[] signal, double[] decimatedSignal) {
 		int halfLength = signal.length / 2;
 		if (decimatedSignal == null) {
-			decimatedSignal = new float[halfLength];
+			decimatedSignal = new double[halfLength];
 		} else if (decimatedSignal.length != halfLength) {
 			throw new IllegalArgumentException(
 				"The downsampled signal must be half as long as the original.");
 		}
 
 		// TODO: reuse some existing array
-		float[] lowPassSignal = lowPassFilter.filter(signal, null);
+		double[] lowPassSignal = lowPassFilter.filter(signal, null);
 		return downsample(lowPassSignal, decimatedSignal);
 	}
 
 	// downsample by factor of two
-	private float[] downsample(float[] signal, float[] downsampledSignal) {
+	private double[] downsample(double[] signal, double[] downsampledSignal) {
 		for (int to = 0, from = 0; to < downsampledSignal.length; to++, from += 2) {
 			downsampledSignal[to] = signal[from];
 		}

@@ -9,5 +9,5 @@ public interface Filter {
 	 * computation is in-place), can be null, then a new array is allocated
 	 * @return filtered signal
 	 */
-	float[] filter(float[] signal, float[] filteredSignal);
+	double[] filter(double[] signal, double[] filteredSignal);
 }
