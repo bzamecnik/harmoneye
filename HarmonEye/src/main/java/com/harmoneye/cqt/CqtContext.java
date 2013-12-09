@@ -132,6 +132,19 @@ public final class CqtContext {
 		return normalizationFactor;
 	}
 
+	@Override
+	public String toString() {
+		return "CqtContext [octaveCount=" + octaveCount + ", baseFreq=" + baseFreq
+			+ ", samplingFreq=" + samplingFreq + ", halftonesPerOctave="
+			+ halftonesPerOctave + ", binsPerHalftone=" + binsPerHalftone
+			+ ", window=" + window + ", chopThreshold=" + chopThreshold
+			+ ", maxFreq=" + maxFreq + ", binsPerOctave=" + binsPerOctave
+			+ ", binsPerOctaveInv=" + binsPerOctaveInv + ", totalBins=" + totalBins
+			+ ", q=" + q + ", windowIntegral=" + windowIntegral
+			+ ", signalBlockSize=" + signalBlockSize + ", normalizationFactor="
+			+ normalizationFactor + "]";
+	}
+
 	public static class Builder {
 
 		private CqtContext ctx = new CqtContext();
