@@ -4,11 +4,11 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-public class DoubleCircularBufferTest {
+public class DoubleRingBufferTest {
 
 	@Test
 	public void writeAndReadFullBuffer() {
-		DoubleCircularBuffer buffer = new DoubleCircularBuffer(5);
+		DoubleRingBuffer buffer = new DoubleRingBuffer(5);
 
 		double[] writtenData = new double[] { 1, 2, 3, 4, 5 };
 		buffer.write(writtenData);
@@ -24,7 +24,7 @@ public class DoubleCircularBufferTest {
 
 	@Test
 	public void writeFullBufferAndReadLess() {
-		DoubleCircularBuffer buffer = new DoubleCircularBuffer(5);
+		DoubleRingBuffer buffer = new DoubleRingBuffer(5);
 
 		double[] writtenData = new double[] { 1, 2, 3, 4, 5 };
 		buffer.write(writtenData);
@@ -41,7 +41,7 @@ public class DoubleCircularBufferTest {
 
 	@Test
 	public void writePastBufferCapacity() {
-		DoubleCircularBuffer buffer = new DoubleCircularBuffer(5);
+		DoubleRingBuffer buffer = new DoubleRingBuffer(5);
 
 		double[] writtenData = new double[] { 1, 2, 3, 4, 5, 6, 7 };
 		buffer.write(writtenData);

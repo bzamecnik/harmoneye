@@ -8,7 +8,7 @@ import org.apache.commons.math3.util.FastMath;
 import com.harmoneye.cqt.CqtContext;
 import com.harmoneye.cqt.FastCqt;
 import com.harmoneye.cqt.HarmonicPatternPitchClassDetector;
-import com.harmoneye.util.DoubleCircularBuffer;
+import com.harmoneye.util.DoubleRingBuffer;
 
 public class MusicAnalyzer implements SoundConsumer {
 
@@ -18,7 +18,7 @@ public class MusicAnalyzer implements SoundConsumer {
 	private CqtContext ctx;
 
 	private FastCqt cqt;
-	private DoubleCircularBuffer amplitudeBuffer;
+	private DoubleRingBuffer amplitudeBuffer;
 	private HarmonicPatternPitchClassDetector pcDetector;
 	private Visualizer<PitchClassProfile> visualizer;
 	private ExpSmoother binSmoother;
@@ -54,7 +54,7 @@ public class MusicAnalyzer implements SoundConsumer {
 
 		amplitudes = new double[ctx.getSignalBlockSize()];
 		octaveBinsDb = new double[ctx.getBinsPerOctave()];
-		amplitudeBuffer = new DoubleCircularBuffer(ctx.getSignalBlockSize());
+		amplitudeBuffer = new DoubleRingBuffer(ctx.getSignalBlockSize());
 		pcDetector = new HarmonicPatternPitchClassDetector(ctx);
 		binSmoother = new ExpSmoother(ctx.getBinsPerOctave(), SMOOTHING_FACTOR);
 		accumulator = new MovingAverageAccumulator(ctx.getBinsPerOctave());

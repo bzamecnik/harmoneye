@@ -8,7 +8,7 @@ import javax.sound.sampled.TargetDataLine;
 import org.apache.commons.lang3.time.StopWatch;
 
 import com.harmoneye.util.ByteConverter;
-import com.harmoneye.util.DoubleCircularBuffer;
+import com.harmoneye.util.DoubleRingBuffer;
 
 public class CircularBufferedSoundCapture {
 
@@ -18,7 +18,7 @@ public class CircularBufferedSoundCapture {
 	private static final int CIRCULAR_BUFFER_SIZE = 8 * 1024;
 
 	public static void main(String s[]) throws Exception {
-		DoubleCircularBuffer circularBuffer = new DoubleCircularBuffer(CIRCULAR_BUFFER_SIZE);
+		DoubleRingBuffer circularBuffer = new DoubleRingBuffer(CIRCULAR_BUFFER_SIZE);
 
 		AudioFormat.Encoding encoding = AudioFormat.Encoding.PCM_SIGNED;
 		float sampleRate = 11025.0f;

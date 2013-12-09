@@ -1,13 +1,17 @@
 package com.harmoneye.util;
 
-// TODO: use locking for thread safety!
-public class DoubleCircularBuffer {
+/**
+ * Lock-free ring buffer.
+ * 
+ * Two concurrent threads might overwrite each other's data.
+ */
+public class DoubleRingBuffer {
 
-	private int bufferSize;
+	private final int bufferSize;
 	private double[] buffer;
-	private int endIndex = 0;
+	private volatile int endIndex = 0;
 
-	public DoubleCircularBuffer(int bufferSize) {
+	public DoubleRingBuffer(int bufferSize) {
 		this.bufferSize = bufferSize;
 		this.buffer = new double[bufferSize];
 	}
