@@ -63,7 +63,7 @@ import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.SoftBevelBorder;
 
-import com.harmoneye.Config;
+import com.harmoneye.app.Config;
 
 /**
  * SimpleSoundCapture Example. This is a simple program to record sounds and

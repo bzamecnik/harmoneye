@@ -9,7 +9,7 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
-import com.harmoneye.Config;
+import com.harmoneye.app.Config;
 
 public class WavFileReader {
 	private static final int BUFFER_SIZE = 4 * 1024;

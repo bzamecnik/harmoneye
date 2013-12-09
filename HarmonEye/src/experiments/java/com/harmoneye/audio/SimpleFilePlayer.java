@@ -48,7 +48,7 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.SourceDataLine;
 
-import com.harmoneye.Config;
+import com.harmoneye.app.Config;
 
 /**
  * SimpleSoundCapture Example. This is a simple program to record sounds and

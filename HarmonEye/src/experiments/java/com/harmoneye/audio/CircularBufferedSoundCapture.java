@@ -7,8 +7,6 @@ import javax.sound.sampled.TargetDataLine;
 
 import org.apache.commons.lang3.time.StopWatch;
 
-import com.harmoneye.util.ByteConverter;
-import com.harmoneye.util.DoubleRingBuffer;
 
 public class CircularBufferedSoundCapture {
 

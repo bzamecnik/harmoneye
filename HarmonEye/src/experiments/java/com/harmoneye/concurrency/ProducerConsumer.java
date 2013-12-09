@@ -1,7 +1,7 @@
 package com.harmoneye.concurrency;
 
+import com.harmoneye.audio.ByteConverter;
 import com.harmoneye.audio.SoundCapture;
-import com.harmoneye.util.ByteConverter;
 
 /**
  * 1 producer and 3 consumers producing/consuming 10 items

@@ -7,8 +7,6 @@ import org.apache.commons.math3.complex.ComplexField;
 import org.apache.commons.math3.linear.ArrayFieldVector;
 import org.apache.commons.math3.linear.FieldMatrix;
 
-import com.harmoneye.util.LinkedListNonZeroSparseFieldMatrix;
-import com.harmoneye.util.NonZeroSparseFieldMatrix;
 
 public class ApacheSparseMatrixBenchmark {
 
