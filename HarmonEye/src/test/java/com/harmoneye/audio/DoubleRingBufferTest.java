@@ -16,7 +16,7 @@ public class DoubleRingBufferTest {
 		buffer.write(writtenData);
 
 		double[] result = new double[writtenData.length];
-		buffer.readLast(result, result.length);
+		buffer.readLast(result.length, result);
 
 		assertEquals(writtenData.length, result.length);
 		for (int i = 0; i < result.length; i++) {
@@ -32,7 +32,7 @@ public class DoubleRingBufferTest {
 		buffer.write(writtenData);
 
 		double[] result = new double[3];
-		buffer.readLast(result, result.length);
+		buffer.readLast(result.length, result);
 
 		assertEquals(3, result.length);
 		int offset = writtenData.length - result.length;
@@ -49,7 +49,7 @@ public class DoubleRingBufferTest {
 		buffer.write(writtenData);
 
 		double[] result = new double[5];
-		buffer.readLast(result, result.length);
+		buffer.readLast(result.length, result);
 
 		double[] expectedData = new double[] { 3, 4, 5, 6, 7 };
 		assertEquals(expectedData.length, result.length);

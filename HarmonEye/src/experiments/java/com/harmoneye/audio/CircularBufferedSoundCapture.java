@@ -58,7 +58,7 @@ public class CircularBufferedSoundCapture {
 
 			circularBuffer.write(newSamples);
 
-			circularBuffer.readLast(recentSamples, recentSamples.length);
+			circularBuffer.readLast(recentSamples.length, recentSamples);
 
 			double rms = getRms(recentSamples);
 			// System.out.print("min: " + min(amplitudes) + "\t");

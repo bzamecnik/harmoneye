@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.util.FastMath;
 
-import com.harmoneye.audio.DoubleRingBuffer;
+import com.harmoneye.audio.MultiRateRingBufferBank;
 import com.harmoneye.math.cqt.CqtContext;
 import com.harmoneye.math.cqt.FastCqt;
 import com.harmoneye.viz.Visualizer;
@@ -18,12 +18,12 @@ public class MusicAnalyzer implements SoundConsumer {
 	private CqtContext ctx;
 
 	private FastCqt cqt;
-	private DoubleRingBuffer amplitudeBuffer;
+	private MultiRateRingBufferBank ringBufferBank;
 	private HarmonicPatternPitchClassDetector pcDetector;
 	private Visualizer<PitchClassProfile> visualizer;
 	private ExpSmoother binSmoother;
 
-	private double[] amplitudes;
+	private double[] samples;
 	/** peak amplitude spectrum */
 	private double[] amplitudeSpectrumDb;
 	private double[] octaveBinsDb;
@@ -46,15 +46,17 @@ public class MusicAnalyzer implements SoundConsumer {
 		//@formatter:off
 		ctx = CqtContext.create()
 			.samplingFreq(sampleRate)
-//			.baseFreq((2 << 1) * 65.4063913251)
-//			.octaveCount(2)
+//			.maxFreq((2 << 6) * 65.4063913251)
+//			.octaves(2)
+			.kernelOctaves(1)
 			.binsPerHalftone(7)
 			.build();
 		//@formatter:on
 
-		amplitudes = new double[ctx.getSignalBlockSize()];
+		samples = new double[ctx.getSignalBlockSize()];
+		amplitudeSpectrumDb = new double[ctx.getTotalBins()];
 		octaveBinsDb = new double[ctx.getBinsPerOctave()];
-		amplitudeBuffer = new DoubleRingBuffer(ctx.getSignalBlockSize());
+		ringBufferBank = new MultiRateRingBufferBank(ctx.getSignalBlockSize(), ctx.getOctaves());
 		pcDetector = new HarmonicPatternPitchClassDetector(ctx);
 		binSmoother = new ExpSmoother(ctx.getBinsPerOctave(), SMOOTHING_FACTOR);
 		accumulator = new MovingAverageAccumulator(ctx.getBinsPerOctave());
@@ -69,40 +71,39 @@ public class MusicAnalyzer implements SoundConsumer {
 
 	@Override
 	public void consume(double[] samples) {
-		amplitudeBuffer.write(samples);
+		ringBufferBank.write(samples);
 	}
 
 	public void updateSignal() {
 		if (!initialized.get()) {
 			return;
 		}
-		amplitudeBuffer.readLast(amplitudes, amplitudes.length);
-		computeAmplitudeSpectrum(amplitudes);
-		double[] pitchClassProfileDb = computePitchClassProfile();
-		PitchClassProfile pcProfile = new PitchClassProfile(pitchClassProfileDb,
-			ctx.getHalftonesPerOctave(), ctx.getBinsPerHalftone());
+		for (int octave = 0; octave < ctx.getOctaves(); octave++) {
+			ringBufferBank.readLast(octave, samples.length, samples);
+			Complex[] cqSpectrum = cqt.transform(samples);
+			int startIndex = octave * ctx.getBinsPerOctave();
+			toAmplitudeDbSpectrum(cqSpectrum, amplitudeSpectrumDb, startIndex);
+		}
+		PitchClassProfile pcProfile = computePitchClassProfile(amplitudeSpectrumDb);
 		visualizer.update(pcProfile);
 	}
 
-	private void computeAmplitudeSpectrum(double[] signal) {
-		Complex[] cqSpectrum = cqt.transform(signal);
-		if (amplitudeSpectrumDb == null) {
-			amplitudeSpectrumDb = new double[cqSpectrum.length];
-		}
-		for (int i = 0; i < amplitudeSpectrumDb.length; i++) {
+	private void toAmplitudeDbSpectrum(Complex[] cqSpectrum, double[] amplitudeSpectrum, int startIndex) {
+		for (int i = 0; i < cqSpectrum.length; i++) {
 			double amplitude = cqSpectrum[i].abs();
-			double referenceAmplitude = 1;
-			double amplitudeDb = 20 * FastMath.log10(amplitude / referenceAmplitude);
+			// Since reference amplitude is 1, this code is implied:
+			// double referenceAmplitude = 1;
+			// amplitude /= referenceAmplitude; 
+			double amplitudeDb = 20 * FastMath.log10(amplitude);
 			if (amplitudeDb < dbThreshold) {
 				amplitudeDb = dbThreshold;
 			}
 			// rescale: [DB_THRESHOLD; 0] -> [-1; 0] -> [0; 1]
-			double scaledAmplitudeDb = amplitudeDb * dbThresholdInv;
-			amplitudeSpectrumDb[i] = 1 - scaledAmplitudeDb;
+			amplitudeSpectrumDb[startIndex + i] = 1 - (amplitudeDb * dbThresholdInv);
 		}
 	}
 
-	private double[] computePitchClassProfile() {
+	private PitchClassProfile computePitchClassProfile(double[] amplitudeSpectrumDb) {
 		int binsPerOctave = ctx.getBinsPerOctave();
 		for (int i = 0; i < binsPerOctave; i++) {
 			// maximum over octaves:
@@ -132,7 +133,7 @@ public class MusicAnalyzer implements SoundConsumer {
 			octaveBinsDb[i] = FastMath.pow(octaveBinsDb[i], 1 / 3.0);
 		}
 
-		double[] pitchClassProfileDb = null;
+		double[] pitchClassProfileDb = null;//octaveBinsDb;
 		if (accumulatorEnabled.get()) {
 			accumulator.add(octaveBinsDb);
 			pitchClassProfileDb = accumulator.getAverage();
@@ -140,7 +141,10 @@ public class MusicAnalyzer implements SoundConsumer {
 			binSmoother.smooth(octaveBinsDb);
 			pitchClassProfileDb = binSmoother.smooth(octaveBinsDb);
 		}
-		return pitchClassProfileDb;
+		
+		PitchClassProfile pcProfile = new PitchClassProfile(pitchClassProfileDb,
+			ctx.getHalftonesPerOctave(), ctx.getBinsPerHalftone());
+		return pcProfile;
 	}
 
 	public void toggleAccumulatorEnabled() {

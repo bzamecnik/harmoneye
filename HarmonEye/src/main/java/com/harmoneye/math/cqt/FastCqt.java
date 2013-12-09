@@ -63,7 +63,7 @@ public class FastCqt implements Cqt {
 			return;
 		}
 		ComplexField field = ComplexField.getInstance();
-		int rows = ctx.getTotalBins();
+		int rows = ctx.getKernelBins();
 		int columns = ctx.getSignalBlockSize();
 		//System.out.println("rows x columns: " + rows + "x" + columns + ", total: " + rows * columns);
 		NonZeroSparseFieldMatrix<Complex> kernels = new NonZeroSparseFieldMatrix<Complex>(field, rows, columns);
