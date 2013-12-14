@@ -25,6 +25,7 @@ abstract class AbstractJava2dVisualizer extends JPanel implements SwingVisualize
 
 	public void update(PitchClassProfile pcProfile) {
 		this.pcProfile = pcProfile;
+		repaint();
 	}
 	
 	@Override
