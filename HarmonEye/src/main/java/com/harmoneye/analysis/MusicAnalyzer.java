@@ -21,6 +21,7 @@ public class MusicAnalyzer implements SoundConsumer {
 	private MultiRateRingBufferBank ringBufferBank;
 	private HarmonicPatternPitchClassDetector pcDetector;
 	private Visualizer<PitchClassProfile> visualizer;
+	private MovingAverageAccumulator accumulator;
 	private ExpSmoother binSmoother;
 
 	private double[] samples;
@@ -32,9 +33,8 @@ public class MusicAnalyzer implements SoundConsumer {
 	private double dbThresholdInv;
 
 	private AtomicBoolean initialized = new AtomicBoolean();
-
-	private MovingAverageAccumulator accumulator;
 	private AtomicBoolean accumulatorEnabled = new AtomicBoolean();
+	private static final boolean BIN_SMOOTHER_ENABLED = true;
 
 	public MusicAnalyzer(Visualizer<PitchClassProfile> visualizer,
 		float sampleRate, int bitsPerSample) {
@@ -133,17 +133,18 @@ public class MusicAnalyzer implements SoundConsumer {
 			octaveBinsDb[i] = FastMath.pow(octaveBinsDb[i], 1 / 3.0);
 		}
 
-		double[] pitchClassProfileDb = null;//octaveBinsDb;
+		double[] pitchClassProfileDb = null;
 		if (accumulatorEnabled.get()) {
 			accumulator.add(octaveBinsDb);
 			pitchClassProfileDb = accumulator.getAverage();
-		} else {
+		} else if (BIN_SMOOTHER_ENABLED) {
 			binSmoother.smooth(octaveBinsDb);
 			pitchClassProfileDb = binSmoother.smooth(octaveBinsDb);
+		} else {
+			pitchClassProfileDb = octaveBinsDb;
 		}
 		
-		PitchClassProfile pcProfile = new PitchClassProfile(pitchClassProfileDb,
-			ctx.getHalftonesPerOctave(), ctx.getBinsPerHalftone());
+		PitchClassProfile pcProfile = new PitchClassProfile(pitchClassProfileDb, ctx);
 		return pcProfile;
 	}
 
