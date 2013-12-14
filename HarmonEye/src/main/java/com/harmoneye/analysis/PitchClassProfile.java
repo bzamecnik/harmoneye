@@ -1,36 +1,26 @@
 package com.harmoneye.analysis;
 
+import com.harmoneye.math.cqt.CqtContext;
+
 public class PitchClassProfile {
-	private double[] pitchClassBins;
 
-	private int halftoneCount;
-	private int binsPerHalftone;
+	private final double[] pitchClassBins;
+	private final CqtContext ctx;
 
-	public PitchClassProfile(double[] pitchClassBins, int halftoneCount, int binsPerHalftone) {
-		assert halftoneCount > 0;
-		assert binsPerHalftone > 0;
+	public PitchClassProfile(double[] pitchClassBins, CqtContext ctx) {
 		assert pitchClassBins != null;
-		assert pitchClassBins.length == halftoneCount * binsPerHalftone;
+		assert ctx != null;
+		assert pitchClassBins.length == ctx.getTotalBins();
 
 		this.pitchClassBins = pitchClassBins;
-		this.halftoneCount = halftoneCount;
-		this.binsPerHalftone = binsPerHalftone;
+		this.ctx = ctx;
 	}
 
 	public double[] getPitchClassBins() {
 		return pitchClassBins;
 	}
-	
-	public int getTotalBinCount() {
-		return pitchClassBins.length;
-	}
 
-	public int getHalftoneCount() {
-		return halftoneCount;
+	public CqtContext getCtxContext() {
+		return ctx;
 	}
-
-	public int getBinsPerHalftone() {
-		return binsPerHalftone;
-	}
-
 }

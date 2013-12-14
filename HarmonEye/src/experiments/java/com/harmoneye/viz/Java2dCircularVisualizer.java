@@ -23,8 +23,8 @@ public class Java2dCircularVisualizer extends AbstractJava2dVisualizer {
 	public void update(PitchClassProfile pcProfile) {
 		super.update(pcProfile);
 		pcBins = pcProfile.getPitchClassBins();
-		binsPerHalftone = pcProfile.getBinsPerHalftone();
-		pitchBinCount = pcProfile.getTotalBinCount();
+		binsPerHalftone = pcProfile.getCtxContext().getBinsPerHalftone();
+		pitchBinCount = pcProfile.getCtxContext().getTotalBins();
 	}
 	
 	@Override

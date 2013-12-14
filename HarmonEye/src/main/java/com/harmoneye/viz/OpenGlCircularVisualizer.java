@@ -16,6 +16,7 @@ import javax.media.opengl.awt.GLCanvas;
 import org.apache.commons.math3.util.FastMath;
 
 import com.harmoneye.analysis.PitchClassProfile;
+import com.harmoneye.math.cqt.CqtContext;
 import com.jogamp.opengl.util.Animator;
 import com.jogamp.opengl.util.awt.TextRenderer;
 
@@ -53,6 +54,7 @@ public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfi
 
 		Animator animator = new Animator(canvas);
 		animator.start();
+		// TODO: stop the animator if the computation is stopped
 	}
 
 	@Override
@@ -61,8 +63,12 @@ public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfi
 			return;
 		}
 
-		binsPerHalftone = pcProfile.getBinsPerHalftone();
-		halftoneCount = pcProfile.getHalftoneCount();
+		CqtContext ctx = pcProfile.getCtxContext();
+		if (ctx == null) {
+			System.out.println("ctx == null");
+		}
+		binsPerHalftone = ctx.getBinsPerHalftone();
+		halftoneCount = ctx.getHalftonesPerOctave();
 
 		values = pcProfile.getPitchClassBins();
 

@@ -25,7 +25,7 @@ public class Java2dLinearVisualizer extends AbstractJava2dVisualizer {
 		}
 
 		double[] pcBins = pcProfile.getPitchClassBins();
-		int totalBinCount = pcProfile.getTotalBinCount();
+		int totalBinCount = pcBins.length;
 
 		float x = 0;
 		Dimension size = getSize();
@@ -45,7 +45,7 @@ public class Java2dLinearVisualizer extends AbstractJava2dVisualizer {
 
 		graphics.setColor(Color.GRAY);
 		x = 0;
-		int binCount = pcProfile.getHalftoneCount();
+		int binCount = pcProfile.getCtxContext().getHalftonesPerOctave();
 		step = (float) size.getWidth() / binCount;
 		for (int i = 0; i < binCount; i++) {
 			line.setFrameFromDiagonal(x, 0, x + step - 1, height);
