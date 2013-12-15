@@ -15,8 +15,9 @@ public class DownsamplerTest {
 		double freq = 2.0f;
 		double sampleFreq = 100.0f;
 		double duration = 2.0f;
-		double[] signal = ToneGenerator.generateSinWave(freq, sampleFreq, duration);
-		double[] expectedSignal = ToneGenerator.generateSinWave(freq, 0.5f * sampleFreq, duration);
+		ToneGenerator toneGenerator = new ToneGenerator(sampleFreq);
+		double[] signal = toneGenerator.generateSinWave(freq, duration);
+		double[] expectedSignal = toneGenerator.generateSinWave(freq, 0.5f * duration);
 
 		System.out.println("Original signal:");
 		System.out.println("RMS: " + RmsCalculator.computeRms(signal));
