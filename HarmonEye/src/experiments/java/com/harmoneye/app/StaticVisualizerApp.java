@@ -2,7 +2,7 @@ package com.harmoneye.app;
 
 import javax.swing.JFrame;
 
-import com.harmoneye.analysis.PitchClassProfile;
+import com.harmoneye.analysis.AnalyzedFrame;
 import com.harmoneye.math.cqt.CqtContext;
 import com.harmoneye.viz.Java2dCircularVisualizer;
 
@@ -23,7 +23,7 @@ public class StaticVisualizerApp {
 		0.39056981482573594, 0.3127457237708192, 0.3580843366608671, };
 
 	private static CqtContext ctx = CqtContext.create().halftonesPerOctave(12).binsPerHalftone(5).build();
-	private static PitchClassProfile pcProfile = new PitchClassProfile(pcProfileValues, ctx);
+	private static AnalyzedFrame pcProfile = new AnalyzedFrame(ctx, pcProfileValues, pcProfileValues);
 
 	public static void main(String[] args) {
 		Java2dCircularVisualizer visualizer = new Java2dCircularVisualizer();

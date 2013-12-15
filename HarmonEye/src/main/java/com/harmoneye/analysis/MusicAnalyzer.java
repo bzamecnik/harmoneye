@@ -22,7 +22,7 @@ public class MusicAnalyzer implements SoundConsumer {
 	private MultiRateRingBufferBank ringBufferBank;
 	private DecibelCalculator dbCalculator;
 	private HarmonicPatternPitchClassDetector pcDetector;
-	private Visualizer<PitchClassProfile> visualizer;
+	private Visualizer<AnalyzedFrame> visualizer;
 	private MovingAverageAccumulator accumulator;
 	private ExpSmoother binSmoother;
 
@@ -36,7 +36,7 @@ public class MusicAnalyzer implements SoundConsumer {
 	private AtomicBoolean accumulatorEnabled = new AtomicBoolean();
 	private static final boolean BIN_SMOOTHER_ENABLED = true;
 
-	public MusicAnalyzer(Visualizer<PitchClassProfile> visualizer,
+	public MusicAnalyzer(Visualizer<AnalyzedFrame> visualizer,
 		float sampleRate, int bitsPerSample) {
 		this.visualizer = visualizer;
 
@@ -83,7 +83,7 @@ public class MusicAnalyzer implements SoundConsumer {
 			int startIndex = octave * ctx.getBinsPerOctave();
 			toAmplitudeDbSpectrum(cqSpectrum, amplitudeSpectrumDb, startIndex);
 		}
-		PitchClassProfile pcProfile = computePitchClassProfile(amplitudeSpectrumDb);
+		AnalyzedFrame pcProfile = computePitchClassProfile(amplitudeSpectrumDb);
 		visualizer.update(pcProfile);
 	}
 
@@ -96,7 +96,7 @@ public class MusicAnalyzer implements SoundConsumer {
 		}
 	}
 
-	private PitchClassProfile computePitchClassProfile(double[] amplitudeSpectrumDb) {
+	private AnalyzedFrame computePitchClassProfile(double[] amplitudeSpectrumDb) {
 		int binsPerOctave = ctx.getBinsPerOctave();
 		for (int i = 0; i < binsPerOctave; i++) {
 			// maximum over octaves:
@@ -137,7 +137,7 @@ public class MusicAnalyzer implements SoundConsumer {
 			pitchClassProfileDb = octaveBinsDb;
 		}
 		
-		PitchClassProfile pcProfile = new PitchClassProfile(pitchClassProfileDb, ctx);
+		AnalyzedFrame pcProfile = new AnalyzedFrame(ctx, amplitudeSpectrumDb, pitchClassProfileDb);
 		return pcProfile;
 	}
 

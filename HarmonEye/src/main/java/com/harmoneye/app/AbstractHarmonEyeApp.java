@@ -21,8 +21,8 @@ import javax.swing.KeyStroke;
 import org.simplericity.macify.eawt.ApplicationEvent;
 import org.simplericity.macify.eawt.ApplicationListener;
 
+import com.harmoneye.analysis.AnalyzedFrame;
 import com.harmoneye.analysis.MusicAnalyzer;
-import com.harmoneye.analysis.PitchClassProfile;
 import com.harmoneye.viz.OpenGlCircularVisualizer;
 import com.harmoneye.viz.SwingVisualizer;
 
@@ -45,7 +45,7 @@ public class AbstractHarmonEyeApp {
 
 	private ApplicationListener appListener;
 
-	private SwingVisualizer<PitchClassProfile> visualizer;
+	private SwingVisualizer<AnalyzedFrame> visualizer;
 	private AtomicBoolean initialized = new AtomicBoolean();
 
 	private Timer updateTimer;

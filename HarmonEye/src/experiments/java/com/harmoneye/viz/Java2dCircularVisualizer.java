@@ -9,7 +9,7 @@ import java.awt.Graphics2D;
 
 import org.apache.commons.math3.util.FastMath;
 
-import com.harmoneye.analysis.PitchClassProfile;
+import com.harmoneye.analysis.AnalyzedFrame;
 
 public class Java2dCircularVisualizer extends AbstractJava2dVisualizer {
 
@@ -20,9 +20,9 @@ public class Java2dCircularVisualizer extends AbstractJava2dVisualizer {
 	private int binsPerHalftone;
 
 	@Override
-	public void update(PitchClassProfile pcProfile) {
+	public void update(AnalyzedFrame pcProfile) {
 		super.update(pcProfile);
-		pcBins = pcProfile.getPitchClassBins();
+		pcBins = pcProfile.getOctaveBins();
 		binsPerHalftone = pcProfile.getCtxContext().getBinsPerHalftone();
 		pitchBinCount = pcProfile.getCtxContext().getTotalBins();
 	}
@@ -34,7 +34,7 @@ public class Java2dCircularVisualizer extends AbstractJava2dVisualizer {
 	}
 
 	private void drawPitchClassCircle(Graphics2D graphics) {
-		PitchClassProfile pitchClassProfile = getPcProfile();
+		AnalyzedFrame pitchClassProfile = getPcProfile();
 		if (pitchClassProfile == null) {
 			return;
 		}

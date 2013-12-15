@@ -9,9 +9,9 @@ import java.awt.geom.Rectangle2D;
 
 import javax.swing.JPanel;
 
-import com.harmoneye.analysis.PitchClassProfile;
+import com.harmoneye.analysis.AnalyzedFrame;
 
-abstract class AbstractJava2dVisualizer extends JPanel implements SwingVisualizer<PitchClassProfile> {
+abstract class AbstractJava2dVisualizer extends JPanel implements SwingVisualizer<AnalyzedFrame> {
 
 	private static final long serialVersionUID = 1L;
 
@@ -19,11 +19,11 @@ abstract class AbstractJava2dVisualizer extends JPanel implements SwingVisualize
 	private static final int DEFAULT_PITCH_STEP = 1;
 
 	private int pitchStep = DEFAULT_PITCH_STEP;
-	private PitchClassProfile pcProfile;
+	private AnalyzedFrame pcProfile;
 	protected Rectangle2D.Float line = new Rectangle2D.Float();
 	private ColorFunction colorFunction = new TemperatureColorFunction();
 
-	public void update(PitchClassProfile pcProfile) {
+	public void update(AnalyzedFrame pcProfile) {
 		this.pcProfile = pcProfile;
 		repaint();
 	}
@@ -57,7 +57,7 @@ abstract class AbstractJava2dVisualizer extends JPanel implements SwingVisualize
 		return colorFunction.toColor(value);
 	}
 
-	protected PitchClassProfile getPcProfile() {
+	protected AnalyzedFrame getPcProfile() {
 		return pcProfile;
 	}
 

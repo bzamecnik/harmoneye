@@ -15,17 +15,21 @@ import javax.media.opengl.awt.GLCanvas;
 
 import org.apache.commons.math3.util.FastMath;
 
-import com.harmoneye.analysis.PitchClassProfile;
+import com.harmoneye.analysis.AnalyzedFrame;
 import com.harmoneye.math.cqt.CqtContext;
 import com.jogamp.opengl.util.Animator;
 import com.jogamp.opengl.util.awt.TextRenderer;
 
-public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfile>, GLEventListener {
+// TODO: rewrite to use vertex buffers instead of immediate mode
+
+public class OpenGlCircularVisualizer implements
+	SwingVisualizer<AnalyzedFrame>, GLEventListener {
 
 	private static final float DEFAULT_LINE_WIDTH = 1f;
 	private static final float WAIT_SCROBBLER_LINE_WIDTH = 1.5f;
 
-	protected static final String[] HALFTONE_NAMES = { "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B" };
+	protected static final String[] HALFTONE_NAMES = { "C", "Db", "D", "Eb",
+		"E", "F", "Gb", "G", "Ab", "A", "Bb", "B" };
 
 	private int pitchStep = 1;
 
@@ -58,19 +62,17 @@ public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfi
 	}
 
 	@Override
-	public void update(PitchClassProfile pcProfile) {
+	public void update(AnalyzedFrame pcProfile) {
 		if (pcProfile == null) {
 			return;
 		}
 
 		CqtContext ctx = pcProfile.getCtxContext();
-		if (ctx == null) {
-			System.out.println("ctx == null");
-		}
+
 		binsPerHalftone = ctx.getBinsPerHalftone();
 		halftoneCount = ctx.getHalftonesPerOctave();
 
-		values = pcProfile.getPitchClassBins();
+		values = pcProfile.getOctaveBins();
 
 		segmentCountInv = 1.0 / values.length;
 		stepAngle = 2 * FastMath.PI * segmentCountInv;
@@ -117,7 +119,9 @@ public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfi
 
 			float value = (float) (0.25 + 0.5 * ((1 - unitAngle + phaseOffset) % 1.0));
 			Color color = colorFunction.toColor((float) value);
-			gl.glColor3ub((byte) color.getRed(), (byte) color.getGreen(), (byte) color.getBlue());
+			gl.glColor3ub((byte) color.getRed(),
+				(byte) color.getGreen(),
+				(byte) color.getBlue());
 
 			double x = FastMath.sin(angle);
 			double y = FastMath.cos(angle);
@@ -176,17 +180,21 @@ public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfi
 			int index = movedPitchClass * binsPerHalftone + binInPitchClass;
 			double value = values[index];
 			Color color = colorFunction.toColor((float) value);
-			gl.glColor3ub((byte) color.getRed(), (byte) color.getGreen(), (byte) color.getBlue());
+			gl.glColor3ub((byte) color.getRed(),
+				(byte) color.getGreen(),
+				(byte) color.getBlue());
 
 			gl.glVertex2d(0, 0);
 
 			double startRadius = radius * values[index];
 			double startAngle = angle - 0.5 * stepAngle;
-			gl.glVertex2d(startRadius * FastMath.sin(startAngle), startRadius * FastMath.cos(startAngle));
+			gl.glVertex2d(startRadius * FastMath.sin(startAngle), startRadius
+				* FastMath.cos(startAngle));
 
 			double endRadius = radius * values[index];
 			double endAngle = angle + 0.5 * stepAngle;
-			gl.glVertex2d(endRadius * FastMath.sin(endAngle), endRadius * FastMath.cos(endAngle));
+			gl.glVertex2d(endRadius * FastMath.sin(endAngle), endRadius
+				* FastMath.cos(endAngle));
 		}
 		gl.glEnd();
 	}
@@ -297,11 +305,13 @@ public class OpenGlCircularVisualizer implements SwingVisualizer<PitchClassProfi
 
 		gl.glClearColor(0.25f, 0.25f, 0.25f, 1f);
 
-		renderer = new TextRenderer(new Font("SansSerif", Font.BOLD, 50), true, true, null, true);
+		renderer = new TextRenderer(new Font("SansSerif", Font.BOLD, 50), true,
+			true, null, true);
 	}
 
 	@Override
-	public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height) {
+	public void reshape(GLAutoDrawable drawable, int x, int y, int width,
+		int height) {
 		setConstantAspectRatio(drawable);
 	}
 

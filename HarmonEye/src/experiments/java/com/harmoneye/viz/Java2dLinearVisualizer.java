@@ -5,7 +5,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 
-import com.harmoneye.analysis.PitchClassProfile;
+import com.harmoneye.analysis.AnalyzedFrame;
 import com.harmoneye.viz.AbstractJava2dVisualizer;
 
 public class Java2dLinearVisualizer extends AbstractJava2dVisualizer {
@@ -19,12 +19,12 @@ public class Java2dLinearVisualizer extends AbstractJava2dVisualizer {
 	}
 
 	private void drawPitchClassBars(Graphics2D graphics) {
-		PitchClassProfile pcProfile = getPcProfile();
+		AnalyzedFrame pcProfile = getPcProfile();
 		if (pcProfile == null) {
 			return;
 		}
 
-		double[] pcBins = pcProfile.getPitchClassBins();
+		double[] pcBins = pcProfile.getOctaveBins();
 		int totalBinCount = pcBins.length;
 
 		float x = 0;
