@@ -77,10 +77,10 @@ public class MusicAnalyzer implements SoundConsumer {
 		if (!initialized.get()) {
 			return;
 		}
-		for (int octave = 0; octave < ctx.getOctaves(); octave++) {
+		int startIndex = (ctx.getOctaves() - 1) * ctx.getBinsPerOctave();
+		for (int octave = 0; octave < ctx.getOctaves(); octave++, startIndex -= ctx.getBinsPerOctave()) {
 			ringBufferBank.readLast(octave, samples.length, samples);
 			Complex[] cqSpectrum = cqt.transform(samples);
-			int startIndex = octave * ctx.getBinsPerOctave();
 			toAmplitudeDbSpectrum(cqSpectrum, amplitudeSpectrumDb, startIndex);
 		}
 		AnalyzedFrame pcProfile = computePitchClassProfile(amplitudeSpectrumDb);
