@@ -1,23 +1,7 @@
-package com.harmoneye.math.filter;
+package com.harmoneye.audio;
 
 
-public class SignalUtils {
-	/**
-	 * @param frequency in Hz
-	 * @param samplingFreq in samples per second
-	 * @param length in seconds
-	 * @return
-	 */
-	public static double[] generateSinWave(double frequency, double samplingFreq,
-		double length) {
-		int sampleCount = (int) Math.ceil(length * samplingFreq);
-		double[] signal = new double[sampleCount];
-		for (int i = 0; i < signal.length; i++) {
-			signal[i] = (double) Math.sin(i * 2 * Math.PI * frequency / samplingFreq);
-		}
-		return signal;
-	}
-
+public class TextSignalPrinter {
 	public static void printSignal(double[] signal) {
 		System.out.println("signal:");
 		System.out.println("length: " + signal.length);
@@ -26,15 +10,6 @@ public class SignalUtils {
 		}
 		System.out.println();
 	}
-
-	public static double computeRms(double[] samples) {
-		double sum = 0;
-		for (double amplitude : samples) {
-			sum += amplitude * amplitude;
-		}
-		return (double) Math.sqrt(sum / (double) samples.length);
-	}
-	
 
 	private static String toStars(double amplitude) {
 		StringBuilder sb = new StringBuilder();

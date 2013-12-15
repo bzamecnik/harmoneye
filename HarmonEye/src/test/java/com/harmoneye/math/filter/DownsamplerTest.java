@@ -1,8 +1,12 @@
 package com.harmoneye.math.filter;
 
 import static org.junit.Assert.*;
-import static com.harmoneye.math.filter.SignalUtils.*;
+import static com.harmoneye.audio.TextSignalPrinter.*;
+
 import org.junit.Test;
+
+import com.harmoneye.audio.RmsCalculator;
+import com.harmoneye.audio.ToneGenerator;
 
 public class DownsamplerTest {
 
@@ -11,22 +15,22 @@ public class DownsamplerTest {
 		double freq = 2.0f;
 		double sampleFreq = 100.0f;
 		double duration = 2.0f;
-		double[] signal = generateSinWave(freq, sampleFreq, duration);
-		double[] expectedSignal = generateSinWave(freq, 0.5f * sampleFreq, duration);
+		double[] signal = ToneGenerator.generateSinWave(freq, sampleFreq, duration);
+		double[] expectedSignal = ToneGenerator.generateSinWave(freq, 0.5f * sampleFreq, duration);
 
 		System.out.println("Original signal:");
-		System.out.println("RMS: " + computeRms(signal));
+		System.out.println("RMS: " + RmsCalculator.computeRms(signal));
 		printSignal(signal);
 
 		Decimator downsampler = Decimator.withDefaultFilter();
 		double[] downsampledSignal = downsampler.decimate(signal);
 
 		System.out.println("Decimated signal:");
-		System.out.println("RMS: " + computeRms(downsampledSignal));
+		System.out.println("RMS: " + RmsCalculator.computeRms(downsampledSignal));
 		printSignal(downsampledSignal);
 
 		System.out.println("Expected signal:");
-		System.out.println("RMS: " + computeRms(expectedSignal));
+		System.out.println("RMS: " + RmsCalculator.computeRms(expectedSignal));
 		printSignal(expectedSignal);
 	}
 
