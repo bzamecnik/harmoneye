@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.util.FastMath;
 
+import com.harmoneye.audio.DecibelCalculator;
 import com.harmoneye.audio.MultiRateRingBufferBank;
 import com.harmoneye.math.cqt.CqtContext;
 import com.harmoneye.math.cqt.FastCqt;
@@ -19,6 +20,7 @@ public class MusicAnalyzer implements SoundConsumer {
 
 	private FastCqt cqt;
 	private MultiRateRingBufferBank ringBufferBank;
+	private DecibelCalculator dbCalculator;
 	private HarmonicPatternPitchClassDetector pcDetector;
 	private Visualizer<PitchClassProfile> visualizer;
 	private MovingAverageAccumulator accumulator;
@@ -29,8 +31,6 @@ public class MusicAnalyzer implements SoundConsumer {
 	private double[] amplitudeSpectrumDb;
 	private double[] octaveBinsDb;
 
-	private double dbThreshold;
-	private double dbThresholdInv;
 
 	private AtomicBoolean initialized = new AtomicBoolean();
 	private AtomicBoolean accumulatorEnabled = new AtomicBoolean();
@@ -39,9 +39,6 @@ public class MusicAnalyzer implements SoundConsumer {
 	public MusicAnalyzer(Visualizer<PitchClassProfile> visualizer,
 		float sampleRate, int bitsPerSample) {
 		this.visualizer = visualizer;
-
-		dbThreshold = -(20 * FastMath.log10(2 << (bitsPerSample - 1)));
-		dbThresholdInv = 1.0 / dbThreshold;
 
 		//@formatter:off
 		ctx = CqtContext.create()
@@ -56,7 +53,9 @@ public class MusicAnalyzer implements SoundConsumer {
 		samples = new double[ctx.getSignalBlockSize()];
 		amplitudeSpectrumDb = new double[ctx.getTotalBins()];
 		octaveBinsDb = new double[ctx.getBinsPerOctave()];
+		
 		ringBufferBank = new MultiRateRingBufferBank(ctx.getSignalBlockSize(), ctx.getOctaves());
+		dbCalculator = new DecibelCalculator(bitsPerSample);
 		pcDetector = new HarmonicPatternPitchClassDetector(ctx);
 		binSmoother = new ExpSmoother(ctx.getBinsPerOctave(), SMOOTHING_FACTOR);
 		accumulator = new MovingAverageAccumulator(ctx.getBinsPerOctave());
@@ -91,15 +90,9 @@ public class MusicAnalyzer implements SoundConsumer {
 	private void toAmplitudeDbSpectrum(Complex[] cqSpectrum, double[] amplitudeSpectrum, int startIndex) {
 		for (int i = 0; i < cqSpectrum.length; i++) {
 			double amplitude = cqSpectrum[i].abs();
-			// Since reference amplitude is 1, this code is implied:
-			// double referenceAmplitude = 1;
-			// amplitude /= referenceAmplitude; 
-			double amplitudeDb = 20 * FastMath.log10(amplitude);
-			if (amplitudeDb < dbThreshold) {
-				amplitudeDb = dbThreshold;
-			}
-			// rescale: [DB_THRESHOLD; 0] -> [-1; 0] -> [0; 1]
-			amplitudeSpectrumDb[startIndex + i] = 1 - (amplitudeDb * dbThresholdInv);
+			double amplitudeDb = dbCalculator.amplitudeToDb(amplitude);
+			double value = dbCalculator.rescale(amplitudeDb);
+			amplitudeSpectrumDb[startIndex + i] = value;
 		}
 	}
 
