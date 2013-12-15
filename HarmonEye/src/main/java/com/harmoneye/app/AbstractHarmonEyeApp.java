@@ -52,6 +52,7 @@ public class AbstractHarmonEyeApp {
 
 	public AbstractHarmonEyeApp() {
 		visualizer = new OpenGlCircularVisualizer();
+//		visualizer = new OpenGlLinearVisualizer();
 
 		soundAnalyzer = new MusicAnalyzer(visualizer, AUDIO_SAMPLE_RATE, AUDIO_BITS_PER_SAMPLE);
 
