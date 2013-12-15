@@ -36,6 +36,7 @@ public class HarmonicPatternPitchClassDetector {
 	 * @return
 	 */
 	public double[] detectPitchClasses(double[] cqBins) {
+		// TODO: do the calculation in-place
 		double[] octaveBins = new double[binsPerOctave];
 		for (int i = 0; i < cqBins.length; i++) {
 			octaveBins[i % binsPerOctave] += calc.sum(extractHarmonics(cqBins, i, harmonicCount));
@@ -62,6 +63,7 @@ public class HarmonicPatternPitchClassDetector {
 	}
 
 	private double[] extractHarmonics(double[] cqBins, int baseFreqBin, int harmonicCount) {
+		// TODO: do the calculation in-place
 		double[] harmonics = new double[harmonicCount];
 		for (int i = 1; i <= harmonicCount; i++) {
 			double frequency = calc.centerFreq(baseFreqBin);
