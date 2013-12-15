@@ -1,6 +1,5 @@
 package com.harmoneye.math.cqt;
 
-import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.util.FastMath;
 
 import com.harmoneye.math.window.HammingWindow;
@@ -25,7 +24,7 @@ public final class CqtContext {
 	private double q;
 	private double windowIntegral;
 	private int signalBlockSize;
-	private Complex normalizationFactor;
+	private double normalizationFactor;
 
 	private CqtContext() {
 	}
@@ -49,7 +48,7 @@ public final class CqtContext {
 		windowIntegral = calc.windowIntegral(window);
 
 		signalBlockSize = calc.nextPowerOf2(calc.bandWidth(firstKernelBin));
-		normalizationFactor = new Complex(2 / (signalBlockSize * windowIntegral));
+		normalizationFactor = 2 / (signalBlockSize * windowIntegral);
 
 		System.out.println(this);
 	}
@@ -154,7 +153,7 @@ public final class CqtContext {
 		return signalBlockSize;
 	}
 
-	public Complex getNormalizationFactor() {
+	public double getNormalizationFactor() {
 		return normalizationFactor;
 	}
 

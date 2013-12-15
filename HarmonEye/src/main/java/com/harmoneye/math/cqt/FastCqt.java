@@ -55,9 +55,9 @@ public class FastCqt implements Cqt {
 		// Transform the DFT spectrum bins into CQT spectrum bins using the
 		// precomputed matrix of kernels (in frequency domain).
 
-		Complex normalizationFactor = ctx.getNormalizationFactor();
 		for (int i = 0; i < transformedSignal.length; i++) {
 			transformedSignal[i] = transformedSignal[i].multiply(normalizationFactor);
+		double normalizationFactor = ctx.getNormalizationFactor();
 		}
 
 		return transformedSignal;

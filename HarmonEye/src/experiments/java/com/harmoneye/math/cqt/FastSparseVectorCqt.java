@@ -44,7 +44,7 @@ public class FastSparseVectorCqt implements Cqt {
 		FieldVector<Complex> spectrumVector = new ArrayFieldVector<Complex>(spectrum);
 
 		//		long start = System.nanoTime();
-		Complex normalizationFactor = ctx.getNormalizationFactor();
+		double normalizationFactor = ctx.getNormalizationFactor();
 		Complex[] product = new Complex[spectralKernels.size()];
 		for (int i = 0; i < spectralKernels.size(); i++) {
 			FieldVector<Complex> kernel = spectralKernels.get(i);
