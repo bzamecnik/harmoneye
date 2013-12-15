@@ -37,18 +37,18 @@ public class CqtTest {
 		double[] signal = toneGen.generateSinWave(freq, duration);
 		//TextSignalPrinter.printSignal(signal);
 
-		Complex[] cqSpectrum = cqt.transform(signal);
+		Complex[] cqtSpectrum = cqt.transform(signal);
 
-		double[] bins = toAmplitudeDbSpectrum(cqSpectrum);
+		double[] bins = toAmplitudeDbSpectrum(cqtSpectrum);
 
 		TextSignalPrinter.printSignal(bins);
 	}
 
-	private double[] toAmplitudeDbSpectrum(Complex[] cqSpectrum) {
+	private double[] toAmplitudeDbSpectrum(Complex[] cqtSpectrum) {
 		DecibelCalculator dbCalculator = new DecibelCalculator(16);
-		double[] amplitudeSpectrum = new double[cqSpectrum.length];
-		for (int i = 0; i < cqSpectrum.length; i++) {
-			double amplitude = cqSpectrum[i].abs();
+		double[] amplitudeSpectrum = new double[cqtSpectrum.length];
+		for (int i = 0; i < cqtSpectrum.length; i++) {
+			double amplitude = cqtSpectrum[i].abs();
 			double amplitudeDb = dbCalculator.amplitudeToDb(amplitude);
 			double value = dbCalculator.rescale(amplitudeDb);
 			amplitudeSpectrum[i] = value;

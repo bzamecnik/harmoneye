@@ -29,7 +29,7 @@ public class MusicAnalyzer implements SoundConsumer {
 	private double[] samples;
 	/** peak amplitude spectrum */
 	private double[] amplitudeSpectrumDb;
-	private double[] octaveBinsDb;
+	private double[] octaveBins;
 
 
 	private AtomicBoolean initialized = new AtomicBoolean();
@@ -52,7 +52,7 @@ public class MusicAnalyzer implements SoundConsumer {
 
 		samples = new double[ctx.getSignalBlockSize()];
 		amplitudeSpectrumDb = new double[ctx.getTotalBins()];
-		octaveBinsDb = new double[ctx.getBinsPerOctave()];
+		octaveBins = new double[ctx.getBinsPerOctave()];
 		
 		ringBufferBank = new MultiRateRingBufferBank(ctx.getSignalBlockSize(), ctx.getOctaves());
 		dbCalculator = new DecibelCalculator(bitsPerSample);
@@ -77,26 +77,43 @@ public class MusicAnalyzer implements SoundConsumer {
 		if (!initialized.get()) {
 			return;
 		}
+		computeCqtSpectrum();
+		AnalyzedFrame frame = analyzeFrame(amplitudeSpectrumDb);
+		visualizer.update(frame);
+	}
+
+	private void computeCqtSpectrum() {
 		int startIndex = (ctx.getOctaves() - 1) * ctx.getBinsPerOctave();
 		for (int octave = 0; octave < ctx.getOctaves(); octave++, startIndex -= ctx.getBinsPerOctave()) {
 			ringBufferBank.readLast(octave, samples.length, samples);
-			Complex[] cqSpectrum = cqt.transform(samples);
-			toAmplitudeDbSpectrum(cqSpectrum, amplitudeSpectrumDb, startIndex);
+			Complex[] cqtSpectrum = cqt.transform(samples);
+			toAmplitudeDbSpectrum(cqtSpectrum, amplitudeSpectrumDb, startIndex);
 		}
-		AnalyzedFrame pcProfile = computePitchClassProfile(amplitudeSpectrumDb);
-		visualizer.update(pcProfile);
 	}
 
-	private void toAmplitudeDbSpectrum(Complex[] cqSpectrum, double[] amplitudeSpectrum, int startIndex) {
-		for (int i = 0; i < cqSpectrum.length; i++) {
-			double amplitude = cqSpectrum[i].abs();
+	private void toAmplitudeDbSpectrum(Complex[] cqtSpectrum, double[] amplitudeSpectrum, int startIndex) {
+		for (int i = 0; i < cqtSpectrum.length; i++) {
+			double amplitude = cqtSpectrum[i].abs();
 			double amplitudeDb = dbCalculator.amplitudeToDb(amplitude);
 			double value = dbCalculator.rescale(amplitudeDb);
 			amplitudeSpectrumDb[startIndex + i] = value;
 		}
 	}
 
-	private AnalyzedFrame computePitchClassProfile(double[] amplitudeSpectrumDb) {
+	private AnalyzedFrame analyzeFrame(double[] allBins) {
+		aggregateIntoOctaves(allBins);
+
+		double[] pitchClassBins = pcDetector.detectPitchClasses(allBins);
+		
+		octaveBins = enhance(allBins, pitchClassBins, octaveBins);
+
+		double[] smoothedOctaveBins = smooth(octaveBins);
+		
+		AnalyzedFrame pcProfile = new AnalyzedFrame(ctx, allBins, smoothedOctaveBins);
+		return pcProfile;
+	}
+
+	private void aggregateIntoOctaves(double[] amplitudeSpectrumDb) {
 		int binsPerOctave = ctx.getBinsPerOctave();
 		for (int i = 0; i < binsPerOctave; i++) {
 			// maximum over octaves:
@@ -104,43 +121,45 @@ public class MusicAnalyzer implements SoundConsumer {
 			for (int j = i; j < amplitudeSpectrumDb.length; j += binsPerOctave) {
 				value = FastMath.max(value, amplitudeSpectrumDb[j]);
 			}
-			octaveBinsDb[i] = value;
+			octaveBins[i] = value;
 		}
+	}
 
-		double[] pitchClassBinsDb = pcDetector.detectPitchClasses(amplitudeSpectrumDb);
+	// just an ad hoc reduction of noise and equalization
+	private double[] enhance(double[] allBins, double[] pitchClassBinsDb, double[] octaveBins) {
 		double max = 0;
-		for (int i = 0; i < amplitudeSpectrumDb.length; i++) {
-			max = FastMath.max(max, amplitudeSpectrumDb[i]);
+		for (int i = 0; i < allBins.length; i++) {
+			max = FastMath.max(max, allBins[i]);
 		}
-		// just an ad hoc reduction of noise and equalization
 		for (int i = 0; i < pitchClassBinsDb.length; i++) {
 			pitchClassBinsDb[i] = FastMath.pow(pitchClassBinsDb[i], 3);
 		}
 		for (int i = 0; i < pitchClassBinsDb.length; i++) {
 			pitchClassBinsDb[i] *= max;
 		}
-		for (int i = 0; i < octaveBinsDb.length; i++) {
-			octaveBinsDb[i] *= pitchClassBinsDb[i];
+		for (int i = 0; i < octaveBins.length; i++) {
+			octaveBins[i] *= pitchClassBinsDb[i];
 		}
-		for (int i = 0; i < octaveBinsDb.length; i++) {
-			octaveBinsDb[i] = FastMath.pow(octaveBinsDb[i], 1 / 3.0);
+		for (int i = 0; i < octaveBins.length; i++) {
+			octaveBins[i] = FastMath.pow(octaveBins[i], 1 / 3.0);
 		}
-
-		double[] pitchClassProfileDb = null;
-		if (accumulatorEnabled.get()) {
-			accumulator.add(octaveBinsDb);
-			pitchClassProfileDb = accumulator.getAverage();
-		} else if (BIN_SMOOTHER_ENABLED) {
-			binSmoother.smooth(octaveBinsDb);
-			pitchClassProfileDb = binSmoother.smooth(octaveBinsDb);
-		} else {
-			pitchClassProfileDb = octaveBinsDb;
-		}
-		
-		AnalyzedFrame pcProfile = new AnalyzedFrame(ctx, amplitudeSpectrumDb, pitchClassProfileDb);
-		return pcProfile;
+		return octaveBins;
 	}
 
+	private double[] smooth(double[] octaveBins) {
+		double[] smoothedOctaveBins = null;
+		if (accumulatorEnabled.get()) {
+			accumulator.add(octaveBins);
+			smoothedOctaveBins = accumulator.getAverage();
+		} else if (BIN_SMOOTHER_ENABLED) {
+			binSmoother.smooth(octaveBins);
+			smoothedOctaveBins = binSmoother.smooth(octaveBins);
+		} else {
+			smoothedOctaveBins = octaveBins;
+		}
+		return smoothedOctaveBins;
+	}
+	
 	public void toggleAccumulatorEnabled() {
 		accumulatorEnabled.set(!accumulatorEnabled.get());
 		if (accumulatorEnabled.get()) {
