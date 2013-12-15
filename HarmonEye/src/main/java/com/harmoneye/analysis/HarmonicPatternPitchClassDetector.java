@@ -53,6 +53,7 @@ public class HarmonicPatternPitchClassDetector {
 		}
 		if (max > 0) {
 			for (int i = 0; i < octaveBins.length; i++) {
+				// TODO: precompute the inverse value
 				octaveBins[i] /= max;
 			}
 		}
@@ -66,6 +67,7 @@ public class HarmonicPatternPitchClassDetector {
 			double frequency = calc.centerFreq(baseFreqBin);
 			int harmonicBin = harmonicFreqBin(frequency, i);
 			if (harmonicBin < cqBins.length) {
+				// TODO: precompute the inverse value
 				double weight = 1 - 0.4 * i / (double) (harmonicCount - 1);
 				harmonics[i - 1] = weight * cqBins[harmonicBin];
 			}
@@ -79,6 +81,7 @@ public class HarmonicPatternPitchClassDetector {
 	 * @return zero-based cq bin index of the k-th harmonic frequency
 	 */
 	private int harmonicFreqBin(double frequency, int harmonicIndex) {
+		// TODO: try to precompute the log
 		return (int) FastMath.round(binsPerOctave * FastMath.log(2, harmonicIndex * frequency / baseFreq))
 			+ binsPerHalftoneHalf;
 	}

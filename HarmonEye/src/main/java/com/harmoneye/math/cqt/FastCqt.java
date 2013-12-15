@@ -40,7 +40,10 @@ public class FastCqt implements Cqt {
 
 	@Override
 	public Complex[] transform(double[] signal) {
+		// Use only the real part of the signal.
+		// Right padding for real-time usage - minimal latency.
 		calc.padRight(signal, dataRI[0]);
+		// The imaginary part is zero.
 		Arrays.fill(dataRI[1], 0);
 
 		FastFourierTransformer.transformInPlace(dataRI, DftNormalization.STANDARD, TransformType.FORWARD);
@@ -49,6 +52,8 @@ public class FastCqt implements Cqt {
 		Complex[] spectrum = TransformUtils.createComplexArray(dataRI);
 
 		spectralKernels.operate(spectrum, transformedSignal);
+		// Transform the DFT spectrum bins into CQT spectrum bins using the
+		// precomputed matrix of kernels (in frequency domain).
 
 		Complex normalizationFactor = ctx.getNormalizationFactor();
 		for (int i = 0; i < transformedSignal.length; i++) {
