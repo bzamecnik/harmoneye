@@ -38,8 +38,9 @@ public class CqtCalculator {
 		Complex[] coeffs = new Complex[size];
 		double sizeInv = 1.0 / size;
 		double factor = 2 * FastMath.PI * ctx.getQ() * sizeInv;
+		WindowFunction window = ctx.getWindow();
 		for (int i = 0; i < size; i++) {
-			Complex value = ComplexUtils.polar2Complex(ctx.getWindow().value(i * sizeInv) * sizeInv, i * factor);
+			Complex value = ComplexUtils.polar2Complex(window.value(i * sizeInv) * sizeInv, i * factor);
 			coeffs[i] = value;
 		}
 		return coeffs;
