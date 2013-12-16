@@ -1,11 +1,22 @@
 package com.harmoneye.audio;
 
+import com.harmoneye.math.window.HammingWindow;
+import com.harmoneye.math.window.WindowFunction;
+
 public class ToneGenerator {
 
 	private double samplingFreq;
+	private boolean windowEnabled;
+	private WindowFunction window;
 
 	public ToneGenerator(double samplingFreq) {
+		this(samplingFreq, false);
+	}
+	
+	public ToneGenerator(double samplingFreq, boolean windowEnabled) {
 		this.samplingFreq = samplingFreq;
+		this.windowEnabled = windowEnabled;
+		window = new HammingWindow();
 	}
 
 	/**
@@ -25,6 +36,14 @@ public class ToneGenerator {
 		for (int i = 0; i < sampleCount; i++) {
 			signal[i] = function.value(i * timeStep);
 		}
+		
+		if (windowEnabled) {
+			double sizeInv = 1.0 / sampleCount;
+			for (int i = 0; i < signal.length; i++) {
+				signal[i] *= window.value(i * sizeInv);
+			}
+		}
+		
 		return signal;
 	}
 
