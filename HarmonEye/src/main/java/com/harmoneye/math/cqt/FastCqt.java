@@ -1,28 +1,29 @@
 package com.harmoneye.math.cqt;
 
-import java.util.Arrays;
-
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.complex.ComplexField;
 import org.apache.commons.math3.exception.DimensionMismatchException;
-import org.apache.commons.math3.transform.DftNormalization;
-import org.apache.commons.math3.transform.FastFourierTransformer;
-import org.apache.commons.math3.transform.TransformType;
 
+import com.harmoneye.math.matrix.ComplexUtils;
+import com.harmoneye.math.matrix.ComplexVector;
 import com.harmoneye.math.matrix.InPlaceFieldMatrix;
 import com.harmoneye.math.matrix.LinkedListNonZeroSparseFieldMatrix;
 import com.harmoneye.math.matrix.NonZeroSparseFieldMatrix;
+
+import edu.emory.mathcs.jtransforms.fft.DoubleFFT_1D;
 
 public class FastCqt implements Cqt {
 
 	protected CqtContext ctx;
 	protected CqtCalculator calc;
+	private DoubleFFT_1D fft;
 
 	// spectral kernels - already Hermite-conjugated (conjugated and transposed) for the transform
 	private InPlaceFieldMatrix<Complex> spectralKernels;
 	private Complex[] cqtSpectrum;
-	private double[][] dataRI;
+	//private double[][] dataRI;
+	private ComplexVector dataRI;
 
 	// allocated result
 	private Complex[] dftSpectrum;
@@ -32,6 +33,7 @@ public class FastCqt implements Cqt {
 	public FastCqt(CqtContext ctx) {
 		this.ctx = ctx;
 		this.calc = new CqtCalculator(ctx);
+		this.fft = new DoubleFFT_1D(ctx.getSignalBlockSize());
 	}
 
 	public void init() {
@@ -40,10 +42,12 @@ public class FastCqt implements Cqt {
 		}
 
 		int signalBlockSize = ctx.getSignalBlockSize();
-		dataRI = new double[][] { new double[signalBlockSize], new double[signalBlockSize] };
+		//dataRI = new double[][] { new double[signalBlockSize], new double[signalBlockSize] };
+		dataRI = new ComplexVector(signalBlockSize);
 		cqtSpectrum = new Complex[spectralKernels.getRowDimension()];
 	}
 
+	// signal must to be as long as ctx.signalBlockLength()
 	@Override
 	public Complex[] transform(double[] signal) {
 //		 StopWatch sw = new StopWatch();
@@ -51,13 +55,17 @@ public class FastCqt implements Cqt {
 
 		// Use only the real part of the signal.
 		// Right padding for real-time usage - minimal latency.
-		calc.padRight(signal, dataRI[0]);
+		//calc.padRight(signal, dataRI[0]);
 		// The imaginary part is zero.
-		Arrays.fill(dataRI[1], 0);
+		//Arrays.fill(dataRI[1], 0);
 
-		FastFourierTransformer.transformInPlace(dataRI, DftNormalization.STANDARD, TransformType.FORWARD);
-
-		dftSpectrum = toComplexArray(dataRI, dftSpectrum);
+		//FastFourierTransformer.transformInPlace(dataRI, DftNormalization.STANDARD, TransformType.FORWARD);
+		
+		//dftSpectrum = toComplexArray(dataRI, dftSpectrum);
+		
+		System.arraycopy(signal, 0, dataRI.getElements(), 0, signal.length);
+		fft.realForwardFull(dataRI.getElements());
+		dftSpectrum = ComplexUtils.complexArrayFromVector(dataRI);
 
 		// Transform the DFT spectrum bins into CQT spectrum bins using the
 		// precomputed matrix of kernels (in frequency domain).
@@ -91,7 +99,7 @@ public class FastCqt implements Cqt {
 				field, rows, columns);
 		for (int k = 0; k < rows; k++) {
 //			kernels.setRow(k, calc.conjugate(calc.spectralKernel(k)));
-			kernels.setRow(k, calc.conjugatedNormalizedspectralKernel(k));
+			kernels.setRow(k, ComplexUtils.complexArrayFromVector(calc.conjugatedNormalizedspectralKernel(k)));
 		}
 		kernels.transpose();
 		spectralKernels = new LinkedListNonZeroSparseFieldMatrix<Complex>(kernels);
@@ -104,7 +112,7 @@ public class FastCqt implements Cqt {
 		return ctx;
 	}
 
-	private Complex[] toComplexArray(double[][] RI, Complex[] result) {
+	private Complex[] toComplexArray(double[][] dataRI, Complex[] result) {
 		// in-place variant of TransformUtils.createComplexArray(dataRI);
 
 		if (dataRI.length != 2) {

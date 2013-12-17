@@ -5,6 +5,7 @@ import org.apache.commons.math3.complex.Complex;
 import com.harmoneye.math.cqt.Cqt;
 import com.harmoneye.math.cqt.CqtCalculator;
 import com.harmoneye.math.cqt.CqtContext;
+import com.harmoneye.math.matrix.ComplexUtils;
 
 public class DirectCqt implements Cqt {
 
@@ -23,7 +24,7 @@ public class DirectCqt implements Cqt {
 		double windowIntegral = ctx.getWindowIntegral();
 		double normalizationFactor = 2 / windowIntegral;
 		for (int k = 0; k < totalBins; k++) {
-			Complex[] kernel = calc.temporalKernel(k);
+			Complex[] kernel = ComplexUtils.complexArrayFromVector(calc.temporalKernel(k));
 			Complex binValue = Complex.ZERO;
 			for (int n = 0; n < kernel.length; n++) {
 				Complex multiple = kernel[n].multiply(signal[n]);

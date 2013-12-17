@@ -8,6 +8,8 @@ import org.junit.Test;
 
 import com.harmoneye.audio.TextSignalPrinter;
 import com.harmoneye.audio.ToneGenerator;
+import com.harmoneye.math.matrix.ComplexUtils;
+import com.harmoneye.math.matrix.ComplexVector;
 
 import edu.emory.mathcs.jtransforms.fft.DoubleFFT_1D;
 
@@ -26,9 +28,7 @@ public class MusicSignalFft {
 			signal[i] *= normalizationFactor;
 		}
 
-		Complex[] spectrum = complexArrayFromInterleaved(signal);
-		
-		TextSignalPrinter.printSignal(spectrum);
+		TextSignalPrinter.printSignal(new ComplexVector(signal));
 	}
 
 	@Test
@@ -47,9 +47,8 @@ public class MusicSignalFft {
 		for (int i = 0; i < data.length; i++) {
 			data[i] *= normalizationFactor;
 		}
-		Complex[] spectrum = complexArrayFromInterleaved(data);
 
-		TextSignalPrinter.printSignal(spectrum);
+		TextSignalPrinter.printSignal(new ComplexVector(data));
 	}
 
 	@Test
@@ -67,7 +66,7 @@ public class MusicSignalFft {
 			spectrum[i] = spectrum[i].multiply(normalizationFactor);
 		}
 
-		TextSignalPrinter.printSignal(spectrum);
+		TextSignalPrinter.printSignal(ComplexUtils.complexVectorFromArray(spectrum));
 	}
 
 	private double[] generateSineWave(int signalBlockSize) {
@@ -80,13 +79,4 @@ public class MusicSignalFft {
 		return signal;
 	}
 
-	private Complex[] complexArrayFromInterleaved(double[] ri) {
-		int size = ri.length / 2;
-		Complex[] complex = new Complex[size];
-
-		for (int i = 0; i < size; i++) {
-			complex[i] = new Complex(ri[2 * i], ri[2 * i + 1]);
-		}
-		return complex;
-	}
 }

@@ -15,6 +15,7 @@ import org.apache.commons.math3.transform.TransformType;
 import com.harmoneye.math.cqt.Cqt;
 import com.harmoneye.math.cqt.CqtCalculator;
 import com.harmoneye.math.cqt.CqtContext;
+import com.harmoneye.math.matrix.ComplexUtils;
 import com.harmoneye.math.vector.LinkedListNonZeroSparseFieldVector;
 
 public class FastSparseVectorCqt implements Cqt {
@@ -68,7 +69,7 @@ public class FastSparseVectorCqt implements Cqt {
 		spectralKernels = new ArrayList<FieldVector<Complex>>(totalBins);
 		int signalBlockSize = ctx.getSignalBlockSize();
 		for (int k = 0; k < totalBins; k++) {
-			Complex[] kernel = calc.padRight(calc.conjugate(calc.spectralKernel(k)), signalBlockSize);
+			Complex[] kernel = calc.padRight(ComplexUtils.complexArrayFromVector(calc.conjugate(calc.spectralKernel(k))), signalBlockSize);
 			SparseFieldVector<Complex> sparseKernel = new SparseFieldVector<Complex>(field, kernel);
 			spectralKernels.add(new LinkedListNonZeroSparseFieldVector<Complex>(sparseKernel));
 		}

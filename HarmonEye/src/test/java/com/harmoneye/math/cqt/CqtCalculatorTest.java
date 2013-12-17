@@ -1,9 +1,9 @@
 package com.harmoneye.math.cqt;
 
-import org.apache.commons.math3.complex.Complex;
 import org.junit.Test;
 
 import com.harmoneye.audio.TextSignalPrinter;
+import com.harmoneye.math.matrix.ComplexVector;
 
 public class CqtCalculatorTest {
 
@@ -40,13 +40,14 @@ public class CqtCalculatorTest {
 	}
 	
 	@Test
-	public void printTemporalKernels() {
+	public void printKernel() {
+		System.out.println("signal block size:" + ctx.getSignalBlockSize());
 		CqtCalculator calc = new CqtCalculator(ctx);
 
 		int totalBins = ctx.getKernelBins();
 		//for (int i = 0; i < totalBins; i++) {
-		//Complex[] kernel = calc.temporalKernel(ctx.getKernelBins() - 1);
-		Complex[] kernel = calc.spectralKernel(ctx.getKernelBins() - 1);
+//		ComplexVector kernel = calc.temporalKernel(ctx.getKernelBins() - 1);
+		ComplexVector kernel = calc.spectralKernel(ctx.getKernelBins() - 1);
 		TextSignalPrinter.printSignal(kernel);
 		//}
 	}

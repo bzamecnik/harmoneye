@@ -1,6 +1,7 @@
 package com.harmoneye.audio;
 
-import org.apache.commons.math3.complex.Complex;
+import com.harmoneye.math.matrix.ComplexVector;
+import com.harmoneye.math.matrix.DComplex;
 
 public class TextSignalPrinter {
 	public static void printSignal(double[] signal) {
@@ -11,29 +12,39 @@ public class TextSignalPrinter {
 		System.out.println();
 	}
 
-	public static void printSignal(Complex[] signal) {
-		System.out.println("signal of length: " + signal.length);
+	public static void printSignal(ComplexVector signal) {
+		printSignal(signal, true);
+	}
 
-		double max = Double.NEGATIVE_INFINITY;
-		for (int i = 0; i < signal.length; i++) {
-			double abs = signal[i].abs();
-			max = Math.max(max, abs);
+	public static void printSignal(ComplexVector signal, boolean normalize) {
+		int size = signal.size();
+		double[] elements = signal.getElements();
+		System.out.println("signal of length: " + size);
+
+		double scaleFactor = 1.0;
+		if (normalize) {
+			double max = Double.NEGATIVE_INFINITY;
+			for (int i = 0; i < size; i++) {
+				double abs = DComplex.abs(elements[2 * i], elements[2 * i + 1]);
+				max = Math.max(max, abs);
+			}
+			;
+			System.out.println("max: " + max);
+			scaleFactor = 1.0 / max;
 		}
-		;
-		System.out.println("max: " + max);
-		double scaleFactor = 1.0 / max;
 
 		System.out.println("abs: ");
-		for (int i = 0; i < signal.length; i++) {
-			printLine(i, signal[i].abs() * scaleFactor);
+		for (int i = 0; i < size; i++) {
+			double abs = DComplex.abs(elements[2 * i], elements[2 * i + 1]);
+			printLine(i, abs * scaleFactor);
 		}
 		System.out.println("real component: ");
-		for (int i = 0; i < signal.length; i++) {
-			printLine(i, signal[i].getReal() * scaleFactor);
+		for (int i = 0; i < size; i++) {
+			printLine(i, elements[2 * i] * scaleFactor);
 		}
 		System.out.println("imaginary component: ");
-		for (int i = 0; i < signal.length; i++) {
-			printLine(i, signal[i].getImaginary() * scaleFactor);
+		for (int i = 0; i < size; i++) {
+			printLine(i, elements[2 * i + 1] * scaleFactor);
 		}
 		System.out.println();
 	}
