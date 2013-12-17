@@ -15,6 +15,7 @@ public class HarmonicPatternPitchClassDetector {
 	private int binsPerOctave;
 	private int binsPerHalftoneHalf;
 	private double baseFreq;
+	private double baseFreqInv;
 
 	private double[] octaveBins;
 
@@ -30,6 +31,7 @@ public class HarmonicPatternPitchClassDetector {
 		binsPerOctave = ctx.getBinsPerOctave();
 		binsPerHalftoneHalf = ctx.getBinsPerHalftone() / 2;
 		baseFreq = ctx.getBaseFreq();
+		baseFreqInv = 1.0 / baseFreq;
 	}
 
 	/**
@@ -58,9 +60,9 @@ public class HarmonicPatternPitchClassDetector {
 			max = FastMath.max(max, octaveBins[i]);
 		}
 		if (max > 0) {
+			double maxInv = 1.0 / max;
 			for (int i = 0; i < octaveBins.length; i++) {
-				// TODO: precompute the inverse value
-				octaveBins[i] /= max;
+				octaveBins[i] *= maxInv;
 			}
 		}
 
@@ -71,10 +73,10 @@ public class HarmonicPatternPitchClassDetector {
 		if (harmonics == null) {
 			harmonics = new double[harmonicCount];
 		}
+		double invFactor = 1.0 / (double) (harmonicCount - 1);
 		for (int i = 1; i <= harmonicCount; i++) {
 			double frequency = calc.centerFreq(baseFreqBin);
 			int harmonicBin = harmonicFreqBin(frequency, i);
-			double invFactor = 1.0 / (double) (harmonicCount - 1);
 			if (harmonicBin < cqBins.length) {
 				double weight = 1 - 0.4 * i * invFactor;
 				harmonics[i - 1] = weight * cqBins[harmonicBin];
@@ -90,7 +92,7 @@ public class HarmonicPatternPitchClassDetector {
 	 */
 	private int harmonicFreqBin(double frequency, int harmonicIndex) {
 		// TODO: try to precompute the log
-		return (int) FastMath.round(binsPerOctave * FastMath.log(2, harmonicIndex * frequency / baseFreq))
+		return (int) FastMath.round(binsPerOctave * FastMath.log(2, harmonicIndex * frequency * baseFreqInv))
 			+ binsPerHalftoneHalf;
 	}
 }
