@@ -6,6 +6,7 @@ import org.apache.commons.math3.util.FastMath;
 
 import com.harmoneye.audio.DecibelCalculator;
 import com.harmoneye.audio.MultiRateRingBufferBank;
+import com.harmoneye.audio.SoundConsumer;
 import com.harmoneye.math.cqt.CqtContext;
 import com.harmoneye.math.cqt.FastCqt;
 import com.harmoneye.math.matrix.ComplexVector;

@@ -7,8 +7,6 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.TargetDataLine;
 
-import com.harmoneye.analysis.SoundConsumer;
-
 public class Capture implements Runnable {
 
 	// TODO: Automatically find out minimum usable buffer size.
