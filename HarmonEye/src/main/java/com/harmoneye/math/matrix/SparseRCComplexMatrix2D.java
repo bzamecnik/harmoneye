@@ -124,14 +124,24 @@ public class SparseRCComplexMatrix2D {
 		}
 	}
 
+	public int getRows() {
+		return rows;
+	}
+
+	public int getColumns() {
+		return columns;
+	}
+
 	@Override
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
 		sb.append(getClass().getSimpleName()).append(' ');
 		sb.append(rows).append('x').append(columns).append('\n');
 		sb.append("elements:").append(Arrays.toString(elements)).append('\n');
-		sb.append("columnIndexes:").append(Arrays.toString(columnIndexes)).append('\n');
-		sb.append("rowPointers:").append(Arrays.toString(rowPointers)).append('\n');
+		sb.append("columnIndexes:").append(Arrays.toString(columnIndexes))
+			.append('\n');
+		sb.append("rowPointers:").append(Arrays.toString(rowPointers))
+			.append('\n');
 		return sb.toString();
 	}
 }

@@ -10,6 +10,7 @@ import org.junit.Test;
 import com.harmoneye.math.cqt.Cqt;
 import com.harmoneye.math.cqt.CqtContext;
 import com.harmoneye.math.cqt.FastCqt;
+import com.harmoneye.math.matrix.ComplexUtils;
 
 public class TestCqt {
 
@@ -43,7 +44,7 @@ public class TestCqt {
 			-0.135158, 0.999111, -0.0512135, -0.989558, 0.235803, 0.945572, -0.412187, -0.868683, 0.574229, 0.761568,
 			-0.71629, -0.627953, 0.833427, 0.472488, -0.921564, -0.300582, 0.977633, 0.118217, -0.999685 };
 
-		Complex[] cqBins = cqt.transform(signal);
+		Complex[] cqBins = ComplexUtils.complexArrayFromVector(cqt.transform(signal));
 
 		System.out.println("cq bins:");
 //		System.out.println(Formatter.formatArray(abs(cqBins)));
@@ -61,16 +62,14 @@ public class TestCqt {
 
 	public void testFastCqtSpeed() {
 
-		FastSparseVectorCqt cqt = new FastSparseVectorCqt(ctx);
+		FastCqt cqt = new FastCqt(ctx);
 		
 		double signal[] = new double[ctx.getSignalBlockSize()];
-
-		
 
 		long start = System.nanoTime();
 		int iterations = 100;
 		for (int i = 0; i < iterations; i++) {
-			Complex[] cqBins = cqt.transform(signal);
+			Complex[] cqBins = ComplexUtils.complexArrayFromVector(cqt.transform(signal));
 
 		}
 		long end = System.nanoTime();

@@ -6,6 +6,7 @@ import com.harmoneye.math.cqt.Cqt;
 import com.harmoneye.math.cqt.CqtCalculator;
 import com.harmoneye.math.cqt.CqtContext;
 import com.harmoneye.math.matrix.ComplexUtils;
+import com.harmoneye.math.matrix.ComplexVector;
 
 public class DirectCqt implements Cqt {
 
@@ -18,7 +19,7 @@ public class DirectCqt implements Cqt {
 	}
 
 	@Override
-	public Complex[] transform(double[] signal) {
+	public ComplexVector transform(double[] signal) {
 		int totalBins = ctx.getTotalBins();
 		Complex[] cqBins = new Complex[totalBins];
 		double windowIntegral = ctx.getWindowIntegral();
@@ -33,6 +34,6 @@ public class DirectCqt implements Cqt {
 			binValue = binValue.multiply(normalizationFactor);
 			cqBins[k] = binValue;
 		}
-		return cqBins;
+		return ComplexUtils.complexVectorFromArray(cqBins);
 	}
 }

@@ -2,13 +2,14 @@ package com.harmoneye.analysis;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.util.FastMath;
 
 import com.harmoneye.audio.DecibelCalculator;
 import com.harmoneye.audio.MultiRateRingBufferBank;
 import com.harmoneye.math.cqt.CqtContext;
 import com.harmoneye.math.cqt.FastCqt;
+import com.harmoneye.math.matrix.ComplexVector;
+import com.harmoneye.math.matrix.DComplex;
 import com.harmoneye.viz.Visualizer;
 
 public class MusicAnalyzer implements SoundConsumer {
@@ -86,14 +87,17 @@ public class MusicAnalyzer implements SoundConsumer {
 		int startIndex = (ctx.getOctaves() - 1) * ctx.getBinsPerOctave();
 		for (int octave = 0; octave < ctx.getOctaves(); octave++, startIndex -= ctx.getBinsPerOctave()) {
 			ringBufferBank.readLast(octave, samples.length, samples);
-			Complex[] cqtSpectrum = cqt.transform(samples);
+			ComplexVector cqtSpectrum = cqt.transform(samples);
 			toAmplitudeDbSpectrum(cqtSpectrum, amplitudeSpectrumDb, startIndex);
 		}
 	}
 
-	private void toAmplitudeDbSpectrum(Complex[] cqtSpectrum, double[] amplitudeSpectrum, int startIndex) {
-		for (int i = 0; i < cqtSpectrum.length; i++) {
-			double amplitude = cqtSpectrum[i].abs();
+	private void toAmplitudeDbSpectrum(ComplexVector cqtSpectrum, double[] amplitudeSpectrum, int startIndex) {
+		double[] elements = cqtSpectrum.getElements();
+		for (int i = 0, index = 0; i < cqtSpectrum.size(); i++, index += 2) {
+			double re = elements[index];
+			double im = elements[index + 1];
+			double amplitude = DComplex.abs(re, im);
 			double amplitudeDb = dbCalculator.amplitudeToDb(amplitude);
 			double value = dbCalculator.rescale(amplitudeDb);
 			amplitudeSpectrumDb[startIndex + i] = value;

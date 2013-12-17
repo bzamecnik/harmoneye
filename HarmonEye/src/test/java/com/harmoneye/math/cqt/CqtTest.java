@@ -7,6 +7,7 @@ import com.harmoneye.audio.DecibelCalculator;
 import com.harmoneye.audio.MultiRateRingBufferBank;
 import com.harmoneye.audio.TextSignalPrinter;
 import com.harmoneye.audio.ToneGenerator;
+import com.harmoneye.math.matrix.ComplexUtils;
 
 public class CqtTest {
 
@@ -38,7 +39,7 @@ public class CqtTest {
 		double[] signal = toneGen.generateSinWave(freq, duration);
 		//TextSignalPrinter.printSignal(signal);
 
-		Complex[] cqtSpectrum = cqt.transform(signal);
+		Complex[] cqtSpectrum = ComplexUtils.complexArrayFromVector(cqt.transform(signal));
 
 		double[] bins = toAmplitudeDbSpectrum(cqtSpectrum);
 
@@ -83,7 +84,7 @@ public class CqtTest {
 			ringBufferBank.readLast(octave, samples.length, samples);
 			System.out.println("samples from octave " + octave + ":");
 			TextSignalPrinter.printSignal(samples);
-			Complex[] cqtSpectrum = cqt.transform(samples);
+			Complex[] cqtSpectrum = ComplexUtils.complexArrayFromVector(cqt.transform(samples));
 			toAmplitudeDbSpectrum(cqtSpectrum, bins, startIndex);
 		}
 

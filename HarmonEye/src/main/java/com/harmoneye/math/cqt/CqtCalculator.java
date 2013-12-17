@@ -4,7 +4,6 @@ import java.util.Arrays;
 
 import org.apache.commons.math3.analysis.integration.TrapezoidIntegrator;
 import org.apache.commons.math3.analysis.integration.UnivariateIntegrator;
-import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.util.FastMath;
 
 import com.harmoneye.math.matrix.ComplexVector;
@@ -136,32 +135,6 @@ public class CqtCalculator {
 
 		System.arraycopy(in, 0, padded, 0, dataSize);
 		Arrays.fill(padded, dataSize, padded.length, 0);
-	}
-
-	@Deprecated
-	public Complex[] padRight(Complex[] values, int totalSize) {
-		Complex[] padded = new Complex[totalSize];
-		int size = FastMath.min(values.length, totalSize);
-		for (int i = 0; i < size; i++) {
-			padded[i] = values[i];
-		}
-		for (int i = values.length; i < totalSize; i++) {
-			padded[i] = Complex.ZERO;
-		}
-		return padded;
-	}
-
-	@Deprecated
-	public double[] padRight(double[] values, int totalSize) {
-		double[] padded = new double[totalSize];
-		int size = FastMath.min(values.length, totalSize);
-		for (int i = 0; i < size; i++) {
-			padded[i] = values[i];
-		}
-		for (int i = values.length; i < totalSize; i++) {
-			padded[i] = 0;
-		}
-		return padded;
 	}
 
 	public double sum(double[] values) {

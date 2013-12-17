@@ -3,7 +3,7 @@ package com.harmoneye.math.matrix;
 import org.apache.commons.math3.complex.Complex;
 
 public class ComplexUtils {
-	
+
 	public static ComplexVector complexVectorFromArray(Complex[] array) {
 		int size = array.length;
 		ComplexVector vector = new ComplexVector(size);
@@ -16,7 +16,6 @@ public class ComplexUtils {
 		}
 		return vector;
 	}
-	
 
 	public static Complex[] complexArrayFromVector(ComplexVector vector) {
 		int size = vector.size();
