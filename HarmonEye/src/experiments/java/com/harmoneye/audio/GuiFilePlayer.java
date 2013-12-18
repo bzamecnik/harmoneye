@@ -63,6 +63,8 @@ import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.SoftBevelBorder;
 
+import com.harmoneye.app.Config;
+
 /**
  * SimpleSoundCapture Example. This is a simple program to record sounds and
  * play them back. It uses some methods from the CapturePlayback program in the
@@ -71,8 +73,6 @@ import javax.swing.border.SoftBevelBorder;
  * @author Steve Potts
  */
 public class GuiFilePlayer extends JPanel implements ActionListener {
-
-	private static final String INPUT_FILE_NAME = "/Users/bzamecnik/dev/harmoneye/data/wav/097_1.WAV";
 
 	final int bufSize = 16384;
 
@@ -148,6 +148,13 @@ public class GuiFilePlayer extends JPanel implements ActionListener {
 
 		Thread thread;
 
+		private String inputFileName;
+		
+		public Playback() {
+			Config config = Config.fromDefault();
+			inputFileName = config.get("inputFile");
+		}
+		
 		public void start() {
 			errStr = null;
 			thread = new Thread(this);
@@ -173,9 +180,11 @@ public class GuiFilePlayer extends JPanel implements ActionListener {
 			// make sure we have something to play
 			if (audioInputStream == null) {
 				try {
-					audioInputStream = AudioSystem
-							.getAudioInputStream(new File(INPUT_FILE_NAME));
-				} catch (UnsupportedAudioFileException | IOException e) {
+					audioInputStream = AudioSystem.getAudioInputStream(new File(inputFileName));
+				} catch (UnsupportedAudioFileException e) {
+					e.printStackTrace();
+					return;
+				} catch (IOException e) {
 					e.printStackTrace();
 					return;
 				}
@@ -220,8 +229,7 @@ public class GuiFilePlayer extends JPanel implements ActionListener {
 					}
 					int numBytesRemaining = numBytesRead;
 					while (numBytesRemaining > 0) {
-						numBytesRemaining -= line.write(data, 0,
-								numBytesRemaining);
+						numBytesRemaining -= line.write(data, 0, numBytesRemaining);
 					}
 				} catch (Exception e) {
 					shutDown("Error during playback: " + e);
@@ -251,8 +259,7 @@ public class GuiFilePlayer extends JPanel implements ActionListener {
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		int w = 360;
 		int h = 170;
-		f.setLocation(screenSize.width / 2 - w / 2, screenSize.height / 2 - h
-				/ 2);
+		f.setLocation(screenSize.width / 2 - w / 2, screenSize.height / 2 - h / 2);
 		f.setSize(w, h);
 		f.show();
 	}

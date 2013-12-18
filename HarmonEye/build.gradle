@@ -31,9 +31,9 @@ sourceSets {
 }
 
 dependencies {
-	compile 'colt:colt:1.2.0'
+	//compile 'colt:colt:1.2.0'
 	compile 'edu.emory.mathcs:JTransforms:2.4'
-	compile 'org.apache.commons:commons-math3:3.1.1'
+	compile 'org.apache.commons:commons-math3:3.2'
 	compile 'org.apache.commons:commons-lang3:3.1'
 
 	compile 'org.simplericity.macify:macify:1.6'
@@ -84,7 +84,7 @@ task macBundleApp(dependsOn: 'macProguardJar') << {
 		name: "HarmonEye",
 		displayname: "HarmonEye",
 		identifier: "com.harmoneye.HarmonEye",
-		mainclassname: "com.harmoneye.HarmonEye",
+		mainclassname: "com.harmoneye.app.HarmonEye",
 		shortversion: version,
 		applicationCategory: "public.app-category.music",
 		icon: "src/main/resources/HarmonEye.icns"
@@ -97,4 +97,6 @@ task macBundleApp(dependsOn: 'macProguardJar') << {
 			classpath(file: it)
 		}
 	}
+	// TODO: enable retina
+	// defaults write "`pwd`/Info.plist" NSHighResolutionCapable -bool true
 }
