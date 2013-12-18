@@ -1,8 +1,9 @@
 .gradle/
 .settings/
-bin/
-build/
-dist/
-lib/
+/bin/
+/build/
+/dist/
+/lib/
 .classpath
 .project
+*.dmg
