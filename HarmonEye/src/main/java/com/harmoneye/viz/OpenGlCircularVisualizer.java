@@ -56,7 +56,8 @@ public class OpenGlCircularVisualizer implements
 
 		component = canvas;
 
-		Animator animator = new Animator(canvas);
+		Animator animator = new Animator();
+		animator.add(canvas);
 		animator.start();
 		// TODO: stop the animator if the computation is stopped
 	}
