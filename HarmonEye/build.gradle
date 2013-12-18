@@ -84,7 +84,7 @@ task macBundleApp(dependsOn: 'macProguardJar') << {
 		name: "HarmonEye",
 		displayname: "HarmonEye",
 		identifier: "com.harmoneye.HarmonEye",
-		mainclassname: "com.harmoneye.HarmonEye",
+		mainclassname: "com.harmoneye.app.HarmonEye",
 		shortversion: version,
 		applicationCategory: "public.app-category.music",
 		icon: "src/main/resources/HarmonEye.icns"
