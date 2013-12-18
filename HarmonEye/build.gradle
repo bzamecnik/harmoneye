@@ -97,4 +97,6 @@ task macBundleApp(dependsOn: 'macProguardJar') << {
 			classpath(file: it)
 		}
 	}
+	// TODO: enable retina
+	// defaults write "`pwd`/Info.plist" NSHighResolutionCapable -bool true
 }
