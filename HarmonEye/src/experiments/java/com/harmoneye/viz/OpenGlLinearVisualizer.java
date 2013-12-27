@@ -125,7 +125,12 @@ public class OpenGlLinearVisualizer implements SwingVisualizer<AnalyzedFrame>,
 		}
 
 		drawBorders(gl);
-		drawBins(gl);
+		
+		gl.glColor3f(0.75f, 0.75f, 0.75f);
+		drawBins(gl, frame.getAllBins());
+		
+		gl.glColor3f(0.4f, 1.0f, 0.4f);
+		drawBins(gl, frame.getDetectedPitchClasses());
 
 		gl.glPopMatrix();
 	}
@@ -138,7 +143,8 @@ public class OpenGlLinearVisualizer implements SwingVisualizer<AnalyzedFrame>,
 		int halftonesPerOctave = ctx.getHalftonesPerOctave();
 		// lines between bins
 		gl.glBegin(GL.GL_LINES);
-		int totalBins = ctx.getOctaves() * halftonesPerOctave;
+		int octaves = ctx.getOctaves();
+		int totalBins = octaves * halftonesPerOctave;
 		double xStep = 1.0 / totalBins;
 		for (int i = 0; i <= totalBins; i++) {
 			if (i % halftonesPerOctave != 0) {
@@ -152,7 +158,7 @@ public class OpenGlLinearVisualizer implements SwingVisualizer<AnalyzedFrame>,
 		gl.glColor3f(0.5f, 0.5f, 0.5f);
 		gl.glLineWidth(1f);
 		gl.glBegin(GL.GL_LINES);
-		totalBins = ctx.getOctaves();
+		totalBins = octaves;
 		xStep = 1.0 / totalBins;
 		for (int i = 0; i <= totalBins; i++) {
 			double x = i * xStep;
@@ -162,32 +168,35 @@ public class OpenGlLinearVisualizer implements SwingVisualizer<AnalyzedFrame>,
 		gl.glEnd();
 	}
 
-	private void drawBins(GL2 gl) {
-		CqtContext ctx = frame.getCtxContext();
+	private void drawBins(GL2 gl, double[] bins) {
+		if (bins == null) {
+			return;
+		}
 
 		gl.glPushMatrix();
 
-		gl.glColor3f(1.0f, 0.4f, 0.4f);
-
-		int totalBins = ctx.getTotalBins();
+		int totalBins = bins.length;
 		double xStep = 1.0 / totalBins;
-		double[] allBins = frame.getAllBins();
-		gl.glBegin(GL.GL_TRIANGLES);
-		for (int i = 0; i < totalBins; i++) {
-			double value = allBins[i];
+		//gl.glBegin(GL.GL_TRIANGLES);
+		gl.glBegin(GL.GL_LINE_STRIP);
+		gl.glVertex2d(0, bins[0]);
+		for (int i = 1; i < totalBins; i++) {
+			double value = bins[i];
 
-			Color color = colorFunction.toColor((float) value);
-			gl.glColor3ub((byte) color.getRed(),
-				(byte) color.getGreen(),
-				(byte) color.getBlue());
+//			Color color = colorFunction.toColor((float) value);
+//			gl.glColor3ub((byte) color.getRed(),
+//				(byte) color.getGreen(),
+//				(byte) color.getBlue());
 
 			double xFrom = i * xStep;
 			double xTo = xFrom + xStep;
 			double yTo = value;
 
-			gl.glVertex2d(xFrom, 0);
-			gl.glVertex2d(0.5 * (xFrom + xTo), yTo);
-			gl.glVertex2d(xTo, 0);
+//			gl.glVertex2d(xFrom, 0);
+//			gl.glVertex2d(0.5 * (xFrom + xTo), yTo);
+//			gl.glVertex2d(xTo, 0);
+			
+			gl.glVertex2d(xTo, yTo);
 		}
 		gl.glEnd();
 
