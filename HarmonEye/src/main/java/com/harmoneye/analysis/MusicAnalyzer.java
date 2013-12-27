@@ -36,7 +36,8 @@ public class MusicAnalyzer implements SoundConsumer {
 
 	private AtomicBoolean initialized = new AtomicBoolean();
 	private AtomicBoolean accumulatorEnabled = new AtomicBoolean();
-	private static final boolean BIN_SMOOTHER_ENABLED = true;
+	private static final boolean BIN_SMOOTHER_ENABLED = false;
+	private static final boolean HARMONIC_DETECTOR_ENABLED = false;
 
 	public MusicAnalyzer(Visualizer<AnalyzedFrame> visualizer,
 		float sampleRate, int bitsPerSample) {
@@ -48,7 +49,7 @@ public class MusicAnalyzer implements SoundConsumer {
 //			.maxFreq((2 << 6) * 65.4063913251)
 //			.octaves(2)
 			.kernelOctaves(1)
-			.binsPerHalftone(7)
+			.binsPerHalftone(5)
 			.build();
 		//@formatter:on
 
@@ -101,52 +102,35 @@ public class MusicAnalyzer implements SoundConsumer {
 			double amplitude = DComplex.abs(re, im);
 			double amplitudeDb = dbCalculator.amplitudeToDb(amplitude);
 			double value = dbCalculator.rescale(amplitudeDb);
-			amplitudeSpectrumDb[startIndex + i] = value;
+			amplitudeSpectrum[startIndex + i] = value;
 		}
 	}
 
 	private AnalyzedFrame analyzeFrame(double[] allBins) {
-		aggregateIntoOctaves(allBins);
+		double[] detectedPitchClasses =  null;
 
-		double[] pitchClassBins = pcDetector.detectPitchClasses(allBins);
-		
-		octaveBins = enhance(allBins, pitchClassBins, octaveBins);
+		if (HARMONIC_DETECTOR_ENABLED) {
+			pcDetector.detectPitchClasses(allBins);
+			octaveBins = aggregateIntoOctaves(detectedPitchClasses, octaveBins);
+		} else {
+			octaveBins = aggregateIntoOctaves(allBins, octaveBins);
+		}
 
 		double[] smoothedOctaveBins = smooth(octaveBins);
 		
-		AnalyzedFrame pcProfile = new AnalyzedFrame(ctx, allBins, smoothedOctaveBins);
+		AnalyzedFrame pcProfile = new AnalyzedFrame(ctx, allBins, smoothedOctaveBins, detectedPitchClasses);
 		return pcProfile;
 	}
 
-	private void aggregateIntoOctaves(double[] amplitudeSpectrumDb) {
+	private double[] aggregateIntoOctaves(double[] bins, double[] octaveBins) {
 		int binsPerOctave = ctx.getBinsPerOctave();
 		for (int i = 0; i < binsPerOctave; i++) {
 			// maximum over octaves:
 			double value = 0;
-			for (int j = i; j < amplitudeSpectrumDb.length; j += binsPerOctave) {
-				value = FastMath.max(value, amplitudeSpectrumDb[j]);
+			for (int j = i; j < bins.length; j += binsPerOctave) {
+				value = FastMath.max(value, bins[j]);
 			}
 			octaveBins[i] = value;
-		}
-	}
-
-	// just an ad hoc reduction of noise and equalization
-	private double[] enhance(double[] allBins, double[] pitchClassBinsDb, double[] octaveBins) {
-		double max = 0;
-		for (int i = 0; i < allBins.length; i++) {
-			max = FastMath.max(max, allBins[i]);
-		}
-		for (int i = 0; i < pitchClassBinsDb.length; i++) {
-			pitchClassBinsDb[i] = FastMath.pow(pitchClassBinsDb[i], 3);
-		}
-		for (int i = 0; i < pitchClassBinsDb.length; i++) {
-			pitchClassBinsDb[i] *= max;
-		}
-		for (int i = 0; i < octaveBins.length; i++) {
-			octaveBins[i] *= pitchClassBinsDb[i];
-		}
-		for (int i = 0; i < octaveBins.length; i++) {
-			octaveBins[i] = FastMath.pow(octaveBins[i], 1 / 3.0);
 		}
 		return octaveBins;
 	}
