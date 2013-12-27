@@ -38,6 +38,10 @@ dependencies {
 
 	compile 'org.simplericity.macify:macify:1.6'
 
+	compile ':jlayer:1.0.1'
+	compile ':mp3spi:1.9.5'
+	compile ':tritonus-share:0.3.6'
+
 	macBundleApp ':appbundler:1.0'
 	
 	compile ':jogl-all:'

@@ -37,6 +37,7 @@ public class Capture implements Runnable {
 
 		readBufferSizeInSamples = DEFAULT_READ_BUFFER_SIZE_SAMPLES;
 		bufferSize = sampleSizeBytes * readBufferSizeInSamples;
+		System.out.println("buffer size: " + bufferSize + " B, " + readBufferSizeInSamples + " samples");
 	}
 
 	public void start() {
@@ -54,7 +55,7 @@ public class Capture implements Runnable {
 		try {
 			capture();
 		} catch (Exception e) {
-			System.err.println(e);
+			e.printStackTrace(System.err);
 			thread = null;
 		}
 	}

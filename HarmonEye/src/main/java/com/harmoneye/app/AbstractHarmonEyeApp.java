@@ -31,7 +31,7 @@ public class AbstractHarmonEyeApp {
 	private static final int TIME_PERIOD_MILLIS = 25;
 	private static final String WINDOW_TITLE = "HarmonEye";
 
-	protected static final float AUDIO_SAMPLE_RATE = 22050.0f;
+	protected static final float AUDIO_SAMPLE_RATE = 44100.0f;
 	protected static final int AUDIO_BITS_PER_SAMPLE = 16;
 
 	protected MusicAnalyzer soundAnalyzer;
