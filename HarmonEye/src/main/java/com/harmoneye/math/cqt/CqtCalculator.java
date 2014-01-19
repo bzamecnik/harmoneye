@@ -50,6 +50,7 @@ public class CqtCalculator {
 
 	public ComplexVector spectralKernel(int k) {
 		ComplexVector temporalKernel = padLeft(temporalKernel(k), ctx.getSignalBlockSize());
+//		ComplexVector temporalKernel = padCenter(temporalKernel(k), ctx.getSignalBlockSize());
 		double[] data = temporalKernel.getElements();
 		getFft().complexForward(data);
 		ComplexVector spectrum = new ComplexVector(data);
@@ -130,6 +131,21 @@ public class CqtCalculator {
 		return padded;
 	}
 
+	public ComplexVector padCenter(ComplexVector values, int totalSize) {
+		if (values.size() == totalSize) {
+			return values;
+		}
+		ComplexVector padded = new ComplexVector(totalSize);
+		int dataSize = FastMath.min(values.size(), totalSize);
+		int prePaddingSize = (totalSize - dataSize) / 2;
+
+		Arrays.fill(padded.getElements(), 0, 2 * prePaddingSize, 0);
+		System.arraycopy(values.getElements(), 0, padded.getElements(), 2 * prePaddingSize, 2 * dataSize);
+		Arrays.fill(padded.getElements(), 2 * (prePaddingSize + dataSize), 2 * totalSize - 1, 0);
+
+		return padded;
+	}
+	
 	public void padRight(double[] in, double[] padded) {
 		int dataSize = FastMath.min(in.length, padded.length);
 
