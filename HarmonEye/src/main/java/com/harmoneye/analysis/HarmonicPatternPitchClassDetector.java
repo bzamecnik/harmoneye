@@ -2,15 +2,14 @@ package com.harmoneye.analysis;
 
 import org.apache.commons.math3.util.FastMath;
 
-import com.harmoneye.audio.analysis.ScalarExpSmoother;
 import com.harmoneye.math.cqt.CqtContext;
 
 public class HarmonicPatternPitchClassDetector {
 
-	private static final int DEFAULT_HARMONIC_COUNT = 7;
+	private static final int DEFAULT_HARMONIC_COUNT = 6;
 	private static final double HARMONIC_WEIGHT_FALLOFF = 0.4;
 
-	private ScalarExpSmoother smoother = new ScalarExpSmoother(0.1);
+	//private ScalarExpSmoother smoother = new ScalarExpSmoother(0.1);
 
 	private int harmonicCount;
 	private int binsPerOctave;
@@ -19,7 +18,7 @@ public class HarmonicPatternPitchClassDetector {
 	private double baseFreqInv;
 	private double harmonicCountMinusOneInv;
 
-	private double[] filteredBins;
+	private double[] harmonicBins;
 	private int[] harmonicBinsIndexes;
 	private CqtContext ctx;
 
@@ -51,16 +50,40 @@ public class HarmonicPatternPitchClassDetector {
 	 * @return
 	 */
 	public double[] detectPitchClasses(double[] cqBins) {
-		if (filteredBins == null) {
-			filteredBins = new double[cqBins.length];
+		int size = cqBins.length;
+		
+		if (harmonicBins == null) {
+			harmonicBins = new double[size];
 		}
 
-		double[] octaveBins = new double[cqBins.length];
-		for (int i = 0; i < cqBins.length; i++) {
-			octaveBins[i] = extractHarmonics(cqBins, i, harmonicCount);
+		for (int i = 0; i < size; i++) {
+			harmonicBins[i] = extractHarmonics(cqBins, i, harmonicCount);
 		}
 
-		// normalize
+		//normalizeViaMax(cqBins, octaveBins);
+		normalizeViaMean(cqBins, harmonicBins);
+
+		return harmonicBins;
+	}
+
+	private void normalizeViaMean(double[] origBins, double[] harmonicBins) {
+		int size = harmonicBins.length;
+
+		double harmonicSum = 0;
+		double origSum = 0;
+		
+		for (int i = 0; i < size; i++) {
+			harmonicSum += harmonicBins[i];
+			origSum += origBins[i];
+		}
+		
+		double normalizationFactor = origSum / harmonicSum;
+		for (int i = 0; i < size; i++) {
+			harmonicBins[i] *= normalizationFactor;
+		}
+	}
+
+	private void normalizeViaMax(double[] cqBins, double[] octaveBins) {
 		
 		// TODO: this kind of normalization is bad and unstable
 		
@@ -70,6 +93,8 @@ public class HarmonicPatternPitchClassDetector {
 			harmonicMax = FastMath.max(harmonicMax, octaveBins[i]);
 			cqMax = FastMath.max(cqMax, cqBins[i]);
 		}
+		
+
 		if (harmonicMax > 0) {
 			double factor = cqMax < 1 ? cqMax / harmonicMax : 1 / cqMax;
 //			double smoothedFactor = smoother.smooth(factor);
@@ -77,8 +102,6 @@ public class HarmonicPatternPitchClassDetector {
 				octaveBins[i] *= factor;
 			}
 		}
-
-		return octaveBins;
 	}
 
 	private double extractHarmonics(double[] cqBins, int baseFreqBin,
