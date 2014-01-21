@@ -16,7 +16,7 @@ import com.harmoneye.viz.Visualizer;
 public class MusicAnalyzer implements SoundConsumer {
 
 	/** [0.0; 1.0] 1.0 = no smoothing */
-	private static final double SMOOTHING_FACTOR = 0.25;
+	private static final double SMOOTHING_FACTOR = 0.5;
 
 	private CqtContext ctx;
 
@@ -26,18 +26,20 @@ public class MusicAnalyzer implements SoundConsumer {
 	private HarmonicPatternPitchClassDetector pcDetector;
 	private Visualizer<AnalyzedFrame> visualizer;
 	private MovingAverageAccumulator accumulator;
-	private ExpSmoother binSmoother;
+	private ExpSmoother allBinSmoother;
+	private ExpSmoother octaveBinSmoother;
 
 	private double[] samples;
 	/** peak amplitude spectrum */
 	private double[] amplitudeSpectrumDb;
 	private double[] octaveBins;
 
-
 	private AtomicBoolean initialized = new AtomicBoolean();
 	private AtomicBoolean accumulatorEnabled = new AtomicBoolean();
-	private static final boolean BIN_SMOOTHER_ENABLED = false;
-	private static final boolean HARMONIC_DETECTOR_ENABLED = false;
+
+	private static final boolean BIN_SMOOTHER_ENABLED = true;
+	private static final boolean OCTAVE_BIN_SMOOTHER_ENABLED = false;
+	private static final boolean HARMONIC_DETECTOR_ENABLED = true;
 
 	public MusicAnalyzer(Visualizer<AnalyzedFrame> visualizer,
 		float sampleRate, int bitsPerSample) {
@@ -49,18 +51,21 @@ public class MusicAnalyzer implements SoundConsumer {
 //			.maxFreq((2 << 6) * 65.4063913251)
 //			.octaves(2)
 			.kernelOctaves(1)
-			.binsPerHalftone(5)
+			.binsPerHalftone(7)
 			.build();
 		//@formatter:on
 
 		samples = new double[ctx.getSignalBlockSize()];
 		amplitudeSpectrumDb = new double[ctx.getTotalBins()];
 		octaveBins = new double[ctx.getBinsPerOctave()];
-		
-		ringBufferBank = new MultiRateRingBufferBank(ctx.getSignalBlockSize(), ctx.getOctaves());
+
+		ringBufferBank = new MultiRateRingBufferBank(ctx.getSignalBlockSize(),
+			ctx.getOctaves());
 		dbCalculator = new DecibelCalculator(bitsPerSample);
 		pcDetector = new HarmonicPatternPitchClassDetector(ctx);
-		binSmoother = new ExpSmoother(ctx.getBinsPerOctave(), SMOOTHING_FACTOR);
+		octaveBinSmoother = new ExpSmoother(ctx.getBinsPerOctave(),
+			SMOOTHING_FACTOR);
+		allBinSmoother = new ExpSmoother(ctx.getTotalBins(), SMOOTHING_FACTOR);
 		accumulator = new MovingAverageAccumulator(ctx.getBinsPerOctave());
 
 		cqt = new FastCqt(ctx);
@@ -87,14 +92,16 @@ public class MusicAnalyzer implements SoundConsumer {
 
 	private void computeCqtSpectrum() {
 		int startIndex = (ctx.getOctaves() - 1) * ctx.getBinsPerOctave();
-		for (int octave = 0; octave < ctx.getOctaves(); octave++, startIndex -= ctx.getBinsPerOctave()) {
+		for (int octave = 0; octave < ctx.getOctaves(); octave++, startIndex -= ctx
+			.getBinsPerOctave()) {
 			ringBufferBank.readLast(octave, samples.length, samples);
 			ComplexVector cqtSpectrum = cqt.transform(samples);
 			toAmplitudeDbSpectrum(cqtSpectrum, amplitudeSpectrumDb, startIndex);
 		}
 	}
 
-	private void toAmplitudeDbSpectrum(ComplexVector cqtSpectrum, double[] amplitudeSpectrum, int startIndex) {
+	private void toAmplitudeDbSpectrum(ComplexVector cqtSpectrum,
+		double[] amplitudeSpectrum, int startIndex) {
 		double[] elements = cqtSpectrum.getElements();
 		for (int i = 0, index = 0; i < cqtSpectrum.size(); i++, index += 2) {
 			double re = elements[index];
@@ -107,18 +114,23 @@ public class MusicAnalyzer implements SoundConsumer {
 	}
 
 	private AnalyzedFrame analyzeFrame(double[] allBins) {
-		double[] detectedPitchClasses =  null;
+		double[] detectedPitchClasses = null;
+
+		if (BIN_SMOOTHER_ENABLED) {
+			allBins = allBinSmoother.smooth(allBins);
+		}
 
 		if (HARMONIC_DETECTOR_ENABLED) {
-			pcDetector.detectPitchClasses(allBins);
+			detectedPitchClasses = pcDetector.detectPitchClasses(allBins);
 			octaveBins = aggregateIntoOctaves(detectedPitchClasses, octaveBins);
 		} else {
 			octaveBins = aggregateIntoOctaves(allBins, octaveBins);
 		}
 
 		double[] smoothedOctaveBins = smooth(octaveBins);
-		
-		AnalyzedFrame pcProfile = new AnalyzedFrame(ctx, allBins, smoothedOctaveBins, detectedPitchClasses);
+
+		AnalyzedFrame pcProfile = new AnalyzedFrame(ctx, allBins,
+			smoothedOctaveBins, detectedPitchClasses);
 		return pcProfile;
 	}
 
@@ -140,15 +152,14 @@ public class MusicAnalyzer implements SoundConsumer {
 		if (accumulatorEnabled.get()) {
 			accumulator.add(octaveBins);
 			smoothedOctaveBins = accumulator.getAverage();
-		} else if (BIN_SMOOTHER_ENABLED) {
-			binSmoother.smooth(octaveBins);
-			smoothedOctaveBins = binSmoother.smooth(octaveBins);
+		} else if (OCTAVE_BIN_SMOOTHER_ENABLED) {
+			smoothedOctaveBins = octaveBinSmoother.smooth(octaveBins);
 		} else {
 			smoothedOctaveBins = octaveBins;
 		}
 		return smoothedOctaveBins;
 	}
-	
+
 	public void toggleAccumulatorEnabled() {
 		accumulatorEnabled.set(!accumulatorEnabled.get());
 		if (accumulatorEnabled.get()) {
