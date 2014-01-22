@@ -39,8 +39,8 @@ public class MusicAnalyzer implements SoundConsumer {
 	private AtomicBoolean initialized = new AtomicBoolean();
 	private AtomicBoolean accumulatorEnabled = new AtomicBoolean();
 
-	private static final boolean BIN_SMOOTHER_ENABLED = true;
-	private static final boolean OCTAVE_BIN_SMOOTHER_ENABLED = false;
+	private static final boolean BIN_SMOOTHER_ENABLED = false;
+	private static final boolean OCTAVE_BIN_SMOOTHER_ENABLED = true;
 	private static final boolean HARMONIC_DETECTOR_ENABLED = true;
 	private static final boolean PERCUSSION_SUPPRESSOR_ENABLED = true;
 	private static final boolean SPECTRAL_EQUALIZER_ENABLED = true;
