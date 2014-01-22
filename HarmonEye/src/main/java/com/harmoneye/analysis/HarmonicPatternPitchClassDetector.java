@@ -111,7 +111,7 @@ public class HarmonicPatternPitchClassDetector {
 		for (int i = 1; i <= harmonicCount; i++) {
 			int harmonicBin = centerFreqBin + harmonicBinsIndexes[i - 1];
 			if (harmonicBin < cqBins.length) {
-				double weight = 1 - HARMONIC_WEIGHT_FALLOFF * i
+				double weight = 1 - HARMONIC_WEIGHT_FALLOFF * (i - 1)
 					* harmonicCountMinusOneInv;
 				// TODO: interpolate the bin values using a continuous bin index
 				dotProduct += weight * cqBins[harmonicBin];
