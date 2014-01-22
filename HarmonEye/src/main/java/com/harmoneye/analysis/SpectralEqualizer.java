@@ -1,7 +1,8 @@
 package com.harmoneye.analysis;
 
-import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.apache.commons.math3.util.FastMath;
+
+import com.harmoneye.math.stats.Median;
 
 public class SpectralEqualizer {
 
@@ -12,25 +13,26 @@ public class SpectralEqualizer {
 	private double[] filteredValues;
 	private double[] window;
 
-	private Median medianFilter = new Median();
+	private Median medianFilter;
 
 	public SpectralEqualizer(int size, int windowSize) {
 		this.size = size;
 		this.windowSize = windowSize;
+		
+		medianFilter = new Median(windowSize, true);
 
 		filteredValues = new double[size];
 		window = new double[windowSize];
 	}
 
 	public double[] filter(double[] values) {
-
 		for (int i = 0; i < size; i++) {
 			for (int winIndex = 0; winIndex < windowSize; winIndex++) {
 				int index = (i + winIndex + size) % size;
 				window[winIndex] = values[index];
 			}
-			filteredValues[i] = values[i] - MEDIAN_WEIGHT
-				* medianFilter.evaluate(window);
+			double median = medianFilter.evaluate(window);
+			filteredValues[i] = values[i] - MEDIAN_WEIGHT * median;
 		}
 
 		normalizeViaMax(values, filteredValues);

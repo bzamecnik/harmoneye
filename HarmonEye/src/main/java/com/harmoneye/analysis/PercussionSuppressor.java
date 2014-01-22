@@ -1,10 +1,10 @@
 package com.harmoneye.analysis;
 
-import org.apache.commons.math3.stat.descriptive.rank.Median;
+import com.harmoneye.math.stats.Median;
 
 /**
- * Suppresses percussive components and retain harmonic ones. Implemented via
- * 1D median filtering of subsequent CQ spectra in the time-domain.
+ * Suppresses percussive components and retain harmonic ones. Implemented via 1D
+ * median filtering of subsequent CQ spectra in the time-domain.
  * 
  * Fitzgerald, D.: "Harmonic/Percussive Separation using Median Filtering", 13th
  * International Conference on Digital Audio Effects (DAFX10), Graz, Austria,
@@ -17,7 +17,7 @@ public class PercussionSuppressor {
 	private double[] filteredValues;
 	private double[] historyColumn;
 
-	private Median medianFilter = new Median();
+	private Median medianFilter;
 
 	public PercussionSuppressor(int size, int historySize) {
 		this.size = size;
@@ -28,6 +28,7 @@ public class PercussionSuppressor {
 		}
 		historyColumn = new double[historySize];
 		filteredValues = new double[size];
+		medianFilter = new Median(historySize, true);
 	}
 
 	public double[] filter(double[] values) {
