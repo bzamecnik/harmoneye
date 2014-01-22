@@ -2,6 +2,7 @@ package com.harmoneye.analysis;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.apache.commons.math3.util.FastMath;
 
 import com.harmoneye.audio.DecibelCalculator;
@@ -28,8 +29,10 @@ public class MusicAnalyzer implements SoundConsumer {
 	private MovingAverageAccumulator accumulator;
 	private ExpSmoother allBinSmoother;
 	private ExpSmoother octaveBinSmoother;
+	private NoiseGate noiseGate;
 	private PercussionSuppressor percussionSuppressor;
 	private SpectralEqualizer spectralEqualizer;
+	private Median medianFilter;
 
 	private double[] samples;
 	/** peak amplitude spectrum */
@@ -44,6 +47,8 @@ public class MusicAnalyzer implements SoundConsumer {
 	private static final boolean HARMONIC_DETECTOR_ENABLED = true;
 	private static final boolean PERCUSSION_SUPPRESSOR_ENABLED = true;
 	private static final boolean SPECTRAL_EQUALIZER_ENABLED = true;
+	private static final boolean NOISE_GATE_ENABLED = false;
+	private static final boolean NOISE_GATE_MEDIAN_THRESHOLD_ENABLED = false;
 
 	public MusicAnalyzer(Visualizer<AnalyzedFrame> visualizer,
 		float sampleRate, int bitsPerSample) {
@@ -55,7 +60,7 @@ public class MusicAnalyzer implements SoundConsumer {
 //			.maxFreq((2 << 6) * 65.4063913251)
 //			.octaves(2)
 			.kernelOctaves(1)
-			.binsPerHalftone(7)
+			.binsPerHalftone(9)
 			.build();
 		//@formatter:on
 
@@ -71,6 +76,12 @@ public class MusicAnalyzer implements SoundConsumer {
 			SMOOTHING_FACTOR);
 		allBinSmoother = new ExpSmoother(ctx.getTotalBins(), SMOOTHING_FACTOR);
 		accumulator = new MovingAverageAccumulator(ctx.getBinsPerOctave());
+		if (NOISE_GATE_ENABLED) {
+			noiseGate = new NoiseGate(ctx.getBinsPerOctave());
+			if (NOISE_GATE_MEDIAN_THRESHOLD_ENABLED) {
+				medianFilter = new Median();
+			}
+		}
 		percussionSuppressor = new PercussionSuppressor(ctx.getTotalBins(), 7);
 		spectralEqualizer = new SpectralEqualizer(ctx.getTotalBins(), 30);
 
@@ -141,6 +152,14 @@ public class MusicAnalyzer implements SoundConsumer {
 		}
 
 		double[] smoothedOctaveBins = smooth(octaveBins);
+
+		if (NOISE_GATE_ENABLED) {
+			if (NOISE_GATE_MEDIAN_THRESHOLD_ENABLED) {
+				double medianValue = medianFilter.evaluate(smoothedOctaveBins);
+				noiseGate.setOpenThreshold(medianValue * 1.25);
+			}
+			noiseGate.filter(smoothedOctaveBins);
+		}
 
 		AnalyzedFrame pcProfile = new AnalyzedFrame(ctx, allBins,
 			smoothedOctaveBins, detectedPitchClasses);
