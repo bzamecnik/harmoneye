@@ -1,5 +1,6 @@
 package com.harmoneye.analysis;
 
+import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.apache.commons.math3.util.FastMath;
 
 import com.harmoneye.math.cqt.CqtContext;
@@ -9,7 +10,7 @@ public class HarmonicPatternPitchClassDetector {
 	private static final int DEFAULT_HARMONIC_COUNT = 6;
 	private static final double HARMONIC_WEIGHT_FALLOFF = 0.4;
 
-	//private ScalarExpSmoother smoother = new ScalarExpSmoother(0.1);
+	// private ScalarExpSmoother smoother = new ScalarExpSmoother(0.1);
 
 	private int harmonicCount;
 	private int binsPerOctave;
@@ -21,6 +22,7 @@ public class HarmonicPatternPitchClassDetector {
 	private double[] harmonicBins;
 	private int[] harmonicBinsIndexes;
 	private CqtContext ctx;
+	private Median medianStat = new Median();
 
 	public HarmonicPatternPitchClassDetector(CqtContext ctx) {
 		this(ctx, DEFAULT_HARMONIC_COUNT);
@@ -51,7 +53,7 @@ public class HarmonicPatternPitchClassDetector {
 	 */
 	public double[] detectPitchClasses(double[] cqBins) {
 		int size = cqBins.length;
-		
+
 		if (harmonicBins == null) {
 			harmonicBins = new double[size];
 		}
@@ -60,10 +62,23 @@ public class HarmonicPatternPitchClassDetector {
 			harmonicBins[i] = extractHarmonics(cqBins, i, harmonicCount);
 		}
 
-		//normalizeViaMax(cqBins, octaveBins);
+		// normalizeViaMax(cqBins, octaveBins);
 		normalizeViaMean(cqBins, harmonicBins);
+		// normalizeViaMedian(cqBins, harmonicBins);
 
 		return harmonicBins;
+	}
+
+	private void normalizeViaMedian(double[] origBins, double[] harmonicBins) {
+		double harmonicMedian = medianStat.evaluate(harmonicBins);
+		double origMedian = medianStat.evaluate(origBins);
+		// System.out.println(harmonicMedian + " " + origMedian);
+
+		double normalizationFactor = origMedian / harmonicMedian;
+		int size = harmonicBins.length;
+		for (int i = 0; i < size; i++) {
+			harmonicBins[i] *= normalizationFactor;
+		}
 	}
 
 	private void normalizeViaMean(double[] origBins, double[] harmonicBins) {
@@ -71,33 +86,34 @@ public class HarmonicPatternPitchClassDetector {
 
 		double harmonicSum = 0;
 		double origSum = 0;
-		
+
 		for (int i = 0; i < size; i++) {
 			harmonicSum += harmonicBins[i];
 			origSum += origBins[i];
 		}
-		
-		double normalizationFactor = origSum / harmonicSum;
-		for (int i = 0; i < size; i++) {
-			harmonicBins[i] *= normalizationFactor;
+
+		if (harmonicSum > 0) {
+			double normalizationFactor = origSum / harmonicSum;
+			for (int i = 0; i < size; i++) {
+				harmonicBins[i] *= normalizationFactor;
+			}
 		}
 	}
 
 	private void normalizeViaMax(double[] cqBins, double[] octaveBins) {
-		
+
 		// TODO: this kind of normalization is bad and unstable
-		
+
 		double harmonicMax = 0;
 		double cqMax = 0;
 		for (int i = 0; i < octaveBins.length; i++) {
 			harmonicMax = FastMath.max(harmonicMax, octaveBins[i]);
 			cqMax = FastMath.max(cqMax, cqBins[i]);
 		}
-		
 
 		if (harmonicMax > 0) {
 			double factor = cqMax < 1 ? cqMax / harmonicMax : 1 / cqMax;
-//			double smoothedFactor = smoother.smooth(factor);
+			// double smoothedFactor = smoother.smooth(factor);
 			for (int i = 0; i < octaveBins.length; i++) {
 				octaveBins[i] *= factor;
 			}
