@@ -28,6 +28,7 @@ public class MusicAnalyzer implements SoundConsumer {
 	private MovingAverageAccumulator accumulator;
 	private ExpSmoother allBinSmoother;
 	private ExpSmoother octaveBinSmoother;
+	private PercussionSuppressor percussionSuppressor;
 
 	private double[] samples;
 	/** peak amplitude spectrum */
@@ -40,6 +41,7 @@ public class MusicAnalyzer implements SoundConsumer {
 	private static final boolean BIN_SMOOTHER_ENABLED = true;
 	private static final boolean OCTAVE_BIN_SMOOTHER_ENABLED = false;
 	private static final boolean HARMONIC_DETECTOR_ENABLED = true;
+	private static final boolean PERCUSSION_SUPPRESSOR_ENABLED = true;
 
 	public MusicAnalyzer(Visualizer<AnalyzedFrame> visualizer,
 		float sampleRate, int bitsPerSample) {
@@ -67,6 +69,7 @@ public class MusicAnalyzer implements SoundConsumer {
 			SMOOTHING_FACTOR);
 		allBinSmoother = new ExpSmoother(ctx.getTotalBins(), SMOOTHING_FACTOR);
 		accumulator = new MovingAverageAccumulator(ctx.getBinsPerOctave());
+		percussionSuppressor = new PercussionSuppressor(ctx.getTotalBins(), 7);
 
 		cqt = new FastCqt(ctx);
 	}
@@ -118,6 +121,9 @@ public class MusicAnalyzer implements SoundConsumer {
 
 		if (BIN_SMOOTHER_ENABLED) {
 			allBins = allBinSmoother.smooth(allBins);
+		}
+		if (PERCUSSION_SUPPRESSOR_ENABLED) {
+			allBins = percussionSuppressor.filter(allBins);
 		}
 
 		if (HARMONIC_DETECTOR_ENABLED) {
