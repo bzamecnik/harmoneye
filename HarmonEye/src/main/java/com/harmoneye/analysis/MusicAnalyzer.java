@@ -29,6 +29,7 @@ public class MusicAnalyzer implements SoundConsumer {
 	private ExpSmoother allBinSmoother;
 	private ExpSmoother octaveBinSmoother;
 	private PercussionSuppressor percussionSuppressor;
+	private SpectralEqualizer spectralEqualizer;
 
 	private double[] samples;
 	/** peak amplitude spectrum */
@@ -42,6 +43,7 @@ public class MusicAnalyzer implements SoundConsumer {
 	private static final boolean OCTAVE_BIN_SMOOTHER_ENABLED = false;
 	private static final boolean HARMONIC_DETECTOR_ENABLED = true;
 	private static final boolean PERCUSSION_SUPPRESSOR_ENABLED = true;
+	private static final boolean SPECTRAL_EQUALIZER_ENABLED = true;
 
 	public MusicAnalyzer(Visualizer<AnalyzedFrame> visualizer,
 		float sampleRate, int bitsPerSample) {
@@ -70,6 +72,7 @@ public class MusicAnalyzer implements SoundConsumer {
 		allBinSmoother = new ExpSmoother(ctx.getTotalBins(), SMOOTHING_FACTOR);
 		accumulator = new MovingAverageAccumulator(ctx.getBinsPerOctave());
 		percussionSuppressor = new PercussionSuppressor(ctx.getTotalBins(), 7);
+		spectralEqualizer = new SpectralEqualizer(ctx.getTotalBins(), 30);
 
 		cqt = new FastCqt(ctx);
 	}
@@ -128,6 +131,10 @@ public class MusicAnalyzer implements SoundConsumer {
 
 		if (HARMONIC_DETECTOR_ENABLED) {
 			detectedPitchClasses = pcDetector.detectPitchClasses(allBins);
+			if (SPECTRAL_EQUALIZER_ENABLED) {
+				detectedPitchClasses = spectralEqualizer
+					.filter(detectedPitchClasses);
+			}
 			octaveBins = aggregateIntoOctaves(detectedPitchClasses, octaveBins);
 		} else {
 			octaveBins = aggregateIntoOctaves(allBins, octaveBins);
@@ -150,6 +157,7 @@ public class MusicAnalyzer implements SoundConsumer {
 			}
 			octaveBins[i] = value;
 		}
+
 		return octaveBins;
 	}
 
