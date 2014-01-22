@@ -17,7 +17,7 @@ import com.harmoneye.viz.Visualizer;
 public class MusicAnalyzer implements SoundConsumer {
 
 	/** [0.0; 1.0] 1.0 = no smoothing */
-	private static final double SMOOTHING_FACTOR = 0.5;
+	private static final double SMOOTHING_FACTOR = 0.25;
 
 	private CqtContext ctx;
 
@@ -26,7 +26,8 @@ public class MusicAnalyzer implements SoundConsumer {
 	private DecibelCalculator dbCalculator;
 	private HarmonicPatternPitchClassDetector pcDetector;
 	private Visualizer<AnalyzedFrame> visualizer;
-	private MovingAverageAccumulator accumulator;
+	//private MovingAverageAccumulator accumulator;
+	private ExpSmoother accumulator;
 	private ExpSmoother allBinSmoother;
 	private ExpSmoother octaveBinSmoother;
 	private NoiseGate noiseGate;
@@ -75,7 +76,8 @@ public class MusicAnalyzer implements SoundConsumer {
 		octaveBinSmoother = new ExpSmoother(ctx.getBinsPerOctave(),
 			SMOOTHING_FACTOR);
 		allBinSmoother = new ExpSmoother(ctx.getTotalBins(), SMOOTHING_FACTOR);
-		accumulator = new MovingAverageAccumulator(ctx.getBinsPerOctave());
+		//accumulator = new MovingAverageAccumulator(ctx.getBinsPerOctave());
+		accumulator = new ExpSmoother(ctx.getBinsPerOctave(), 0.005);
 		if (NOISE_GATE_ENABLED) {
 			noiseGate = new NoiseGate(ctx.getBinsPerOctave());
 			if (NOISE_GATE_MEDIAN_THRESHOLD_ENABLED) {
@@ -182,9 +184,11 @@ public class MusicAnalyzer implements SoundConsumer {
 
 	private double[] smooth(double[] octaveBins) {
 		double[] smoothedOctaveBins = null;
+		double[] accumulatedOctaveBins = accumulator.smooth(octaveBins);
 		if (accumulatorEnabled.get()) {
-			accumulator.add(octaveBins);
-			smoothedOctaveBins = accumulator.getAverage();
+			//accumulator.add(octaveBins);
+			//smoothedOctaveBins = accumulator.getAverage();
+			smoothedOctaveBins = accumulatedOctaveBins;
 		} else if (OCTAVE_BIN_SMOOTHER_ENABLED) {
 			smoothedOctaveBins = octaveBinSmoother.smooth(octaveBins);
 		} else {
@@ -196,7 +200,7 @@ public class MusicAnalyzer implements SoundConsumer {
 	public void toggleAccumulatorEnabled() {
 		accumulatorEnabled.set(!accumulatorEnabled.get());
 		if (accumulatorEnabled.get()) {
-			accumulator.reset();
+			//accumulator.reset();
 		}
 	}
 
