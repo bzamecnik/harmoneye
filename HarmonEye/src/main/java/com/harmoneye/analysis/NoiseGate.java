@@ -1,6 +1,5 @@
 package com.harmoneye.analysis;
 
-import com.harmoneye.audio.analysis.ScalarExpSmoother;
 
 public class NoiseGate {
 	private int signalLength;

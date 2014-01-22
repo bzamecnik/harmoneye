@@ -1,4 +1,4 @@
-package com.harmoneye.audio.analysis;
+package com.harmoneye.analysis;
 
 public class ScalarExpSmoother {
 
