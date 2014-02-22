@@ -47,6 +47,6 @@ public class DoubleRingBuffer {
 	}
 
 	private int incrementIndex(int value, int increment) {
-		return (value + increment + bufferSize) % bufferSize;
+		return (((value + increment) % bufferSize) + bufferSize) % bufferSize;
 	}
 }
