@@ -19,6 +19,12 @@ public class ComplexVector {
 		this.size = elements.length / 2;
 		this.elements = elements;
 	}
+	
+	public ComplexVector(ComplexVector copy) {
+		this.size = copy.size;
+		this.elements = new double[copy.getElements().length];
+		System.arraycopy(copy.getElements(), 0, elements, 0, size);
+	}
 
 	public double[] getElements() {
 		return elements;

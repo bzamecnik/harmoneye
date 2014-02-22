@@ -50,6 +50,10 @@ dependencies {
 	macRuntime ':gluegen-rt-natives-macosx-universal:'
 
 	testCompile 'junit:junit:4.10'
+	
+	// experiments
+	compile 'commons-cli:commons-cli:1.2'
+	compile ':p5-core:'
 }
 
 jar {
