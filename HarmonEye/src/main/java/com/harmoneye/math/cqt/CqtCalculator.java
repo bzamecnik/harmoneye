@@ -2,8 +2,6 @@ package com.harmoneye.math.cqt;
 
 import java.util.Arrays;
 
-import org.apache.commons.math3.analysis.integration.TrapezoidIntegrator;
-import org.apache.commons.math3.analysis.integration.UnivariateIntegrator;
 import org.apache.commons.math3.util.FastMath;
 
 import com.harmoneye.math.matrix.ComplexVector;
@@ -75,11 +73,6 @@ public class CqtCalculator {
 		}
 
 		return spectrum;
-	}
-
-	public double windowIntegral(WindowFunction window) {
-		UnivariateIntegrator integrator = new TrapezoidIntegrator();
-		return integrator.integrate(100, window, 0, 1);
 	}
 
 	// http://acius2.blogspot.cz/2007/11/calculating-next-power-of-2.html

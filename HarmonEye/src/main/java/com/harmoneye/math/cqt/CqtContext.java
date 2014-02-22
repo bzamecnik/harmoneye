@@ -4,6 +4,7 @@ import org.apache.commons.math3.util.FastMath;
 
 import com.harmoneye.math.window.HammingWindow;
 import com.harmoneye.math.window.WindowFunction;
+import com.harmoneye.math.window.WindowIntegrator;
 
 public final class CqtContext {
 	private int octaves = 6;
@@ -45,7 +46,7 @@ public final class CqtContext {
 		kernelBins = binsPerOctave * kernelOctaves;
 		firstKernelBin = totalBins - kernelBins;
 		q = 1 / (FastMath.pow(2, binsPerOctaveInv) - 1);
-		windowIntegral = calc.windowIntegral(window);
+		windowIntegral = new WindowIntegrator().integral(window);
 
 		signalBlockSize = calc.nextPowerOf2(calc.bandWidth(firstKernelBin));
 		normalizationFactor = 2 / (signalBlockSize * windowIntegral);

@@ -1,42 +1,36 @@
 package com.harmoneye.math.fft;
 
 import com.harmoneye.math.cqt.Cqt;
-import com.harmoneye.math.cqt.CqtCalculator;
 import com.harmoneye.math.cqt.CqtContext;
 import com.harmoneye.math.matrix.ComplexVector;
 import com.harmoneye.math.window.WindowFunction;
+import com.harmoneye.math.window.WindowIntegrator;
 
 import edu.emory.mathcs.jtransforms.fft.DoubleFFT_1D;
 
 public class Fft implements Cqt {
 
-	protected CqtContext ctx;
-	protected CqtCalculator calc;
 	private DoubleFFT_1D fft;
 
 	private ComplexVector dataRI;
-	private double[] window;
+	private double[] sampledWindow;
 	private double normalizationFactor;
 
 	public Fft(CqtContext ctx) {
-		this.ctx = ctx;
-		this.calc = new CqtCalculator(ctx);
-		this.fft = new DoubleFFT_1D(ctx.getSignalBlockSize());
+		this(ctx.getSignalBlockSize(), ctx.getWindow());
 	}
 
-	public void init() {
-		int signalBlockSize = ctx.getSignalBlockSize();
-		dataRI = new ComplexVector(signalBlockSize);
-		window = sampleWindow(signalBlockSize);
-
-		double windowIntegral = calc.windowIntegral(ctx.getWindow());
-		normalizationFactor = 2 / windowIntegral;
+	public Fft(int windowSize, WindowFunction window) {
+		this.fft = new DoubleFFT_1D(windowSize);
+		dataRI = new ComplexVector(windowSize);
+		sampledWindow = sampleWindow(window, windowSize);
+		double windowIntegral = new WindowIntegrator().integral(window);
+		normalizationFactor = 2.0 / windowIntegral;
 	}
 
-	private double[] sampleWindow(int size) {
+	private double[] sampleWindow(WindowFunction window, int size) {
 		double[] coeffs = new double[size];
 		double sizeInv = 1.0 / size;
-		WindowFunction window = ctx.getWindow();
 		for (int i = 0; i < size; i++) {
 			coeffs[i] = window.value(i * sizeInv) * sizeInv;
 		}
@@ -53,7 +47,7 @@ public class Fft implements Cqt {
 		// System.arraycopy(signal, 0, dataRIElems, 0, signal.length);
 
 		for (int i = 0; i < signal.length; i++) {
-			dataRIElems[i] = signal[i] * window[i];
+			dataRIElems[i] = signal[i] * sampledWindow[i];
 		}
 
 		fft.realForwardFull(dataRIElems);
@@ -78,9 +72,5 @@ public class Fft implements Cqt {
 				elements[2 * i + 1] = normalizationFactor * im;
 			}
 		}
-	}
-
-	public CqtContext getContext() {
-		return ctx;
 	}
 }
