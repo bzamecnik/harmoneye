@@ -1,7 +1,7 @@
 package com.harmoneye.app.spectrogram;
 
 import com.harmoneye.audio.DecibelCalculator;
-import com.harmoneye.math.fft.Fft;
+import com.harmoneye.math.fft.ShortTimeFourierTransform;
 import com.harmoneye.math.matrix.ComplexVector;
 import com.harmoneye.math.matrix.DComplex;
 import com.harmoneye.math.window.HammingWindow;
@@ -10,7 +10,7 @@ public class Spectrograph {
 
 	private int windowSize;
 	private int hopSize;
-	private Fft fft;
+	private ShortTimeFourierTransform fft;
 
 	public Spectrograph(int windowSize, double overlapRatio) {
 		this.windowSize = windowSize;
@@ -18,7 +18,7 @@ public class Spectrograph {
 		System.out.println("windowSize:" + windowSize);
 		System.out.println("overlapRatio:" + overlapRatio);
 		System.out.println("hopSize:" + hopSize);
-		this.fft = new Fft(windowSize, new HammingWindow());
+		this.fft = new ShortTimeFourierTransform(windowSize, new HammingWindow());
 	}
 
 	public Spectrogram computeSpectrogram(SampledAudio audio) {

@@ -1,14 +1,14 @@
 package com.harmoneye.math.fft;
 
-import com.harmoneye.math.cqt.Cqt;
-import com.harmoneye.math.cqt.CqtContext;
 import com.harmoneye.math.matrix.ComplexVector;
 import com.harmoneye.math.window.WindowFunction;
 import com.harmoneye.math.window.WindowIntegrator;
 
 import edu.emory.mathcs.jtransforms.fft.DoubleFFT_1D;
 
-public class Fft implements Cqt {
+public class ShortTimeFourierTransform
+//implements Cqt
+{
 
 	private DoubleFFT_1D fft;
 
@@ -16,11 +16,11 @@ public class Fft implements Cqt {
 	private double[] sampledWindow;
 	private double normalizationFactor;
 
-	public Fft(CqtContext ctx) {
-		this(ctx.getSignalBlockSize(), ctx.getWindow());
-	}
+//	public ShortTimeFourierTransform(CqtContext ctx) {
+//		this(ctx.getSignalBlockSize(), ctx.getWindow());
+//	}
 
-	public Fft(int windowSize, WindowFunction window) {
+	public ShortTimeFourierTransform(int windowSize, WindowFunction window) {
 		this.fft = new DoubleFFT_1D(windowSize);
 		dataRI = new ComplexVector(windowSize);
 		sampledWindow = sampleWindow(window, windowSize);
@@ -38,7 +38,7 @@ public class Fft implements Cqt {
 	}
 
 	// signal must to be as long as ctx.signalBlockLength()
-	@Override
+//	@Override
 	public ComplexVector transform(double[] signal) {
 		// StopWatch sw = new StopWatch();
 		// sw.start();
