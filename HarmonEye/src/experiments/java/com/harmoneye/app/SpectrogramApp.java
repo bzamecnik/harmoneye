@@ -22,15 +22,17 @@ public class SpectrogramApp extends PApplet {
 		PApplet.main(SpectrogramApp.class.getName(), args);
 	}
 
-	private boolean guiEnabled = true;
-	// private Spectrogram spectrogram;
+	private Spectrograph spectrograph;
+
 	private String inputFile;
 	private String outputFile;
+
 	private SampledAudio audio;
-	private int windowSize = 2*1024;
-	private PImage spectrumImage;
 	private Spectrogram spectrogram;
-	private Spectrograph spectrograph;
+	private PImage spectrumImage;
+
+	private boolean guiEnabled = true;
+	private int windowSize = 2 * 1024;
 	private double overlapRatio = 0;
 
 	public void setup() {
@@ -72,7 +74,7 @@ public class SpectrogramApp extends PApplet {
 		int lastPercent = 0;
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
-		
+
 		for (int x = 0; x < frames; x++) {
 			magnitudeSpectrum = spectrogram.getMagnitudeFrame(x,
 				magnitudeSpectrum);
@@ -88,7 +90,8 @@ public class SpectrogramApp extends PApplet {
 		}
 		stopWatch.stop();
 		System.out.println("100%");
-		System.out.println("Computed spectrogram in " + stopWatch.getTime() + " ms");
+		System.out.println("Computed spectrogram in " + stopWatch.getTime()
+			+ " ms");
 		return image;
 	}
 
@@ -115,8 +118,8 @@ public class SpectrogramApp extends PApplet {
 		if (cmd.hasOption("o")) {
 			outputFile = cmd.getOptionValue("o");
 		} else {
-			outputFile = inputFile.replaceAll("\\.[a-z]+$", "_win_" + windowSize
-				+ "_overlap_" + overlapRatio + ".png");
+			outputFile = inputFile.replaceAll("\\.[a-z]+$", "_win_"
+				+ windowSize + "_overlap_" + overlapRatio + ".png");
 		}
 	}
 
