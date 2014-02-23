@@ -30,6 +30,7 @@ public class SpectrogramApp extends PApplet {
 	private PImage spectrumImage;
 	private Spectrogram spectrogram;
 	private Spectrograph spectrograph;
+	private double overlapRatio = 0;
 
 	public void setup() {
 		try {
@@ -49,7 +50,7 @@ public class SpectrogramApp extends PApplet {
 		}
 
 		audio = new AudioReader().readAudio(inputFile);
-		spectrograph = new Spectrograph(windowSize);
+		spectrograph = new Spectrograph(windowSize, overlapRatio);
 		spectrumImage = prepareSpectrum(audio);
 
 		colorMode(HSB, 1.0f);
@@ -85,15 +86,25 @@ public class SpectrogramApp extends PApplet {
 		options.addOption("o", true, "output file");
 		options.addOption("n", "no-gui", false, "No GUI (headless mode)");
 		options.addOption("w", "window-size", true, "Window size");
+		options.addOption("l", "overlap-factor", true, "Overlap factor");
 
 		CommandLineParser parser = new BasicParser();
 		CommandLine cmd = parser.parse(options, args);
 
 		guiEnabled = !cmd.hasOption("no-gui");
-		inputFile = cmd.getOptionValue("i");
-		outputFile = cmd.getOptionValue("o");
 		if (cmd.hasOption("w")) {
 			windowSize = Integer.valueOf(cmd.getOptionValue("w"));
+		}
+		if (cmd.hasOption("l")) {
+			int overlapFactor = Integer.valueOf(cmd.getOptionValue("l"));
+			overlapRatio = 1 - (1.0 / overlapFactor);
+		}
+		inputFile = cmd.getOptionValue("i");
+		if (cmd.hasOption("o")) {
+			outputFile = cmd.getOptionValue("o");
+		} else {
+			outputFile = inputFile.replaceAll("\\.[a-z]+$", "_win_" + windowSize
+				+ "_overlap_" + overlapRatio + ".png");
 		}
 	}
 
