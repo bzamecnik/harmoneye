@@ -4,6 +4,7 @@ import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Options;
+import org.apache.commons.lang3.time.StopWatch;
 
 import processing.core.PApplet;
 import processing.core.PImage;
@@ -69,6 +70,9 @@ public class SpectrogramApp extends PApplet {
 
 		double[] magnitudeSpectrum = new double[spectrogram.getBinCount()];
 		int lastPercent = 0;
+		StopWatch stopWatch = new StopWatch();
+		stopWatch.start();
+		
 		for (int x = 0; x < frames; x++) {
 			magnitudeSpectrum = spectrogram.getMagnitudeFrame(x,
 				magnitudeSpectrum);
@@ -82,7 +86,9 @@ public class SpectrogramApp extends PApplet {
 				lastPercent = (int) percent;
 			}
 		}
+		stopWatch.stop();
 		System.out.println("100%");
+		System.out.println("Computed spectrogram in " + stopWatch.getTime() + " ms");
 		return image;
 	}
 
@@ -137,8 +143,11 @@ public class SpectrogramApp extends PApplet {
 		if (outputFile != null) {
 			String path = savePath(outputFile);
 			System.out.println("Saving:" + path);
+			StopWatch stopWatch = new StopWatch();
+			stopWatch.start();
 			spectrumImage.save(path);
-			System.out.println("Saved ok.");
+			stopWatch.stop();
+			System.out.println("Saved ok in " + stopWatch.getTime() + " ms");
 		}
 
 		popMatrix();
