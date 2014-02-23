@@ -41,9 +41,9 @@ public class SpectrogramApp extends PApplet {
 		}
 
 		size(640, 512, JAVA2D);
-//		if (frame != null) {
-//			frame.setResizable(true);
-//		}
+		// if (frame != null) {
+		// frame.setResizable(true);
+		// }
 
 		if (!guiEnabled) {
 			System.setProperty("java.awt.headless", "true");
@@ -68,15 +68,21 @@ public class SpectrogramApp extends PApplet {
 		colorMode(HSB, 1.0f);
 
 		double[] magnitudeSpectrum = new double[spectrogram.getBinCount()];
+		int lastPercent = 0;
 		for (int x = 0; x < frames; x++) {
 			magnitudeSpectrum = spectrogram.getMagnitudeFrame(x,
 				magnitudeSpectrum);
 			for (int y = 0; y < frequencies; y++) {
-				int i = y * frames + x;
+				int i = (frequencies - y - 1) * frames + x;
 				image.pixels[i] = color((float) magnitudeSpectrum[y]);
 			}
-			System.out.println(100 * x / (float)frames + " %");
+			float percent = 100 * x / (float) frames;
+			if ((int) percent > lastPercent) {
+				System.out.println(percent + " %");
+				lastPercent = (int) percent;
+			}
 		}
+		System.out.println("100%");
 		return image;
 	}
 
@@ -127,8 +133,12 @@ public class SpectrogramApp extends PApplet {
 		translate(0, -height);
 
 		image(spectrumImage, 0, 0, width, height);
+		System.out.println("output file:" + outputFile);
 		if (outputFile != null) {
-			spectrumImage.save(savePath(outputFile));
+			String path = savePath(outputFile);
+			System.out.println("Saving:" + path);
+			spectrumImage.save(path);
+			System.out.println("Saved ok.");
 		}
 
 		popMatrix();
