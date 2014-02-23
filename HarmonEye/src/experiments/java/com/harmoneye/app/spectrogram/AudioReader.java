@@ -61,7 +61,7 @@ public class AudioReader {
 					amplitudeBufferMono,
 					inputChannelCount);
 
-				int readSampleCount = readBytesCount / BYTES_PER_INPUT_SAMPLE;
+				int readSampleCount = readBytesCount / (inputChannelCount * BYTES_PER_INPUT_SAMPLE);
 				System.arraycopy(amplitudeBufferMono,
 					0,
 					amplitudes,
