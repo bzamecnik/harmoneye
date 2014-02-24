@@ -13,6 +13,7 @@ import com.harmoneye.app.spectrogram.AudioReader;
 import com.harmoneye.app.spectrogram.BasicSpectrograph;
 import com.harmoneye.app.spectrogram.MagnitudeSpectrogram;
 import com.harmoneye.app.spectrogram.MagnitudeSpectrograph;
+import com.harmoneye.app.spectrogram.PhaseDiffReassignedSpectrograph;
 import com.harmoneye.app.spectrogram.SampledAudio;
 import com.harmoneye.audio.RmsCalculator;
 
@@ -35,6 +36,8 @@ public class SpectrogramApp extends PApplet {
 	private int windowSize = 2 * 1024;
 	private double overlapRatio = 0;
 
+	private boolean reassignmentEnabled;
+
 	public void setup() {
 		try {
 			prepareOptions();
@@ -53,7 +56,12 @@ public class SpectrogramApp extends PApplet {
 		}
 
 		audio = new AudioReader().readAudio(inputFile);
+		if (reassignmentEnabled) {
+			spectrograph = new PhaseDiffReassignedSpectrograph(windowSize,
+				overlapRatio);
+		} else {
 			spectrograph = new BasicSpectrograph(windowSize, overlapRatio);
+		}
 		spectrumImage = prepareSpectrum(audio);
 
 		colorMode(HSB, 1.0f);
@@ -101,11 +109,13 @@ public class SpectrogramApp extends PApplet {
 		options.addOption("n", "no-gui", false, "No GUI (headless mode)");
 		options.addOption("w", "window-size", true, "Window size");
 		options.addOption("l", "overlap-factor", true, "Overlap factor");
+		options.addOption("r", "reassign", false, "Spectral reassignment");
 
 		CommandLineParser parser = new BasicParser();
 		CommandLine cmd = parser.parse(options, args);
 
 		guiEnabled = !cmd.hasOption("no-gui");
+		reassignmentEnabled = cmd.hasOption("reassign");
 		if (cmd.hasOption("w")) {
 			windowSize = Integer.valueOf(cmd.getOptionValue("w"));
 		}
@@ -118,7 +128,8 @@ public class SpectrogramApp extends PApplet {
 			outputFile = cmd.getOptionValue("o");
 		} else {
 			outputFile = inputFile.replaceAll("\\.[a-z]+$", "_win_"
-				+ windowSize + "_overlap_" + overlapRatio + ".png");
+				+ windowSize + "_overlap_" + overlapRatio
+				+ (reassignmentEnabled ? "_ra" : "") + ".png");
 		}
 	}
 
