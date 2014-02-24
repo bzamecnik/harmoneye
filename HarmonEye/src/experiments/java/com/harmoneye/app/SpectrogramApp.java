@@ -10,9 +10,10 @@ import processing.core.PApplet;
 import processing.core.PImage;
 
 import com.harmoneye.app.spectrogram.AudioReader;
+import com.harmoneye.app.spectrogram.BasicSpectrograph;
+import com.harmoneye.app.spectrogram.MagnitudeSpectrogram;
+import com.harmoneye.app.spectrogram.MagnitudeSpectrograph;
 import com.harmoneye.app.spectrogram.SampledAudio;
-import com.harmoneye.app.spectrogram.Spectrograph;
-import com.harmoneye.app.spectrogram.Spectrograph.Spectrogram;
 import com.harmoneye.audio.RmsCalculator;
 
 public class SpectrogramApp extends PApplet {
@@ -22,13 +23,12 @@ public class SpectrogramApp extends PApplet {
 		PApplet.main(SpectrogramApp.class.getName(), args);
 	}
 
-	private Spectrograph spectrograph;
+	private MagnitudeSpectrograph spectrograph;
 
 	private String inputFile;
 	private String outputFile;
 
 	private SampledAudio audio;
-	private Spectrogram spectrogram;
 	private PImage spectrumImage;
 
 	private boolean guiEnabled = true;
@@ -53,7 +53,7 @@ public class SpectrogramApp extends PApplet {
 		}
 
 		audio = new AudioReader().readAudio(inputFile);
-		spectrograph = new Spectrograph(windowSize, overlapRatio);
+			spectrograph = new BasicSpectrograph(windowSize, overlapRatio);
 		spectrumImage = prepareSpectrum(audio);
 
 		colorMode(HSB, 1.0f);
@@ -62,22 +62,21 @@ public class SpectrogramApp extends PApplet {
 	}
 
 	private PImage prepareSpectrum(SampledAudio audio) {
-		spectrogram = spectrograph.computeSpectrogram(audio);
+		MagnitudeSpectrogram magSpectrogram = spectrograph
+			.computeMagnitudeSpectrogram(audio);
 
-		int frames = spectrogram.getFrameCount();
-		int frequencies = spectrogram.getBinCount() / 2;
+		int frames = magSpectrogram.getFrameCount();
+		int frequencies = magSpectrogram.getBinCount();
 		PImage image = new PImage(frames, frequencies);
 
 		colorMode(HSB, 1.0f);
 
-		double[] magnitudeSpectrum = new double[spectrogram.getBinCount()];
 		int lastPercent = 0;
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
 
 		for (int x = 0; x < frames; x++) {
-			magnitudeSpectrum = spectrogram.getMagnitudeFrame(x,
-				magnitudeSpectrum);
+			double[] magnitudeSpectrum = magSpectrogram.getFrame(x);
 			for (int y = 0; y < frequencies; y++) {
 				int i = (frequencies - y - 1) * frames + x;
 				image.pixels[i] = color((float) magnitudeSpectrum[y]);
