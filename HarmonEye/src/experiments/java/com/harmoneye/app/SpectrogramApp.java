@@ -15,7 +15,6 @@ import com.harmoneye.app.spectrogram.MagnitudeSpectrogram;
 import com.harmoneye.app.spectrogram.MagnitudeSpectrograph;
 import com.harmoneye.app.spectrogram.PhaseDiffReassignedSpectrograph;
 import com.harmoneye.app.spectrogram.SampledAudio;
-import com.harmoneye.audio.RmsCalculator;
 
 public class SpectrogramApp extends PApplet {
 	private static final long serialVersionUID = -1188263388156753697L;
@@ -38,6 +37,8 @@ public class SpectrogramApp extends PApplet {
 
 	private boolean reassignmentEnabled;
 
+	private MagnitudeSpectrogram magSpectrogram;
+
 	public void setup() {
 		try {
 			prepareOptions();
@@ -47,9 +48,6 @@ public class SpectrogramApp extends PApplet {
 		}
 
 		size(640, 512, JAVA2D);
-		// if (frame != null) {
-		// frame.setResizable(true);
-		// }
 
 		if (!guiEnabled) {
 			System.setProperty("java.awt.headless", "true");
@@ -62,17 +60,86 @@ public class SpectrogramApp extends PApplet {
 		} else {
 			spectrograph = new BasicSpectrograph(windowSize, overlapRatio);
 		}
-		spectrumImage = prepareSpectrum(audio);
+		magSpectrogram = computeSpectrogram(audio);
+		spectrumImage = prepareSpectrumImage(magSpectrogram);
 
 		colorMode(HSB, 1.0f);
 		smooth();
-		noLoop();
+		 noLoop();
 	}
 
-	private PImage prepareSpectrum(SampledAudio audio) {
-		MagnitudeSpectrogram magSpectrogram = spectrograph
-			.computeMagnitudeSpectrogram(audio);
+	public void draw() {
+		background(1.0f);
 
+		// drawSpectrumPlotAnimation();
+
+		 drawSpectrumImage();
+
+		// drawWaveForm(audio);
+
+		// saveFrame(outputFile);
+		 if (!guiEnabled) {
+		 exit();
+		 }
+	}
+
+	private void drawSpectrumImage() {
+		pushMatrix();
+
+		scale(1, -1);
+		translate(0, -height);
+
+		image(spectrumImage, 0, 0, width, height);
+		System.out.println("output file:" + outputFile);
+		if (outputFile != null) {
+			String path = savePath(outputFile);
+			System.out.println("Saving:" + path);
+			StopWatch stopWatch = new StopWatch();
+			stopWatch.start();
+			spectrumImage.save(path);
+			stopWatch.stop();
+			System.out.println("Saved ok in " + stopWatch.getTime() + " ms");
+		}
+
+		popMatrix();
+	}
+
+	private void drawSpectrumPlotAnimation() {
+		pushMatrix();
+
+		scale(1, -1);
+		translate(0, -height);
+
+		int binCount = magSpectrogram.getBinCount();
+		float xScale = width / (float) binCount;
+		float yScale = height;
+
+		int frameIndex = frameCount % magSpectrogram.getFrameCount();
+		double[] spectrumFrame = magSpectrogram.getFrame(frameIndex);
+		for (int i = 1; i < spectrumFrame.length; i++) {
+			float prevValue = (float) spectrumFrame[i - 1];
+			float value = (float) spectrumFrame[i];
+			line((i - 1) * xScale, prevValue * yScale, i * xScale, value
+				* yScale);
+		}
+
+		popMatrix();
+	}
+
+	private MagnitudeSpectrogram computeSpectrogram(SampledAudio audio) {
+		System.out.println("Computing spectrogram.");
+		StopWatch stopWatch = new StopWatch();
+		stopWatch.start();
+		MagnitudeSpectrogram spectrogram = spectrograph
+			.computeMagnitudeSpectrogram(audio);
+		stopWatch.stop();
+		System.out.println("Computed spectrogram in " + stopWatch.getTime()
+			+ " ms");
+		return spectrogram;
+	}
+
+	private PImage prepareSpectrumImage(MagnitudeSpectrogram magSpectrogram) {
+		System.out.println("Converting spectrogram to image.");
 		int frames = magSpectrogram.getFrameCount();
 		int frequencies = magSpectrogram.getBinCount();
 		PImage image = new PImage(frames, frequencies);
@@ -97,8 +164,8 @@ public class SpectrogramApp extends PApplet {
 		}
 		stopWatch.stop();
 		System.out.println("100%");
-		System.out.println("Computed spectrogram in " + stopWatch.getTime()
-			+ " ms");
+		System.out.println("Computed spectrogram image in "
+			+ stopWatch.getTime() + " ms");
 		return image;
 	}
 
@@ -131,62 +198,6 @@ public class SpectrogramApp extends PApplet {
 				+ windowSize + "_overlap_" + overlapRatio
 				+ (reassignmentEnabled ? "_ra" : "") + ".png");
 		}
-	}
-
-	public void draw() {
-		background(1.0f);
-
-		drawSpectrum();
-		// drawWaveForm(audio);
-
-		// saveFrame(outputFile);
-		if (!guiEnabled) {
-			exit();
-		}
-	}
-
-	private void drawSpectrum() {
-		pushMatrix();
-
-		scale(1, -1);
-		translate(0, -height);
-
-		image(spectrumImage, 0, 0, width, height);
-		System.out.println("output file:" + outputFile);
-		if (outputFile != null) {
-			String path = savePath(outputFile);
-			System.out.println("Saving:" + path);
-			StopWatch stopWatch = new StopWatch();
-			stopWatch.start();
-			spectrumImage.save(path);
-			stopWatch.stop();
-			System.out.println("Saved ok in " + stopWatch.getTime() + " ms");
-		}
-
-		popMatrix();
-	}
-
-	private void drawWaveForm(SampledAudio audio) {
-		pushMatrix();
-
-		scale(1, -1);
-		translate(0, -height);
-
-		double[] amplitudes = audio.getSamples();
-		int frameCount = this.width;
-		int frameSize = amplitudes.length / frameCount;
-		double[] amplitudeFrame = new double[frameSize];
-		for (int i = 0; i < frameCount; i++) {
-			System.arraycopy(amplitudes,
-				i * frameSize,
-				amplitudeFrame,
-				0,
-				frameSize);
-			double rms = RmsCalculator.computeRms(amplitudeFrame);
-			line(i, 0, i, (float) (this.height * rms));
-		}
-
-		popMatrix();
 	}
 
 	public boolean displayable() {
