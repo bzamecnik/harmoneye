@@ -32,6 +32,7 @@ public class SpectrogramApp extends PApplet {
 	private PImage spectrumImage;
 
 	private boolean guiEnabled = true;
+	private boolean animationEnabled;
 	private int windowSize = 2 * 1024;
 	private double overlapRatio = 0;
 
@@ -65,21 +66,25 @@ public class SpectrogramApp extends PApplet {
 
 		colorMode(HSB, 1.0f);
 		smooth();
-		 noLoop();
+		if(!animationEnabled) {
+			noLoop();
+		}
 	}
 
 	public void draw() {
 		background(1.0f);
 
-		// drawSpectrumPlotAnimation();
-
-		 drawSpectrumImage();
+		if(animationEnabled) {
+			drawSpectrumPlotAnimation();
+		} else {
+			drawSpectrumImage();
+		}
 
 		// drawWaveForm(audio);
 
 		// saveFrame(outputFile);
 		 if (!guiEnabled) {
-		 exit();
+			 exit();
 		 }
 	}
 
@@ -177,11 +182,13 @@ public class SpectrogramApp extends PApplet {
 		options.addOption("w", "window-size", true, "Window size");
 		options.addOption("l", "overlap-factor", true, "Overlap factor");
 		options.addOption("r", "reassign", false, "Spectral reassignment");
+		options.addOption("a", "anim", false, "Animation");
 
 		CommandLineParser parser = new BasicParser();
 		CommandLine cmd = parser.parse(options, args);
 
-		guiEnabled = !cmd.hasOption("no-gui");
+		animationEnabled = cmd.hasOption("anim");
+		guiEnabled = !cmd.hasOption("no-gui") || animationEnabled;
 		reassignmentEnabled = cmd.hasOption("reassign");
 		if (cmd.hasOption("w")) {
 			windowSize = Integer.valueOf(cmd.getOptionValue("w"));
