@@ -43,6 +43,9 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 	private ShortTimeFourierTransform fft;
 
 	private double normalizedBaseFreqInv;
+
+	// private ButterworthFilter lowPassFilter;
+
 	public PhaseDiffReassignedSpectrograph(int windowSize, double overlapRatio,
 		double sampleRate) {
 		this.windowSize = windowSize;
@@ -66,6 +69,8 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 
 		this.fft = new ShortTimeFourierTransform(windowSize,
 			new BlackmanWindow());
+
+		// this.lowPassFilter = new ZeroPhaseFilter(ButterworthFilter());
 	}
 
 	public MagnitudeSpectrogram computeMagnitudeSpectrogram(SampledAudio audio) {
@@ -149,6 +154,12 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 				reassignedMagnitudes[i] /= (double) weight;
 			}
 		}
+
+		// double[] reassignedMagnitudesLowPass =
+		// lowPassFilter.filter(reassignedMagnitudes);
+		// System.arraycopy(reassignedMagnitudesLowPass, 0,
+		// reassignedMagnitudes, 0, reassignedMagnitudes.length);
+
 		return reassignedMagnitudes;
 	}
 
