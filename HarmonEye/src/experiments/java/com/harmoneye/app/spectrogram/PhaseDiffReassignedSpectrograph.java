@@ -43,7 +43,7 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 	 * target bin there's the number of source bins that were assigned here.
 	 * This is needed for normalizing the chromagram later.
 	 */
-	private int[] chromaFrameHistogram;
+	private double[] chromaFrameHistogram;
 
 	private ShortTimeFourierTransform fft;
 
@@ -59,12 +59,13 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 		amplitudeFrame = new double[windowSize];
 		freqEstimateFrame = new double[positiveFreqCount];
 		magnitudeFrame = new double[positiveFreqCount];
-		chromaFrameHistogram = new int[chromagramSize];
+		chromaFrameHistogram = new double[chromagramSize];
 
-		System.out.println("sampleRate:" + sampleRate);
-		System.out.println("windowSize:" + windowSize);
-		System.out.println("overlapRatio:" + overlapRatio);
-		System.out.println("hopSize:" + hopSize);
+		System.out.println("sampleRate: " + sampleRate);
+		System.out.println("windowSize: " + windowSize);
+		System.out.println("overlapRatio: " + overlapRatio);
+		System.out.println("hopSize: " + hopSize);
+		System.out.println("chromagram size: " + chromagramSize);
 
 		this.fft = new ShortTimeFourierTransform(windowSize,
 			new BlackmanWindow());
@@ -94,7 +95,6 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 
 			reassignedMagFrames[i] = reassignMagnitudes(magnitudeFrame,
 				freqEstimateFrame,
-				chromaFrameHistogram,
 				chromagramSize);
 		}
 
@@ -106,12 +106,12 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 	}
 
 	private double[] reassignMagnitudes(double[] magnitudes,
-		double[] freqEstimates, int counts[], int chromagramSize) {
+		double[] freqEstimates, int chromagramSize) {
 		int length = magnitudes.length;
 
 		double[] reassignedMagnitudes = new double[chromagramSize];
 
-		Arrays.fill(counts, 0);
+		Arrays.fill(chromaFrameHistogram, 0);
 
 		// iterate from 1 to ignore the DC
 		for (int i = 1; i < length; i++) {
@@ -122,7 +122,7 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 				continue;
 			}
 			double targetFreq = freqEstimates[i];
-			int targetBin = musicalBinByFrequency(targetFreq);
+			double targetBin = musicalBinByFrequency(targetFreq);
 			// if (Math.abs(targetBin - i) / (double) length > 0.01) {
 			// targetBin = i;
 			// }
@@ -133,12 +133,28 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 			// targetBin = sourceBin;
 			// }
 
-			reassignedMagnitudes[targetBin] += magnitudes[i];
-			counts[targetBin]++;
+			// DEBUG: wrap around the octaves
+
+			int lowerBin = (int) Math.floor(targetBin);
+			int upperBin = lowerBin + 1;
+			double upperContribution = targetBin - lowerBin;
+			double lowerContribution = 1 - upperContribution;
+			double magnitude = magnitudes[i];
+			if (lowerBin >= 0 && lowerBin < chromagramSize) {
+				reassignedMagnitudes[lowerBin] += lowerContribution * magnitude;
+				chromaFrameHistogram[lowerBin] += lowerContribution;
+			}
+			if (upperBin >= 0 && upperBin < chromagramSize) {
+				reassignedMagnitudes[upperBin] += upperContribution * magnitude;
+				chromaFrameHistogram[upperBin] += upperContribution;
+			}
 		}
 		// normalization
 		for (int i = 0; i < chromagramSize; i++) {
-			reassignedMagnitudes[i] *= 1.0 / counts[i];
+			double weight = chromaFrameHistogram[i];
+			if (weight > 0) {
+				reassignedMagnitudes[i] /= (double) weight;
+			}
 		}
 		return reassignedMagnitudes;
 	}
