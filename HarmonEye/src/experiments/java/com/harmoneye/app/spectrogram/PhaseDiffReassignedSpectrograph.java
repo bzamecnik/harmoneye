@@ -20,7 +20,8 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 	/** frequency of the lowest chromagram bin */
 	private double baseFrequency = 110.0 / 4;
 	private int tonesPerOctave = 12;
-	private int binsPerTone = 11;
+	private int binsPerTone = 10;
+	private boolean octaveWrapEnabled = false;
 
 	/** ratio of the baseFrequency to the sampleRate */
 	private double normalizedBaseFreq;
@@ -52,8 +53,12 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 		this.hopSize = (int) (windowSize * (1 - overlapRatio));
 		this.normalizedBaseFreq = baseFrequency / sampleRate;
 		this.normalizedBaseFreqInv = 1.0 / normalizedBaseFreq;
+		if (octaveWrapEnabled) {
+			chromagramSize = tonesPerOctave * binsPerTone;
+		} else {
 			double bin = musicalBinByFrequency(0.5 - normalizedBaseFreq);
 			chromagramSize = (int) FastMath.round(bin);
+		}
 		int positiveFreqCount = windowSize / 2;
 
 		amplitudeFrame = new double[windowSize];
@@ -121,6 +126,11 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 
 			double targetFreq = freqEstimates[i];
 			double targetBin = musicalBinByFrequency(targetFreq);
+
+			if (octaveWrapEnabled) {
+				targetBin %= chromagramSize;
+			}
+
 			// if (Math.abs(targetBin - i) / (double) length > 0.01) {
 			// targetBin = i;
 			// }
