@@ -56,7 +56,7 @@ public class SpectrogramApp extends PApplet {
 		audio = new AudioReader().readAudio(inputFile);
 		if (reassignmentEnabled) {
 			spectrograph = new PhaseDiffReassignedSpectrograph(windowSize,
-				overlapRatio);
+				overlapRatio, audio.getSampleRate());
 		} else {
 			spectrograph = new BasicSpectrograph(windowSize, overlapRatio);
 		}
