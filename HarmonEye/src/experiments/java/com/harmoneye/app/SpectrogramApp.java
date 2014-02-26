@@ -194,7 +194,7 @@ public class SpectrogramApp extends PApplet {
 		if (cmd.hasOption("o")) {
 			outputFile = cmd.getOptionValue("o");
 		} else {
-			outputFile = inputFile.replaceAll("\\.[a-z]+$", "_win_"
+			outputFile = inputFile.replaceAll("\\.[a-zA-Z0-9]+$", "_win_"
 				+ windowSize + "_overlap_" + overlapRatio
 				+ (reassignmentEnabled ? "_ra" : "") + ".png");
 		}
