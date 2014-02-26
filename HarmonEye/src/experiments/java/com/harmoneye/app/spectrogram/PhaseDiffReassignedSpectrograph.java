@@ -23,14 +23,9 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 	private int binsPerTone = 11;
 
 	/** ratio of the baseFrequency to the sampleRate */
-	private double relativeBaseFreq;
+	private double normalizedBaseFreq;
 	/** size of the target chromagram (log-frequency resampled spectrogram) */
 	private int chromagramSize;
-	/**
-	 * inverse of the {@link #windowSize}, can be used to convert an absolute
-	 * frequency to the normalized one [0; windowSize] to [0; 1]
-	 */
-	private double windowSizeInv;
 
 	/** a single frame of time-domain signal (amplitudes) of windowSize length */
 	private double[] amplitudeFrame;
@@ -47,13 +42,15 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 
 	private ShortTimeFourierTransform fft;
 
+	private double normalizedBaseFreqInv;
 	public PhaseDiffReassignedSpectrograph(int windowSize, double overlapRatio,
 		double sampleRate) {
 		this.windowSize = windowSize;
 		this.hopSize = (int) (windowSize * (1 - overlapRatio));
-		this.relativeBaseFreq = sampleRate / baseFrequency;
-		chromagramSize = musicalBinByFrequency(0.5);
-		windowSizeInv = 1.0 / windowSize;
+		this.normalizedBaseFreq = baseFrequency / sampleRate;
+		this.normalizedBaseFreqInv = 1.0 / normalizedBaseFreq;
+			double bin = musicalBinByFrequency(0.5 - normalizedBaseFreq);
+			chromagramSize = (int) FastMath.round(bin);
 		int positiveFreqCount = windowSize / 2;
 
 		amplitudeFrame = new double[windowSize];
@@ -116,11 +113,7 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 		// iterate from 1 to ignore the DC
 		for (int i = 1; i < length; i++) {
 			// int targetBin = linearBinByFrequency(freqEstimates[i]);
-			double sourceFreq = i * windowSizeInv;
-			int sourceBin = musicalBinByFrequency(sourceFreq);
-			if (sourceBin < 0 || sourceBin >= chromagramSize) {
-				continue;
-			}
+
 			double targetFreq = freqEstimates[i];
 			double targetBin = musicalBinByFrequency(targetFreq);
 			// if (Math.abs(targetBin - i) / (double) length > 0.01) {
@@ -166,9 +159,9 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 	/**
 	 * @param frequency normalized frequency
 	 */
-	private int musicalBinByFrequency(double frequency) {
-		return (int) FastMath.round(log2(frequency * relativeBaseFreq)
-			* tonesPerOctave * binsPerTone);
+	private double musicalBinByFrequency(double frequency) {
+		return log2(frequency * normalizedBaseFreqInv) * tonesPerOctave
+			* binsPerTone;
 	}
 
 	/*
