@@ -1,7 +1,5 @@
 package com.harmoneye.app.spectrogram;
 
-import java.util.Arrays;
-
 import org.apache.commons.math3.util.FastMath;
 
 import com.harmoneye.math.Modulo;
@@ -34,16 +32,13 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 	private double[] freqEstimateFrame;
 	/** a single frame of magnitudes (only the positive freq. half) */
 	private double[] magnitudeFrame;
-	/**
-	 * A histogram of target chromagram bins which got some energy. For each
-	 * target bin there's the number of source bins that were assigned here.
-	 * This is needed for normalizing the chromagram later.
-	 */
-	private double[] chromaFrameHistogram;
 
 	private ShortTimeFourierTransform fft;
 
 	private double normalizedBaseFreqInv;
+
+	/** just to scale the chormagram to the [0; 1.0] range of PNG... */
+	private double normalizationFactor = 0.2;
 
 	// private ButterworthFilter lowPassFilter;
 
@@ -64,7 +59,6 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 		amplitudeFrame = new double[windowSize];
 		freqEstimateFrame = new double[positiveFreqCount];
 		magnitudeFrame = new double[positiveFreqCount];
-		chromaFrameHistogram = new double[chromagramSize];
 
 		System.out.println("sampleRate: " + sampleRate);
 		System.out.println("windowSize: " + windowSize);
@@ -118,7 +112,7 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 
 		double[] reassignedMagnitudes = new double[chromagramSize];
 
-		Arrays.fill(chromaFrameHistogram, 0);
+		
 
 		// iterate from 1 to ignore the DC
 		for (int i = 1; i < length; i++) {
@@ -141,27 +135,21 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 			// targetBin = sourceBin;
 			// }
 
-			// DEBUG: wrap around the octaves
-
+			double magnitude = normalizationFactor  * magnitudes[i];
+//			
+//			reassignedMagnitudes[(int)targetBin] += magnitude;
+//			
+			
 			int lowerBin = (int) Math.floor(targetBin);
 			int upperBin = lowerBin + 1;
 			double upperContribution = targetBin - lowerBin;
 			double lowerContribution = 1 - upperContribution;
-			double magnitude = magnitudes[i];
+			
 			if (lowerBin >= 0 && lowerBin < chromagramSize) {
 				reassignedMagnitudes[lowerBin] += lowerContribution * magnitude;
-				chromaFrameHistogram[lowerBin] += lowerContribution;
 			}
 			if (upperBin >= 0 && upperBin < chromagramSize) {
 				reassignedMagnitudes[upperBin] += upperContribution * magnitude;
-				chromaFrameHistogram[upperBin] += upperContribution;
-			}
-		}
-		// normalization
-		for (int i = 0; i < chromagramSize; i++) {
-			double weight = chromaFrameHistogram[i];
-			if (weight > 0) {
-				reassignedMagnitudes[i] /= (double) weight;
 			}
 		}
 
