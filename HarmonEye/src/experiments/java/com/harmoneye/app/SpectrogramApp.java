@@ -93,8 +93,6 @@ public class SpectrogramApp extends PApplet {
 	private void drawSpectrumImage() {
 		pushMatrix();
 
-		scale(1, -1);
-		translate(0, -height);
 
 		image(spectrumImage, 0, 0, width, height);
 		System.out.println("output file:" + outputFile);
