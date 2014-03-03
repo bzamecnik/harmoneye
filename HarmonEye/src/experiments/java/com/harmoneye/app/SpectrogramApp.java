@@ -61,7 +61,9 @@ public class SpectrogramApp extends PApplet {
 		} else {
 			spectrograph = new BasicSpectrograph(windowSize, overlapRatio);
 		}
-		magSpectrogram = computeSpectrogram(audio);
+		MagnitudeSpectrogram spectrogram = spectrograph
+		.computeMagnitudeSpectrogram(audio);
+		magSpectrogram = spectrogram;
 		spectrumImage = prepareSpectrumImage(magSpectrogram);
 
 		colorMode(HSB, 1.0f);
@@ -131,16 +133,6 @@ public class SpectrogramApp extends PApplet {
 		popMatrix();
 	}
 
-	private MagnitudeSpectrogram computeSpectrogram(SampledAudio audio) {
-		System.out.println("Computing spectrogram.");
-		StopWatch stopWatch = new StopWatch();
-		stopWatch.start();
-		MagnitudeSpectrogram spectrogram = spectrograph
-			.computeMagnitudeSpectrogram(audio);
-		stopWatch.stop();
-		System.out.println("Computed spectrogram in " + stopWatch.getTime()
-			+ " ms");
-		return spectrogram;
 	}
 
 	private PImage prepareSpectrumImage(MagnitudeSpectrogram magSpectrogram) {
@@ -151,7 +143,6 @@ public class SpectrogramApp extends PApplet {
 
 		colorMode(HSB, 1.0f);
 
-		int lastPercent = 0;
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
 
@@ -161,14 +152,9 @@ public class SpectrogramApp extends PApplet {
 				int i = (frequencies - y - 1) * frames + x;
 				image.pixels[i] = color((float) magnitudeSpectrum[y]);
 			}
-			float percent = 100 * x / (float) frames;
-			if ((int) percent > lastPercent) {
-				System.out.println(percent + " %");
-				lastPercent = (int) percent;
-			}
+			
 		}
 		stopWatch.stop();
-		System.out.println("100%");
 		System.out.println("Computed spectrogram image in "
 			+ stopWatch.getTime() + " ms");
 		return image;

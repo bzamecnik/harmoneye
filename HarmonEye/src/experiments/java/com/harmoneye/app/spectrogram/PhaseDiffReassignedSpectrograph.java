@@ -1,5 +1,6 @@
 package com.harmoneye.app.spectrogram;
 
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.math3.util.FastMath;
 
 import com.harmoneye.math.Modulo;
@@ -78,10 +79,16 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 		int frameCount = (int) Math
 			.floor((audio.getLength() - offset - windowSize) / (double) hopSize) + 1;
 		System.out.println("frame count: " + frameCount);
+		System.out.println("duration: " + audio.getDurationMillis() + " ms");
 
 		double[] amplitudes = audio.getSamples();
 		double[][] reassignedMagFrames = new double[frameCount][];
 
+		System.out.println("Computing spectrogram.");
+		StopWatch stopWatch = new StopWatch();
+		stopWatch.start();
+
+		int lastPercent = 0;
 		for (int i = 0; i < frameCount; i++) {
 			ComplexVector frame = transformFrame(amplitudes, amplitudeFrame, i
 				* hopSize);
@@ -97,7 +104,21 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 			reassignedMagFrames[i] = reassignMagnitudes(magnitudeFrame,
 				freqEstimateFrame,
 				chromagramSize);
+
+			float percent = 10 * i / (float) frameCount;
+
+			if ((int) percent > lastPercent) {
+				System.out.print(".");
+				lastPercent = (int) percent;
+			}
 		}
+		System.out.println();
+
+		stopWatch.stop();
+		System.out.println("Computed spectrogram in " + stopWatch.getTime()
+			+ " ms");
+		System.out.println(String.format("Audio time / computation time: %.4f",
+			audio.getDurationMillis() / (double) stopWatch.getTime()));
 
 		return new MagnitudeSpectrogram(reassignedMagFrames, chromagramSize);
 	}
@@ -111,8 +132,6 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 		int length = magnitudes.length;
 
 		double[] reassignedMagnitudes = new double[chromagramSize];
-
-		
 
 		// iterate from 1 to ignore the DC
 		for (int i = 1; i < length; i++) {
@@ -144,7 +163,7 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 			int upperBin = lowerBin + 1;
 			double upperContribution = targetBin - lowerBin;
 			double lowerContribution = 1 - upperContribution;
-			
+
 			if (lowerBin >= 0 && lowerBin < chromagramSize) {
 				reassignedMagnitudes[lowerBin] += lowerContribution * magnitude;
 			}
