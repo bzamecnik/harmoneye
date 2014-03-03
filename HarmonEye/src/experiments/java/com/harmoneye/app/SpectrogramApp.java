@@ -78,13 +78,11 @@ public class SpectrogramApp extends PApplet {
 
 		if(animationEnabled) {
 			drawSpectrumPlotAnimation();
+//			drawSpectrumCircleAnimation();
 		} else {
 			drawSpectrumImage();
 		}
 
-		// drawWaveForm(audio);
-
-		// saveFrame(outputFile);
 		 if (!guiEnabled) {
 			 exit();
 		 }
@@ -92,7 +90,6 @@ public class SpectrogramApp extends PApplet {
 
 	private void drawSpectrumImage() {
 		pushMatrix();
-
 
 		image(spectrumImage, 0, 0, width, height);
 		System.out.println("output file:" + outputFile);
@@ -130,7 +127,33 @@ public class SpectrogramApp extends PApplet {
 
 		popMatrix();
 	}
+	
+	private void drawSpectrumCircleAnimation() {
+		int frameIndex = frameCount % magSpectrogram.getFrameCount();
+		
+		strokeWeight(10);
+		stroke(1, 1, 1);
+		line(0, height, width *frameIndex / (float)magSpectrogram.getFrameCount(), height);
+		
+		pushMatrix();
 
+		translate(width/2, height/2);
+		
+		double radius = min(width/2, height/2); 
+
+		strokeWeight(2);
+		stroke(0);
+		double[] spectrumFrame = magSpectrogram.getFrame(frameIndex);
+		for (int i = 1; i < spectrumFrame.length; i++) {
+			float value = (float) spectrumFrame[i];
+			double angle = ((i * 2 / 120.0) + 1) * Math.PI;
+			double r = radius * value;
+			double x = r * Math.cos(angle);
+			double y = r * Math.sin(angle);
+			line(0, 0, (float)x, (float)y);
+		}
+
+		popMatrix();
 	}
 
 	private PImage prepareSpectrumImage(MagnitudeSpectrogram magSpectrogram) {
