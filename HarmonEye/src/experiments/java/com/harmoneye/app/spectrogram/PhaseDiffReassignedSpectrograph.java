@@ -1,5 +1,8 @@
 package com.harmoneye.app.spectrogram;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.math3.util.FastMath;
 
@@ -20,10 +23,16 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 	private double baseFrequency = 110.0 / 4;
 	private int tonesPerOctave = 12;
 	private int binsPerTone = 10;
+	private int harmonicCount = 10;
 	private boolean octaveWrapEnabled = false;
+	private boolean correlationEnabled = false;
+	/** just to scale the chromagram to the [0; 1.0] range of PNG... */
+	private double normalizationFactor = 1;
+	private boolean magnitudeSquaringEnabled = true;
 
 	/** ratio of the baseFrequency to the sampleRate */
 	private double normalizedBaseFreq;
+	private double normalizedBaseFreqInv;
 	/** size of the target chromagram (log-frequency resampled spectrogram) */
 	private int chromagramSize;
 
@@ -36,12 +45,7 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 
 	private ShortTimeFourierTransform fft;
 
-	private double normalizedBaseFreqInv;
-
-	/** just to scale the chormagram to the [0; 1.0] range of PNG... */
-	private double normalizationFactor = 0.2;
-
-	// private ButterworthFilter lowPassFilter;
+	private HarmonicPattern harmonicPattern;
 
 	public PhaseDiffReassignedSpectrograph(int windowSize, double overlapRatio,
 		double sampleRate) {
@@ -49,13 +53,9 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 		this.hopSize = (int) (windowSize * (1 - overlapRatio));
 		this.normalizedBaseFreq = baseFrequency / sampleRate;
 		this.normalizedBaseFreqInv = 1.0 / normalizedBaseFreq;
-		if (octaveWrapEnabled) {
-			chromagramSize = tonesPerOctave * binsPerTone;
-		} else {
-			double bin = musicalBinByFrequency(0.5 - normalizedBaseFreq);
-			chromagramSize = (int) FastMath.round(bin);
-		}
+		double bin = musicalBinByFrequency(0.5 - normalizedBaseFreq);
 		int positiveFreqCount = windowSize / 2;
+		chromagramSize = (int) FastMath.round(bin);
 
 		amplitudeFrame = new double[windowSize];
 		freqEstimateFrame = new double[positiveFreqCount];
@@ -70,7 +70,7 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 		this.fft = new ShortTimeFourierTransform(windowSize,
 			new BlackmanWindow());
 
-		// this.lowPassFilter = new ZeroPhaseFilter(ButterworthFilter());
+		harmonicPattern = new HarmonicPattern(harmonicCount);
 	}
 
 	public MagnitudeSpectrogram computeMagnitudeSpectrogram(SampledAudio audio) {
@@ -120,7 +120,9 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 		System.out.println(String.format("Audio time / computation time: %.4f",
 			audio.getDurationMillis() / (double) stopWatch.getTime()));
 
-		return new MagnitudeSpectrogram(reassignedMagFrames, chromagramSize);
+		int size = octaveWrapEnabled ? tonesPerOctave * binsPerTone
+			: chromagramSize;
+		return new MagnitudeSpectrogram(reassignedMagFrames, size);
 	}
 
 	private double log2(double value) {
@@ -135,30 +137,21 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 
 		// iterate from 1 to ignore the DC
 		for (int i = 1; i < length; i++) {
-			// int targetBin = linearBinByFrequency(freqEstimates[i]);
-
 			double targetFreq = freqEstimates[i];
 			double targetBin = musicalBinByFrequency(targetFreq);
 
-			if (octaveWrapEnabled) {
-				targetBin %= chromagramSize;
-			}
-
-			// if (Math.abs(targetBin - i) / (double) length > 0.01) {
-			// targetBin = i;
-			// }
 			if (targetBin < 0 || targetBin >= chromagramSize) {
 				continue;
 			}
-			// if (Math.abs(sourceBin - targetBin) > 2 * binsPerTone) {
-			// targetBin = sourceBin;
-			// }
 
-			double magnitude = normalizationFactor  * magnitudes[i];
-//			
-//			reassignedMagnitudes[(int)targetBin] += magnitude;
-//			
-			
+			double magnitude = magnitudes[i];
+
+			if (magnitudeSquaringEnabled) {
+				magnitude *= magnitude; // ^2
+			}
+
+			magnitude *= normalizationFactor;
+
 			int lowerBin = (int) Math.floor(targetBin);
 			int upperBin = lowerBin + 1;
 			double upperContribution = targetBin - lowerBin;
@@ -172,17 +165,43 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 			}
 		}
 
-		// double[] reassignedMagnitudesLowPass =
-		// lowPassFilter.filter(reassignedMagnitudes);
-		// System.arraycopy(reassignedMagnitudesLowPass, 0,
-		// reassignedMagnitudes, 0, reassignedMagnitudes.length);
+		if (correlationEnabled) {
+			computeHarmonicCorrellation(reassignedMagnitudes);
+		}
+
+		if (octaveWrapEnabled) {
+			int octaveBins = tonesPerOctave * binsPerTone;
+			double[] wrappedMagnitudes = new double[octaveBins];
+			int sourceOctaves = (chromagramSize / octaveBins) - 1;
+			int maxIndex = sourceOctaves * octaveBins;
+			for (int i = octaveBins; i < maxIndex; i++) {
+				double value = reassignedMagnitudes[i];
+				wrappedMagnitudes[i % octaveBins] += value;
+			}
+
+			reassignedMagnitudes = wrappedMagnitudes;
+		}
 
 		return reassignedMagnitudes;
 	}
 
-	// private int linearBinByFrequency(double frequency) {
-	// return (int) Math.round(windowSize * frequency);
-	// }
+	private void computeHarmonicCorrellation(double[] reassignedMagnitudes) {
+
+		for (int i = 0; i < chromagramSize; i++) {
+			double acc = 0;
+
+			for (int harmonic = 0; harmonic < harmonicPattern.getLength(); harmonic++) {
+				int bin = i + harmonicPattern.getIndex(harmonic);
+				double weight = harmonicPattern.getWeight(harmonic);
+
+				if (bin < 0 || bin >= chromagramSize) {
+					continue;
+				}
+				acc += weight * reassignedMagnitudes[bin];
+			}
+			reassignedMagnitudes[i] = acc;
+		}
+	}
 
 	/**
 	 * @param frequency normalized frequency
@@ -229,5 +248,75 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 		double[] amplitudeFrame, int index) {
 		System.arraycopy(amplitudes, index, amplitudeFrame, 0, windowSize);
 		return new ComplexVector(fft.transform(amplitudeFrame));
+	}
+
+	private class HarmonicPattern {
+
+		private List<Integer> binIndexes = new ArrayList<Integer>();
+		private List<Double> binWeights = new ArrayList<Double>();
+
+		public HarmonicPattern(int harmonicCount) {
+			addPatternForFreq(harmonicCount, 1.0, 1);
+			// addPatternForFreq(harmonicCount, 1.0 / 2, -1);
+			// addPatternForFreq(harmonicCount, 1.0 / 3, -1/2.0);
+			// addPatternForFreq(harmonicCount, 1.0 / 4, -1/3.0);
+			// addPatternForFreq(harmonicCount, 1.0 / 5, -1/4.0);
+			// addPatternForFreq(harmonicCount, 1.0 / 6, -1/5.0);
+			// addPatternForFreq(harmonicCount, 2.0, -2);
+			// addPatternForFreq(harmonicCount, 3.0, -2);
+		}
+
+		private void addPatternForFreq(int harmonicCount, double baseFreq,
+			double sign) {
+			for (int i = 0; i < harmonicCount; i++) {
+				double bin = FastMath.log(2, baseFreq * (i + 1))
+					* tonesPerOctave * binsPerTone;
+
+				int lowerBin = (int) bin;
+				int upperBin = lowerBin + 1;
+				double weight = sign * 1.0 / (i + 1);
+				double upperWeight = weight * (bin - lowerBin);
+				double lowerWeight = weight * (1 - upperWeight);
+
+				if (lowerWeight != 0 && !binIndexes.contains(lowerBin)) {
+					binIndexes.add(lowerBin);
+					binWeights.add(lowerWeight);
+				}
+				if (upperWeight != 0 && !binIndexes.contains(upperBin)) {
+					binIndexes.add(upperBin);
+					binWeights.add(upperWeight);
+				}
+			}
+
+			double posWeightSum = 0;
+			double negWeightSum = 0;
+			for (double weight : binWeights) {
+				if (weight > 0) {
+					posWeightSum += weight;
+				} else {
+					negWeightSum += weight;
+				}
+			}
+			for (int i = 0; i < binWeights.size(); i++) {
+				Double weight = binWeights.get(i);
+				weight /= weight > 0 ? posWeightSum : negWeightSum;
+				binWeights.set(i, weight);
+			}
+
+			System.out.println(binIndexes);
+			System.out.println(binWeights);
+		}
+
+		public int getIndex(int i) {
+			return binIndexes.get(i);
+		}
+
+		public double getWeight(int i) {
+			return binWeights.get(i);
+		}
+
+		public int getLength() {
+			return binIndexes.size();
+		}
 	}
 }
