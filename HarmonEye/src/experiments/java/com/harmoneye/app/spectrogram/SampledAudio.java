@@ -8,7 +8,7 @@ public class SampledAudio {
 	public SampledAudio(double[] samples, double sampleRate) {
 		this.samples = samples;
 		this.sampleRate = sampleRate;
-		this.durationMillis = samples.length / sampleRate;
+		this.durationMillis = 1000 * samples.length / sampleRate;
 	}
 
 	public double[] getSamples() {
