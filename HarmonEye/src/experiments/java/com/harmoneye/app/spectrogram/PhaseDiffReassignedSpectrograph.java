@@ -8,6 +8,7 @@ import org.apache.commons.math3.util.FastMath;
 
 import com.harmoneye.math.Modulo;
 import com.harmoneye.math.fft.ShortTimeFourierTransform;
+import com.harmoneye.math.filter.BoxFilter;
 import com.harmoneye.math.matrix.ComplexVector;
 import com.harmoneye.math.matrix.DComplex;
 import com.harmoneye.math.window.BlackmanWindow;
@@ -28,7 +29,8 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 	private boolean correlationEnabled = false;
 	/** just to scale the chromagram to the [0; 1.0] range of PNG... */
 	private double normalizationFactor = 1;
-	private boolean magnitudeSquaringEnabled = true;
+	private boolean magnitudeSquaringEnabled = false;
+	private boolean highPassFilterEnabled = false;
 
 	/** ratio of the baseFrequency to the sampleRate */
 	private double normalizedBaseFreq;
@@ -169,6 +171,10 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 			computeHarmonicCorrellation(reassignedMagnitudes);
 		}
 
+		if (highPassFilterEnabled) {
+			highPassFilter(reassignedMagnitudes);
+		}
+
 		if (octaveWrapEnabled) {
 			int octaveBins = tonesPerOctave * binsPerTone;
 			double[] wrappedMagnitudes = new double[octaveBins];
@@ -183,6 +189,15 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 		}
 
 		return reassignedMagnitudes;
+	}
+
+	private void highPassFilter(double[] reassignedMagnitudes) {
+		int boxFilterSize = 10;
+		BoxFilter boxFilter = new BoxFilter(boxFilterSize);
+		double[] lowPass = boxFilter.filter(reassignedMagnitudes);
+		for (int i = 0; i < reassignedMagnitudes.length; i++) {
+			reassignedMagnitudes[i] -= lowPass[i];
+		}
 	}
 
 	private void computeHarmonicCorrellation(double[] reassignedMagnitudes) {
