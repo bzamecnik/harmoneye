@@ -32,7 +32,11 @@ public class AudioReader {
 			int readBufferSizeBytes = BYTES_PER_INPUT_SAMPLE
 				* MONO_READ_BUFFER_SIZE_SAMPLES;
 
+			int bytesPerMonoSample = inputChannelCount * BYTES_PER_INPUT_SAMPLE;
+			double bytesPerMonoSampleInv = 1.0 / bytesPerMonoSample;
+
 			int sampleCount = getSampleCount(file, audioInputStream);
+			sampleCount = (int)(Math.ceil(sampleCount * bytesPerMonoSampleInv) * bytesPerMonoSample);
 
 			double[] amplitudes = new double[sampleCount];
 
@@ -61,7 +65,7 @@ public class AudioReader {
 					amplitudeBufferMono,
 					inputChannelCount);
 
-				int readSampleCount = readBytesCount / (inputChannelCount * BYTES_PER_INPUT_SAMPLE);
+				int readSampleCount = (int) (readBytesCount * bytesPerMonoSampleInv);
 				System.arraycopy(amplitudeBufferMono,
 					0,
 					amplitudes,
