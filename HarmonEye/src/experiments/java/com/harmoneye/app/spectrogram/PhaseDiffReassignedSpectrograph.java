@@ -91,6 +91,7 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 		stopWatch.start();
 
 		int lastPercent = 0;
+		double frameCountInv = 1.0 / frameCount;
 		for (int i = 0; i < frameCount; i++) {
 			ComplexVector frame = transformFrame(amplitudes, amplitudeFrame, i
 				* hopSize);
@@ -107,7 +108,7 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 				freqEstimateFrame,
 				chromagramSize);
 
-			float percent = 10 * i / (float) frameCount;
+			double percent = 10 * i * frameCountInv;
 
 			if ((int) percent > lastPercent) {
 				System.out.print(".");
