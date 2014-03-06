@@ -16,7 +16,12 @@ import com.harmoneye.app.spectrogram.MagnitudeSpectrograph;
 import com.harmoneye.app.spectrogram.PhaseDiffReassignedSpectrograph;
 import com.harmoneye.app.spectrogram.SampledAudio;
 
+import ddf.minim.AudioPlayer;
+import ddf.minim.Minim;
+
 public class SpectrogramApp extends PApplet {
+	private static final int FRAME_RATE = 30;
+
 	private static final long serialVersionUID = -1188263388156753697L;
 
 	public static void main(String args[]) {
@@ -40,52 +45,81 @@ public class SpectrogramApp extends PApplet {
 
 	private MagnitudeSpectrogram magSpectrogram;
 
+	private boolean saveVideoFramesEnabled;
+	private boolean movingSpectrogramEnabled;
+
+	private Minim minim;
+	private AudioPlayer player;
+
+	private int startTime;
+	private float time;
+
 	public void setup() {
 		try {
 			prepareOptions();
+
+			if (saveVideoFramesEnabled) {
+				size(1280, 720, JAVA2D);
+			} else {
+				size(1042, 586, JAVA2D);
+			}
+
+			if (!guiEnabled) {
+				System.setProperty("java.awt.headless", "true");
+			}
+
+			audio = new AudioReader().readAudio(inputFile);
+			if (reassignmentEnabled) {
+				spectrograph = new PhaseDiffReassignedSpectrograph(windowSize,
+					overlapRatio, audio.getSampleRate());
+			} else {
+				spectrograph = new BasicSpectrograph(windowSize, overlapRatio);
+			}
+			MagnitudeSpectrogram spectrogram = spectrograph
+				.computeMagnitudeSpectrogram(audio);
+			magSpectrogram = spectrogram;
+
+			spectrumImage = prepareSpectrumImage(magSpectrogram);
+
+			colorMode(HSB, 1.0f);
+			smooth();
+			if (!animationEnabled) {
+				noLoop();
+			} else {
+				frameRate(FRAME_RATE);
+				if (movingSpectrogramEnabled && !saveVideoFramesEnabled) {
+					minim = new Minim(this);
+					player = minim.loadFile(inputFile);
+					player.play();
+					startTime = millis();
+				}
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			exit();
-		}
-
-		size(640, 512, JAVA2D);
-
-		if (!guiEnabled) {
-			System.setProperty("java.awt.headless", "true");
-		}
-
-		audio = new AudioReader().readAudio(inputFile);
-		if (reassignmentEnabled) {
-			spectrograph = new PhaseDiffReassignedSpectrograph(windowSize,
-				overlapRatio, audio.getSampleRate());
-		} else {
-			spectrograph = new BasicSpectrograph(windowSize, overlapRatio);
-		}
-		MagnitudeSpectrogram spectrogram = spectrograph
-		.computeMagnitudeSpectrogram(audio);
-		magSpectrogram = spectrogram;
-		spectrumImage = prepareSpectrumImage(magSpectrogram);
-
-		colorMode(HSB, 1.0f);
-		smooth();
-		if(!animationEnabled) {
-			noLoop();
 		}
 	}
 
 	public void draw() {
 		background(1.0f);
 
-		if(animationEnabled) {
-			drawSpectrumPlotAnimation();
-//			drawSpectrumCircleAnimation();
+		if (animationEnabled) {
+			if (movingSpectrogramEnabled) {
+				drawMovingSpectrumImage();
+			} else {
+				drawSpectrumPlotAnimation();
+				// drawSpectrumCircleAnimation();
+			}
 		} else {
 			drawSpectrumImage();
 		}
+		if (saveVideoFramesEnabled) {
+			saveFrame("video-frames/######.tga");
+		}
 
-		 if (!guiEnabled) {
-			 exit();
-		 }
+		if (!guiEnabled) {
+			exit();
+		}
 	}
 
 	private void drawSpectrumImage() {
@@ -106,6 +140,74 @@ public class SpectrogramApp extends PApplet {
 		popMatrix();
 	}
 
+	private void drawMovingSpectrumImage() {
+		background(0);
+
+		float speed = (float) (1.0 / audio.getDurationMillis());
+		if (!saveVideoFramesEnabled) {
+			time = millis() - startTime;
+		}
+
+		float frameIndex = spectrumImage.width * (time * speed);
+		if (saveVideoFramesEnabled) {
+			time += 1000.0 / FRAME_RATE;
+		}
+		if (frameIndex >= spectrumImage.width) {
+			noLoop();
+		}
+		// System.out.println(frameIndex + " / " + spectrumImage.width);
+		// frames per width of the window
+		// double framesPerWindowWidth = width;
+		// int frameStartX = (int) Math.min(frameIndex - framesPerWindowWidth/2,
+		// frameIndex);
+
+		float xScale = width / (float) spectrumImage.width;
+
+		// continuous scrolling, start&end at the center of the screen
+		// int frameStartX = Math.min(Math.max(frameIndex - width / 2, 0),
+		// spectrumImage.width - width / 2);
+		// int frameWidth = Math.min(Math.min(width, width / 2 + frameIndex),
+		// spectrumImage.width + width / 2 - frameIndex - 1);
+		// float imageStartX = Math.max(width / 2 - frameIndex, 0);
+
+		// the window is stuck at the beginning and end and the "needle" moves
+		float frameStartX = (spectrumImage.width > width) ? constrain(frameIndex
+			- width / 2,
+			0,
+			spectrumImage.width - width)
+			: 0;
+		float frameWidth = width;
+		float imageStartX = 0;
+
+		// stroke(1, 0, 0.5f);
+		// line(frameIndex * xScale, 0, frameIndex * xScale, height);
+		//
+		// stroke(0);
+		// rect(frameStartX * xScale,
+		// height * 0.25f,
+		// frameWidth * xScale,
+		// height * 0.5f);
+
+		image(spectrumImage,
+			imageStartX + (frameStartX - (int) frameStartX),
+			0,
+			frameWidth,
+			height,
+			(int) frameStartX,
+			0,
+			(int) (frameStartX + frameWidth),
+			spectrumImage.height);
+
+		stroke(1, 0, 0.2f);
+		float needleX = frameIndex - frameStartX;
+		line(needleX, 0, needleX, height);
+
+		fill(1, 1, 0.85f);
+		noStroke();
+		line(frameIndex * xScale, 0, frameIndex * xScale, height);
+		rect(0, height - 3, frameIndex * xScale, 3);
+	}
+
 	private void drawSpectrumPlotAnimation() {
 		pushMatrix();
 
@@ -116,6 +218,7 @@ public class SpectrogramApp extends PApplet {
 		float xScale = width / (float) binCount;
 		float yScale = height;
 
+		stroke(0);
 		int frameIndex = frameCount % magSpectrogram.getFrameCount();
 		double[] spectrumFrame = magSpectrogram.getFrame(frameIndex);
 		for (int i = 1; i < spectrumFrame.length; i++) {
@@ -125,21 +228,30 @@ public class SpectrogramApp extends PApplet {
 				* yScale);
 		}
 
+		// double threshold = 2 * stdDev.evaluate(spectrumFrame, 0,
+		// spectrumFrame.length);
+		// stroke(1,1,1);
+		// line(0, (float)(threshold * yScale), width, (float)(threshold *
+		// yScale));
+
 		popMatrix();
 	}
-	
+
 	private void drawSpectrumCircleAnimation() {
 		int frameIndex = frameCount % magSpectrogram.getFrameCount();
-		
+
 		strokeWeight(10);
 		stroke(1, 1, 1);
-		line(0, height, width *frameIndex / (float)magSpectrogram.getFrameCount(), height);
-		
+		line(0,
+			height,
+			width * frameIndex / (float) magSpectrogram.getFrameCount(),
+			height);
+
 		pushMatrix();
 
-		translate(width/2, height/2);
-		
-		double radius = min(width/2, height/2); 
+		translate(width / 2, height / 2);
+
+		double radius = min(width / 2, height / 2);
 
 		strokeWeight(2);
 		stroke(0);
@@ -150,7 +262,7 @@ public class SpectrogramApp extends PApplet {
 			double r = radius * value;
 			double x = r * Math.cos(angle);
 			double y = r * Math.sin(angle);
-			line(0, 0, (float)x, (float)y);
+			line(0, 0, (float) x, (float) y);
 		}
 
 		popMatrix();
@@ -173,7 +285,7 @@ public class SpectrogramApp extends PApplet {
 				int i = (frequencies - y - 1) * frames + x;
 				image.pixels[i] = color((float) magnitudeSpectrum[y]);
 			}
-			
+
 		}
 		stopWatch.stop();
 		System.out.println("Computed spectrogram image in "
@@ -189,12 +301,19 @@ public class SpectrogramApp extends PApplet {
 		options.addOption("w", "window-size", true, "Window size");
 		options.addOption("l", "overlap-factor", true, "Overlap factor");
 		options.addOption("r", "reassign", false, "Spectral reassignment");
-		options.addOption("a", "anim", false, "Animation");
+		options.addOption("a", "anim", false, "Spectrum plot animation");
+		options.addOption("m",
+			"moving-spectrogram",
+			false,
+			"Moving spectrogram");
+		options.addOption("v", "save-video", false, "Save video frames");
 
 		CommandLineParser parser = new BasicParser();
 		CommandLine cmd = parser.parse(options, args);
 
 		animationEnabled = cmd.hasOption("anim");
+		movingSpectrogramEnabled = cmd.hasOption("moving-spectrogram");
+		saveVideoFramesEnabled = cmd.hasOption("save-video");
 		guiEnabled = !cmd.hasOption("no-gui") || animationEnabled;
 		reassignmentEnabled = cmd.hasOption("reassign");
 		if (cmd.hasOption("w")) {
@@ -218,4 +337,9 @@ public class SpectrogramApp extends PApplet {
 		return guiEnabled;
 	}
 
+	public void stop() {
+		player.close();
+		minim.stop();
+		super.stop();
+	}
 }
