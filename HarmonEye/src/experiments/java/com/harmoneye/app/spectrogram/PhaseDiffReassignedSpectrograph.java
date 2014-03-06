@@ -28,7 +28,7 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 	private boolean octaveWrapEnabled = false;
 	private boolean correlationEnabled = true;
 	/** just to scale the chromagram to the [0; 1.0] range of PNG... */
-	private double normalizationFactor = 1;
+	private double postScalingFactor = 1;
 	private boolean magnitudeSquaringEnabled = false;
 	private boolean highPassFilterEnabled = true;
 	private int boxFilterSize = 10;
@@ -156,8 +156,6 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 				magnitude *= magnitude; // ^2
 			}
 
-			magnitude *= normalizationFactor;
-
 			int lowerBin = (int) Math.floor(targetBin);
 			int upperBin = lowerBin + 1;
 			double upperContribution = targetBin - lowerBin;
@@ -192,6 +190,9 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 			reassignedMagnitudes = wrappedMagnitudes;
 		}
 
+		for (int i = 1; i < reassignedMagnitudes.length; i++) {
+			reassignedMagnitudes[i] *= postScalingFactor;
+		}
 		return reassignedMagnitudes;
 	}
 
