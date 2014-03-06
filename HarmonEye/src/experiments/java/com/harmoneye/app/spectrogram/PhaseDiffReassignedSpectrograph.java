@@ -170,12 +170,12 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 			}
 		}
 
-		if (correlationEnabled) {
-			computeHarmonicCorrellation(reassignedMagnitudes);
-		}
-
 		if (highPassFilterEnabled) {
 			highPassFilter(reassignedMagnitudes);
+		}
+
+		if (correlationEnabled) {
+			computeHarmonicCorrellation(reassignedMagnitudes);
 		}
 
 		if (octaveWrapEnabled) {
