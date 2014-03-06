@@ -52,6 +52,8 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 
 	private double[] correlation;
 
+//	private StandardDeviation stdDev = new StandardDeviation();
+
 	public PhaseDiffReassignedSpectrograph(int windowSize, double overlapRatio,
 		double sampleRate) {
 		this.windowSize = windowSize;
@@ -193,6 +195,9 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 		for (int i = 1; i < reassignedMagnitudes.length; i++) {
 			reassignedMagnitudes[i] *= postScalingFactor;
 		}
+
+		// threshold(reassignedMagnitudes);
+
 		return reassignedMagnitudes;
 	}
 
@@ -281,6 +286,16 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 		System.arraycopy(amplitudes, index, amplitudeFrame, 0, windowSize);
 		return new ComplexVector(fft.transform(amplitudeFrame));
 	}
+
+//	private void threshold(double[] reassignedMagnitudes) {
+//		double threshold = 2.5 * stdDev.evaluate(reassignedMagnitudes,
+//			0,
+//			reassignedMagnitudes.length);
+//		for (int i = 0; i < reassignedMagnitudes.length; i++) {
+//			reassignedMagnitudes[i] = reassignedMagnitudes[i] > threshold ? 1
+//				: 0;
+//		}
+//	}
 
 	private class HarmonicPattern {
 
