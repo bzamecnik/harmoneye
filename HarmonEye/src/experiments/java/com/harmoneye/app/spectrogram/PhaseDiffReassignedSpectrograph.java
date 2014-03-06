@@ -24,7 +24,7 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 	private double baseFrequency = 110.0 / 4;
 	private int tonesPerOctave = 12;
 	private int binsPerTone = 10;
-	private int harmonicCount = 10;
+	private int harmonicCount = 20;
 	private boolean octaveWrapEnabled = false;
 	private boolean correlationEnabled = false;
 	/** just to scale the chromagram to the [0; 1.0] range of PNG... */
@@ -270,57 +270,62 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 
 		private List<Integer> binIndexes = new ArrayList<Integer>();
 		private List<Double> binWeights = new ArrayList<Double>();
+		private int harmonicCount;
 
 		public HarmonicPattern(int harmonicCount) {
-			addPatternForFreq(harmonicCount, 1.0, 1);
-			// addPatternForFreq(harmonicCount, 1.0 / 2, -1);
-			// addPatternForFreq(harmonicCount, 1.0 / 3, -1/2.0);
-			// addPatternForFreq(harmonicCount, 1.0 / 4, -1/3.0);
-			// addPatternForFreq(harmonicCount, 1.0 / 5, -1/4.0);
-			// addPatternForFreq(harmonicCount, 1.0 / 6, -1/5.0);
-			// addPatternForFreq(harmonicCount, 2.0, -2);
-			// addPatternForFreq(harmonicCount, 3.0, -2);
+			this.harmonicCount = harmonicCount;
+			addPatternForFreq(1.0, 1);
+			addPatternForFreq(1.0 / 2, -1);
+			addPatternForFreq(1.0 / 3, -1);
+			// addPatternForFreq(1.0 / 4, -1);
+			// addPatternForFreq(1.0 / 5, -1);
+			// addPatternForFreq(1.0 / 6, -1);
+			// addPatternForFreq(1.0 / 7, -1);
+			// addPatternForFreq(2.0, -1);
+			// addPatternForFreq(3.0, -1);
 		}
 
-		private void addPatternForFreq(int harmonicCount, double baseFreq,
-			double sign) {
+		private void addPatternForFreq(double baseFreq, double sign) {
+			double normalizationFactor = 0;
+			for (int i = 0; i < harmonicCount; i++) {
+				normalizationFactor += Math.abs(sign * weightForHarmonic(i));
+			}
+			normalizationFactor = sign / normalizationFactor;
+
 			for (int i = 0; i < harmonicCount; i++) {
 				double bin = FastMath.log(2, baseFreq * (i + 1))
 					* tonesPerOctave * binsPerTone;
 
-				int lowerBin = (int) bin;
-				int upperBin = lowerBin + 1;
-				double weight = sign * 1.0 / (i + 1);
-				double upperWeight = weight * (bin - lowerBin);
-				double lowerWeight = weight * (1 - upperWeight);
+				int lowerBin = (int) Math.floor(bin);
+				// int upperBin = lowerBin + 1;
+				double weight = normalizationFactor * weightForHarmonic(i);
 
-				if (lowerWeight != 0 && !binIndexes.contains(lowerBin)) {
+				if (weight != 0 && !binIndexes.contains(lowerBin)) {
 					binIndexes.add(lowerBin);
-					binWeights.add(lowerWeight);
+					binWeights.add(weight);
 				}
-				if (upperWeight != 0 && !binIndexes.contains(upperBin)) {
-					binIndexes.add(upperBin);
-					binWeights.add(upperWeight);
-				}
-			}
 
-			double posWeightSum = 0;
-			double negWeightSum = 0;
-			for (double weight : binWeights) {
-				if (weight > 0) {
-					posWeightSum += weight;
-				} else {
-					negWeightSum += weight;
-				}
-			}
-			for (int i = 0; i < binWeights.size(); i++) {
-				Double weight = binWeights.get(i);
-				weight /= weight > 0 ? posWeightSum : negWeightSum;
-				binWeights.set(i, weight);
+				// double upperWeight = sign * weight * (bin - lowerBin);
+				// double lowerWeight = sign * weight * (upperBin - bin);
+				//
+				// if (lowerWeight != 0 && !binIndexes.contains(lowerBin)) {
+				// binIndexes.add(lowerBin);
+				// binWeights.add(lowerWeight);
+				// }
+				// if (upperWeight != 0 && !binIndexes.contains(upperBin)) {
+				// binIndexes.add(upperBin);
+				// binWeights.add(upperWeight);
+				// }
 			}
 
 			System.out.println(binIndexes);
 			System.out.println(binWeights);
+		}
+
+		private double weightForHarmonic(int i) {
+			// return 1.0 / (i + 1);
+			// return 1.0 - (i / (2.0 * (harmonicCount - 1)));
+			return 1.0;
 		}
 
 		public int getIndex(int i) {
