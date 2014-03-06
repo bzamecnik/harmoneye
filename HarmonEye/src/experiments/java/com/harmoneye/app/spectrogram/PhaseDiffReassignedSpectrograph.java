@@ -30,7 +30,8 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 	/** just to scale the chromagram to the [0; 1.0] range of PNG... */
 	private double normalizationFactor = 1;
 	private boolean magnitudeSquaringEnabled = false;
-	private boolean highPassFilterEnabled = false;
+	private boolean highPassFilterEnabled = true;
+	private int boxFilterSize = 10;
 
 	/** ratio of the baseFrequency to the sampleRate */
 	private double normalizedBaseFreq;
@@ -195,7 +196,6 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 	}
 
 	private void highPassFilter(double[] reassignedMagnitudes) {
-		int boxFilterSize = 10;
 		BoxFilter boxFilter = new BoxFilter(boxFilterSize);
 		double[] lowPass = boxFilter.filter(reassignedMagnitudes);
 		for (int i = 0; i < reassignedMagnitudes.length; i++) {
