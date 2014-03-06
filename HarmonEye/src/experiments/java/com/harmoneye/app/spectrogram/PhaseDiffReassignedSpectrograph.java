@@ -26,7 +26,7 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 	private int binsPerTone = 10;
 	private int harmonicCount = 20;
 	private boolean octaveWrapEnabled = false;
-	private boolean correlationEnabled = false;
+	private boolean correlationEnabled = true;
 	/** just to scale the chromagram to the [0; 1.0] range of PNG... */
 	private double normalizationFactor = 1;
 	private boolean magnitudeSquaringEnabled = false;
@@ -48,6 +48,8 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 	private ShortTimeFourierTransform fft;
 
 	private HarmonicPattern harmonicPattern;
+
+	private double[] correlation;
 
 	public PhaseDiffReassignedSpectrograph(int windowSize, double overlapRatio,
 		double sampleRate) {
@@ -202,7 +204,9 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 	}
 
 	private void computeHarmonicCorrellation(double[] reassignedMagnitudes) {
-
+		if (correlation == null || correlation.length != chromagramSize) {
+			correlation = new double[chromagramSize];
+		}
 		for (int i = 0; i < chromagramSize; i++) {
 			double acc = 0;
 
@@ -215,7 +219,18 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 				}
 				acc += weight * reassignedMagnitudes[bin];
 			}
-			reassignedMagnitudes[i] = acc;
+			correlation[i] = acc;
+		}
+		// max filter with kernel size 3
+		for (int i = 0; i < chromagramSize; i++) {
+			double max = correlation[i];
+			if (i - 1 >= 0) {
+				max = Math.max(max, correlation[i - 1]);
+			}
+			if (i + 1 < chromagramSize) {
+				max = Math.max(max, correlation[i + 1]);
+			}
+			reassignedMagnitudes[i] *= max;
 		}
 	}
 
