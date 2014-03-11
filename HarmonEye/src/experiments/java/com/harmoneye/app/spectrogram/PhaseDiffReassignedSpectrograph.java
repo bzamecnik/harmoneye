@@ -29,11 +29,13 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 	private int harmonicCount = 20;
 	private boolean octaveWrapEnabled = true;
 	private boolean correlationEnabled = true;
-	/** just to scale the chromagram to the [0; 1.0] range of PNG... */
-	private double postScalingFactor = 1;
-	private boolean magnitudeSquaringEnabled = false;
+	private boolean magnitudeSquaringEnabled = true;
 	private boolean highPassFilterEnabled = true;
 	private int boxFilterSize = 10;
+	// enable L2-norm normalization, otherwise use just plain constant scaling
+	private boolean normalizationEnabled = true;
+	/** just to scale the chromagram to the [0; 1.0] range of PNG... */
+	private double postScalingFactor = 1;
 
 	/** ratio of the baseFrequency to the sampleRate */
 	private double normalizedBaseFreq;
@@ -54,7 +56,8 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 
 	private double[] correlation;
 
-//	private StandardDeviation stdDev = new StandardDeviation();
+
+	// private StandardDeviation stdDev = new StandardDeviation();
 
 	public PhaseDiffReassignedSpectrograph(int windowSize, double overlapRatio,
 		double sampleRate) {
@@ -199,13 +202,32 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 			reassignedMagnitudes = wrappedMagnitudes;
 		}
 
-		for (int i = 1; i < reassignedMagnitudes.length; i++) {
-			reassignedMagnitudes[i] *= postScalingFactor;
+		if (normalizationEnabled) {
+			normalize(reassignedMagnitudes);
+		} else {
+			for (int i = 1; i < reassignedMagnitudes.length; i++) {
+				reassignedMagnitudes[i] *= postScalingFactor;
+			}
 		}
 
 		// threshold(reassignedMagnitudes);
 
 		return reassignedMagnitudes;
+	}
+
+	private void normalize(double[] reassignedMagnitudes) {
+		// L2 norm
+		double norm = 0;
+		for (int i = 0; i < reassignedMagnitudes.length; i++) {
+			double value = reassignedMagnitudes[i];
+			norm += value * value;
+		}
+		norm = Math.sqrt(norm);
+		double threshold = 1e-4; // zero out too weak signals
+		double normInv = (norm > threshold) ? 1 / norm : 0;
+		for (int i = 0; i < reassignedMagnitudes.length; i++) {
+			reassignedMagnitudes[i] *= normInv;
+		}
 	}
 
 	private void highPassFilter(double[] reassignedMagnitudes) {
@@ -294,15 +316,15 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 		return new ComplexVector(fft.transform(amplitudeFrame));
 	}
 
-//	private void threshold(double[] reassignedMagnitudes) {
-//		double threshold = 2.5 * stdDev.evaluate(reassignedMagnitudes,
-//			0,
-//			reassignedMagnitudes.length);
-//		for (int i = 0; i < reassignedMagnitudes.length; i++) {
-//			reassignedMagnitudes[i] = reassignedMagnitudes[i] > threshold ? 1
-//				: 0;
-//		}
-//	}
+	// private void threshold(double[] reassignedMagnitudes) {
+	// double threshold = 2.5 * stdDev.evaluate(reassignedMagnitudes,
+	// 0,
+	// reassignedMagnitudes.length);
+	// for (int i = 0; i < reassignedMagnitudes.length; i++) {
+	// reassignedMagnitudes[i] = reassignedMagnitudes[i] > threshold ? 1
+	// : 0;
+	// }
+	// }
 
 	private class HarmonicPattern {
 
