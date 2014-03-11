@@ -161,7 +161,8 @@ public class SpectrogramApp extends PApplet {
 		// int frameStartX = (int) Math.min(frameIndex - framesPerWindowWidth/2,
 		// frameIndex);
 
-		float xScale = width / (float) spectrumImage.width;
+		float xScalingFactor = 1; 
+		float xScale = width / (spectrumImage.width * xScalingFactor);
 
 		// continuous scrolling, start&end at the center of the screen
 		// int frameStartX = Math.min(Math.max(frameIndex - width / 2, 0),
@@ -171,12 +172,12 @@ public class SpectrogramApp extends PApplet {
 		// float imageStartX = Math.max(width / 2 - frameIndex, 0);
 
 		// the window is stuck at the beginning and end and the "needle" moves
-		float frameStartX = (spectrumImage.width > width) ? constrain(frameIndex
-			- width / 2,
+		float frameWidth = width / xScalingFactor;
+		float frameStartX = (spectrumImage.width > frameWidth) ? constrain(frameIndex
+			- frameWidth / 2,
 			0,
-			spectrumImage.width - width)
+			spectrumImage.width - frameWidth)
 			: 0;
-		float frameWidth = width;
 		float imageStartX = 0;
 
 		// stroke(1, 0, 0.5f);
@@ -191,7 +192,7 @@ public class SpectrogramApp extends PApplet {
 		image(spectrumImage,
 			imageStartX + (frameStartX - (int) frameStartX),
 			0,
-			frameWidth,
+			width,
 			height,
 			(int) frameStartX,
 			0,
@@ -199,7 +200,7 @@ public class SpectrogramApp extends PApplet {
 			spectrumImage.height);
 
 		stroke(1, 0, 0.2f);
-		float needleX = frameIndex - frameStartX;
+		float needleX = (frameIndex - frameStartX) * xScalingFactor;
 		line(needleX, 0, needleX, height);
 
 		fill(1, 1, 0.85f);
