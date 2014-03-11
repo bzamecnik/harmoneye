@@ -119,7 +119,7 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 			shiftRight(amplitudeFrame);
 			prevSpectrum = transformFrame(amplitudeFrame, prevSpectrum);
 
-			freqEstimates = estimateFreqs(prevSpectrum,
+			freqEstimates = estimateFreqsByCrossSpectrum(prevSpectrum,
 				spectrum,
 				freqEstimates);
 			magnitudeSpectrum = magnitudes(spectrum, magnitudeSpectrum);
@@ -303,7 +303,7 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 	 * 
 	 * Frequencies are normalized: [0.0; 1.0] means [0.0; sampleRate].
 	 */
-	private double[] estimateFreqs(ComplexVector frame,
+	private double[] estimateFreqsByPhaseDiff(ComplexVector frame,
 		ComplexVector nextFrame, double[] freqEstimates) {
 		int length = freqEstimates.length;
 		double[] frameElems = frame.getElements();
@@ -317,6 +317,32 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 				nextFrameElems[imIndex], nextFrameElems[reIndex]);
 			double phaseDiff = nextPhase - phase;
 			double freq = Modulo.modulo(phaseDiff * TWO_PI_INV, 1.0);
+			freqEstimates[i] = freq;
+		}
+		return freqEstimates;
+	}
+
+	private double[] estimateFreqsByCrossSpectrum(ComplexVector frame,
+		ComplexVector nextFrame, double[] freqEstimates) {
+
+		// mod(angle(conj(frame).*nextFrame) / (2*pi), 1.0)
+
+		int length = freqEstimates.length;
+		double[] frameElems = frame.getElements();
+		double[] nextFrameElems = nextFrame.getElements();
+		for (int i = 0, reIndex = 0; i < length; i++, reIndex += 2) {
+			int imIndex = reIndex + 1;
+
+			double conjRe = frameElems[reIndex];
+			double conjIm = -frameElems[imIndex];
+			double nextRe = nextFrameElems[reIndex];
+			double nextIm = nextFrameElems[imIndex];
+			double crossRe = conjRe * nextRe - conjIm * nextIm;
+			double crossIm = conjIm * nextRe + conjRe * nextIm;
+
+			double crossPhase = FastMath.atan2(crossIm, crossRe);
+			double freq = crossPhase * TWO_PI_INV;
+			freq = Modulo.modulo(freq, 1.0);
 			freqEstimates[i] = freq;
 		}
 		return freqEstimates;
