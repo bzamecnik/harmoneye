@@ -39,11 +39,11 @@ public class ShortTimeFourierTransform
 
 	// signal must to be as long as ctx.signalBlockLength()
 //	@Override
-	public ComplexVector transform(double[] signal) {
+	public ComplexVector transform(double[] signal, ComplexVector spectrum) {
 		// StopWatch sw = new StopWatch();
 		// sw.start();
 
-		double[] dataRIElems = dataRI.getElements();
+		double[] dataRIElems = spectrum.getElements();
 		// System.arraycopy(signal, 0, dataRIElems, 0, signal.length);
 
 		for (int i = 0; i < signal.length; i++) {
@@ -52,13 +52,17 @@ public class ShortTimeFourierTransform
 
 		fft.realForwardFull(dataRIElems);
 
-		normalize(dataRI);
+		normalize(spectrum);
 
 		// sw.stop();
 		// System.out.println("Computed transformed signal in " +
 		// acc.smooth(sw.getNanoTime()) * 0.001 + " us");
 
-		return dataRI;
+		return spectrum;
+	}
+	
+	public ComplexVector transform(double[] signal) {
+		return transform(signal, dataRI);
 	}
 
 	private void normalize(ComplexVector spectrum) {
