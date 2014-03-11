@@ -24,8 +24,10 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 	private double baseFrequency = 110.0 / 4;
 	private int tonesPerOctave = 12;
 	private int binsPerTone = 10;
+	private int wrappedBinsPerTone = binsPerTone; // 1 for plain PCP
+	private int octaveBinShift = 3; // A -> C
 	private int harmonicCount = 20;
-	private boolean octaveWrapEnabled = false;
+	private boolean octaveWrapEnabled = true;
 	private boolean correlationEnabled = true;
 	/** just to scale the chromagram to the [0; 1.0] range of PNG... */
 	private double postScalingFactor = 1;
@@ -128,7 +130,7 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 		System.out.println(String.format("Audio time / computation time: %.4f",
 			audio.getDurationMillis() / (double) stopWatch.getTime()));
 
-		int size = octaveWrapEnabled ? tonesPerOctave * binsPerTone
+		int size = octaveWrapEnabled ? tonesPerOctave * wrappedBinsPerTone
 			: chromagramSize;
 		return new MagnitudeSpectrogram(reassignedMagFrames, size);
 	}
@@ -180,13 +182,18 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 		}
 
 		if (octaveWrapEnabled) {
-			int octaveBins = tonesPerOctave * binsPerTone;
+			int octaveBins = tonesPerOctave * wrappedBinsPerTone;
+			double binReductionFactorInv = wrappedBinsPerTone
+				/ (double) binsPerTone;
 			double[] wrappedMagnitudes = new double[octaveBins];
 			int sourceOctaves = (chromagramSize / octaveBins) - 1;
 			int maxIndex = sourceOctaves * octaveBins;
-			for (int i = octaveBins; i < maxIndex; i++) {
+			int middleBin = binsPerTone / 2;
+			for (int i = 0; i < maxIndex; i++) {
 				double value = reassignedMagnitudes[i];
-				wrappedMagnitudes[i % octaveBins] += value;
+				wrappedMagnitudes[((int) ((i + middleBin) * binReductionFactorInv)
+					+ octaveBins - octaveBinShift)
+					% octaveBins] += value;
 			}
 
 			reassignedMagnitudes = wrappedMagnitudes;
