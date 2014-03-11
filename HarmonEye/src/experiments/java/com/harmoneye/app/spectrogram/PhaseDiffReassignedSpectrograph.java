@@ -46,9 +46,9 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 	/** a single frame of time-domain signal (amplitudes) of windowSize length */
 	private double[] amplitudeFrame;
 	/** a single frame of reassigned frequencies (only the positive freq. half) */
-	private double[] freqEstimateFrame;
+	private double[] freqEstimates;
 	/** a single frame of magnitudes (only the positive freq. half) */
-	private double[] magnitudeFrame;
+	private double[] magnitudeSpectrum;
 
 	private ShortTimeFourierTransform fft;
 
@@ -70,8 +70,8 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 		chromagramSize = (int) FastMath.round(bin);
 
 		amplitudeFrame = new double[windowSize];
-		freqEstimateFrame = new double[positiveFreqCount];
-		magnitudeFrame = new double[positiveFreqCount];
+		freqEstimates = new double[positiveFreqCount];
+		magnitudeSpectrum = new double[positiveFreqCount];
 
 		System.out.println("sampleRate: " + sampleRate);
 		System.out.println("windowSize: " + windowSize);
@@ -102,20 +102,30 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 
 		int lastPercent = 0;
 		double frameCountInv = 1.0 / frameCount;
+		ComplexVector spectrum = new ComplexVector(windowSize);
+		ComplexVector prevSpectrum = new ComplexVector(windowSize);
 		for (int i = 0; i < frameCount; i++) {
-			ComplexVector frame = transformFrame(amplitudes, amplitudeFrame, i
-				* hopSize);
-			ComplexVector nextFrame = transformFrame(amplitudes,
+			// Make a phase difference of two frames shifted by one sample.
+			// We don't actually need the sample at position 0 since the window
+			// is almost zero there anyway. It introduces almost no error.
+			// Thus data from a single frame is practically sufficient.
+			int sourceIndex = i * hopSize;
+			System.arraycopy(amplitudes,
+				sourceIndex,
 				amplitudeFrame,
-				i * hopSize + offset);
+				0,
+				windowSize);
+			spectrum = transformFrame(amplitudeFrame, spectrum);
+			shiftRight(amplitudeFrame);
+			prevSpectrum = transformFrame(amplitudeFrame, prevSpectrum);
 
-			freqEstimateFrame = estimateFreqs(frame,
-				nextFrame,
-				freqEstimateFrame);
-			magnitudeFrame = magnitudes(frame, magnitudeFrame);
+			freqEstimates = estimateFreqs(prevSpectrum,
+				spectrum,
+				freqEstimates);
+			magnitudeSpectrum = magnitudes(spectrum, magnitudeSpectrum);
 
-			reassignedMagFrames[i] = reassignMagnitudes(magnitudeFrame,
-				freqEstimateFrame,
+			reassignedMagFrames[i] = reassignMagnitudes(magnitudeSpectrum,
+				freqEstimates,
 				chromagramSize);
 
 			double percent = 10 * i * frameCountInv;
@@ -136,6 +146,12 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 		int size = octaveWrapEnabled ? tonesPerOctave * wrappedBinsPerTone
 			: chromagramSize;
 		return new MagnitudeSpectrogram(reassignedMagFrames, size);
+	}
+
+	// shifts all values one sample to the right with left zero padding
+	private void shiftRight(double[] values) {
+		System.arraycopy(values, 0, values, 1, values.length - 1);
+		values[0] = 0;
 	}
 
 	private double log2(double value) {
@@ -310,10 +326,15 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 		return MagnitudeSpectrogram.toLogMagnitudeSpectrum(frame, magnitudes);
 	}
 
-	private ComplexVector transformFrame(double[] amplitudes,
-		double[] amplitudeFrame, int index) {
-		System.arraycopy(amplitudes, index, amplitudeFrame, 0, windowSize);
-		return new ComplexVector(fft.transform(amplitudeFrame));
+	// private ComplexVector transformFrame(double[] amplitudes,
+	// double[] amplitudeFrame, int index) {
+	// System.arraycopy(amplitudes, index, amplitudeFrame, 0, windowSize);
+	// return new ComplexVector(fft.transform(amplitudeFrame));
+	// }
+
+	private ComplexVector transformFrame(double[] amplitudeFrame, ComplexVector spectrum) {
+		return fft.transform(amplitudeFrame, spectrum);
+//		return new ComplexVector(fft.transform(amplitudeFrame));
 	}
 
 	// private void threshold(double[] reassignedMagnitudes) {
