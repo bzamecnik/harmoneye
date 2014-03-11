@@ -295,10 +295,10 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 		for (int i = 0; i < length; i++) {
 			int reIndex = 2 * i;
 			int imIndex = reIndex + 1;
-			double phase = DComplex.arg(frameElems[reIndex],
-				frameElems[imIndex]);
-			double nextPhase = DComplex.arg(nextFrameElems[reIndex],
-				nextFrameElems[imIndex]);
+			double phase = FastMath.atan2(
+				frameElems[imIndex], frameElems[reIndex]);
+			double nextPhase = DComplex.arg(
+				nextFrameElems[imIndex], nextFrameElems[reIndex]);
 			double phaseDiff = nextPhase - phase;
 			double freq = Modulo.modulo(phaseDiff * TWO_PI_INV, 1.0);
 			freqEstimates[i] = freq;
