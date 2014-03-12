@@ -202,7 +202,7 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 		// iterate from 1 to ignore the DC
 		for (int i = 1; i < length; i++) {
 			if (transientFilterEnabled
-				&& (Math.abs(secondDerivatives[i]) > transientThreshold)) {
+				&& (FastMath.abs(secondDerivatives[i]) > transientThreshold)) {
 				continue;
 			}
 			double targetFreq = freqEstimates[i];
@@ -225,7 +225,7 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 			// double magnitude = 0.5 + 0.05 * windowSize * (freqEstimates[i] -
 			// i/(double)windowSize);//debug
 			// double magnitude = 0.5*(secondDerivatives[i] + 1);//debug
-			// double magnitude = Math.abs(secondDerivatives[i]);// debug
+			// double magnitude = FastMath.abs(secondDerivatives[i]);// debug
 
 			double magnitudeThreshold = 1e-2;
 			if (magnitude < magnitudeThreshold) {
@@ -236,13 +236,13 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 				magnitude *= magnitude; // ^2
 			}
 
-			int lowerBin = (int) Math.floor(targetBin);
+			int lowerBin = (int) FastMath.floor(targetBin);
 			int upperBin = lowerBin + 1;
 			double upperContribution = targetBin - lowerBin;
 			double lowerContribution = 1 - upperContribution;
 
 			double groupDelay = groupDelays[i];
-			// if (Math.abs(groupDelay) < 1e-1) {
+			// if (FastMath.abs(groupDelay) < 1e-1) {
 			// // in case the sharpening effect would be small we wouldn't
 			// // utilize group delay
 			// groupDelay = 0;
@@ -275,7 +275,7 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 	void distributeMagnitudeOverTime(double[][] frames, int frameIndex,
 		int freqBin, double groupDelay, double magnitude) {
 		double idealFrameIndex = frameIndex + groupDelay;
-		int lowerT = (int) Math.floor(idealFrameIndex);
+		int lowerT = (int) FastMath.floor(idealFrameIndex);
 		int upperT = lowerT + 1;
 		double upperW = idealFrameIndex - lowerT;
 		double lowerW = 1 - upperW;
@@ -349,8 +349,6 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 		return outputFrames;
 	}
 
-	
-
 	private double[] shiftPrevFreqSpectrum(ComplexVector spectrum,
 		ComplexVector prevFreqSpectrum) {
 		double[] target = prevFreqSpectrum.getElements();
@@ -381,19 +379,19 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 			double value = values[i];
 			norm += value * value;
 		}
-		norm = Math.sqrt(norm);
+		norm = FastMath.sqrt(norm);
 		double normInv = (norm > normalizationThreshold) ? 1 / norm : 0;
 		for (int i = 0; i < values.length; i++) {
 			values[i] *= normInv;
 		}
 	}
 
-	private void highPassFilter(double[] reassignedMagnitudes) {
-		double[] lowPass = boxFilter.filter(reassignedMagnitudes);
-		for (int i = 0; i < reassignedMagnitudes.length; i++) {
-			double value = reassignedMagnitudes[i] - lowPass[i];
-			value = Math.max(value, 0);
-			reassignedMagnitudes[i] = value;
+	private void highPassFilter(double[] values) {
+		double[] lowPass = boxFilter.filter(values);
+		for (int i = 0; i < values.length; i++) {
+			double value = values[i] - lowPass[i];
+			value = FastMath.max(value, 0);
+			values[i] = value;
 		}
 	}
 
@@ -419,10 +417,10 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 		for (int i = 0; i < chromagramSize; i++) {
 			double max = correlation[i];
 			if (i - 1 >= 0) {
-				max = Math.max(max, correlation[i - 1]);
+				max = FastMath.max(max, correlation[i - 1]);
 			}
 			if (i + 1 < chromagramSize) {
-				max = Math.max(max, correlation[i + 1]);
+				max = FastMath.max(max, correlation[i + 1]);
 			}
 			reassignedMagnitudes[i] *= max;
 		}
@@ -553,7 +551,7 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 		private void addPatternForFreq(double baseFreq, double sign) {
 			double normalizationFactor = 0;
 			for (int i = 0; i < harmonicCount; i++) {
-				normalizationFactor += Math.abs(sign * weightForHarmonic(i));
+				normalizationFactor += FastMath.abs(sign * weightForHarmonic(i));
 			}
 			normalizationFactor = sign / normalizationFactor;
 
@@ -561,7 +559,7 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 				double bin = FastMath.log(2, baseFreq * (i + 1))
 					* tonesPerOctave * binsPerTone;
 
-				int lowerBin = (int) Math.floor(bin);
+				int lowerBin = (int) FastMath.floor(bin);
 				// int upperBin = lowerBin + 1;
 				double weight = normalizationFactor * weightForHarmonic(i);
 
