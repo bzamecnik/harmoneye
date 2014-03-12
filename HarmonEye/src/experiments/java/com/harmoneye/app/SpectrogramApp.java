@@ -13,7 +13,7 @@ import com.harmoneye.app.spectrogram.AudioReader;
 import com.harmoneye.app.spectrogram.BasicSpectrograph;
 import com.harmoneye.app.spectrogram.MagnitudeSpectrogram;
 import com.harmoneye.app.spectrogram.MagnitudeSpectrograph;
-import com.harmoneye.app.spectrogram.PhaseDiffReassignedSpectrograph;
+import com.harmoneye.app.spectrogram.ReassignedSpectrograph;
 import com.harmoneye.app.spectrogram.SampledAudio;
 
 import ddf.minim.AudioPlayer;
@@ -70,7 +70,7 @@ public class SpectrogramApp extends PApplet {
 
 			audio = new AudioReader().readAudio(inputFile);
 			if (reassignmentEnabled) {
-				spectrograph = new PhaseDiffReassignedSpectrograph(windowSize,
+				spectrograph = new ReassignedSpectrograph(windowSize,
 					overlapRatio, audio.getSampleRate());
 			} else {
 				spectrograph = new BasicSpectrograph(windowSize, overlapRatio);

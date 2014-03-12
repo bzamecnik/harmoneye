@@ -12,7 +12,7 @@ import com.harmoneye.math.filter.BoxFilter;
 import com.harmoneye.math.matrix.ComplexVector;
 import com.harmoneye.math.window.BlackmanWindow;
 
-public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
+public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 
 	private static final double TWO_PI_INV = 1 / (2 * Math.PI);
 
@@ -34,14 +34,14 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 	private boolean highPassFilterEnabled = true;
 	private int boxFilterSize = 10;
 	private boolean correlationEnabled = true;
-	private boolean octaveWrapEnabled = false;
-	private boolean circleOfFifthsEnabled = false;
+	private boolean octaveWrapEnabled = true;
+	private boolean circleOfFifthsEnabled = true;
 	// enable L2-norm normalization, otherwise use just plain constant scaling
-	private boolean normalizationEnabled = false;
+	private boolean normalizationEnabled = true;
 	// prevent zero-division - zero out too weak signals
 	private double normalizationThreshold = 1e-2;
 	/** just to scale the chromagram to the [0; 1.0] range of PNG... */
-	private double postScalingFactor = 10;
+	private double postScalingFactor = 1;
 
 	/** ratio of the baseFrequency to the sampleRate */
 	private double normalizedBaseFreq;
@@ -70,7 +70,7 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 
 	// private StandardDeviation stdDev = new StandardDeviation();
 
-	public PhaseDiffReassignedSpectrograph(int windowSize, double overlapRatio,
+	public ReassignedSpectrograph(int windowSize, double overlapRatio,
 		double sampleRate) {
 		this.windowSize = windowSize;
 		this.hopSize = (int) (windowSize * (1 - overlapRatio));
