@@ -82,7 +82,11 @@ public class SpectrogramApp extends PApplet {
 			spectrumImage = prepareSpectrumImage(magSpectrogram);
 
 			colorMode(HSB, 1.0f);
-			smooth();
+			if (spectrumImage.height > 12) {
+				smooth();
+			} else {
+				noSmooth();
+			}
 			if (!animationEnabled) {
 				noLoop();
 			} else {
