@@ -140,9 +140,13 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 
 			shiftPrevFreqSpectrum(spectrum, prevFreqSpectrum);
 
-			crossSpectrum(prevTimeSpectrum, spectrum, crossTimeSpectrum);
-			crossSpectrum(prevFreqSpectrum, spectrum, crossFreqSpectrum);
-			crossSpectrum(crossFreqSpectrum,
+			ComplexVector.crossSpectrum(prevTimeSpectrum,
+				spectrum,
+				crossTimeSpectrum);
+			ComplexVector.crossSpectrum(prevFreqSpectrum,
+				spectrum,
+				crossFreqSpectrum);
+			ComplexVector.crossSpectrum(crossFreqSpectrum,
 				crossTimeSpectrum,
 				crossFreqTimeSpectrum);
 
@@ -345,22 +349,7 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 		return outputFrames;
 	}
 
-	// cross spectrum: conj(A).*B
-	private void crossSpectrum(ComplexVector spectrumA,
-		ComplexVector spectrumB, ComplexVector crossSpectrum) {
-		double[] a = spectrumA.getElements();
-		double[] b = spectrumB.getElements();
-		double[] c = crossSpectrum.getElements();
-		int length = spectrumA.size();
-		for (int i = 0, reIndex = 0, imIndex = 1; i < length; i++, reIndex += 2, imIndex += 2) {
-			double aConjRe = a[reIndex];
-			double bConjIm = -a[imIndex];
-			double bRe = b[reIndex];
-			double bIm = b[imIndex];
-			c[reIndex] = aConjRe * bRe - bConjIm * bIm;
-			c[imIndex] = bConjIm * bRe + aConjRe * bIm;
-		}
-	}
+	
 
 	private double[] shiftPrevFreqSpectrum(ComplexVector spectrum,
 		ComplexVector prevFreqSpectrum) {

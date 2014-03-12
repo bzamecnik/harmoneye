@@ -19,7 +19,7 @@ public class ComplexVector {
 		this.size = elements.length / 2;
 		this.elements = elements;
 	}
-	
+
 	public ComplexVector(ComplexVector copy) {
 		this.size = copy.size;
 		this.elements = new double[copy.getElements().length];
@@ -32,6 +32,23 @@ public class ComplexVector {
 
 	public int size() {
 		return size;
+	}
+
+	// cross spectrum: conj(A).*B
+	public static void crossSpectrum(ComplexVector spectrumA,
+		ComplexVector spectrumB, ComplexVector crossSpectrum) {
+		double[] a = spectrumA.getElements();
+		double[] b = spectrumB.getElements();
+		double[] c = crossSpectrum.getElements();
+		int length = spectrumA.size();
+		for (int i = 0, reIndex = 0, imIndex = 1; i < length; i++, reIndex += 2, imIndex += 2) {
+			double aConjRe = a[reIndex];
+			double bConjIm = -a[imIndex];
+			double bRe = b[reIndex];
+			double bIm = b[imIndex];
+			c[reIndex] = aConjRe * bRe - bConjIm * bIm;
+			c[imIndex] = bConjIm * bRe + aConjRe * bIm;
+		}
 	}
 
 	@Override
