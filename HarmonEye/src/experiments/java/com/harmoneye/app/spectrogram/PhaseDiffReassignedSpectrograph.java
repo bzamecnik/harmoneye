@@ -250,7 +250,9 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 	private void highPassFilter(double[] reassignedMagnitudes) {
 		double[] lowPass = boxFilter.filter(reassignedMagnitudes);
 		for (int i = 0; i < reassignedMagnitudes.length; i++) {
-			reassignedMagnitudes[i] -= lowPass[i];
+			double value = reassignedMagnitudes[i] - lowPass[i];
+			value = Math.max(value, 0);
+			reassignedMagnitudes[i] = value;
 		}
 	}
 
