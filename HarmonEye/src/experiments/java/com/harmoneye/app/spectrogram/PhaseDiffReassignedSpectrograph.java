@@ -56,6 +56,7 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 
 	private double[] correlation;
 
+	private BoxFilter boxFilter = new BoxFilter(boxFilterSize);
 
 	// private StandardDeviation stdDev = new StandardDeviation();
 
@@ -247,7 +248,6 @@ public class PhaseDiffReassignedSpectrograph implements MagnitudeSpectrograph {
 	}
 
 	private void highPassFilter(double[] reassignedMagnitudes) {
-		BoxFilter boxFilter = new BoxFilter(boxFilterSize);
 		double[] lowPass = boxFilter.filter(reassignedMagnitudes);
 		for (int i = 0; i < reassignedMagnitudes.length; i++) {
 			reassignedMagnitudes[i] -= lowPass[i];

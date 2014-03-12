@@ -1,5 +1,7 @@
 package com.harmoneye.math.filter;
 
+import java.util.Arrays;
+
 // TODO: implement a better algorithm independent on the kernel size
 // (spread only the kernel difference and then integrate)
 
@@ -20,6 +22,8 @@ public class BoxFilter implements Filter {
 		int length = signal.length;
 		if (resultBuffer == null || resultBuffer.length != length) {
 			resultBuffer = new double[length];
+		} else {
+			Arrays.fill(resultBuffer, 0);
 		}
 		int lowerOffset = -size / 2;
 		double weight = 1.0 / size;
