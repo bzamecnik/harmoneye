@@ -5,15 +5,12 @@ import org.apache.commons.math3.util.FastMath;
 
 import com.harmoneye.math.L2Norm;
 import com.harmoneye.math.MaxNorm;
-import com.harmoneye.math.Modulo;
 import com.harmoneye.math.fft.ShortTimeFourierTransform;
 import com.harmoneye.math.filter.Normalizer;
 import com.harmoneye.math.matrix.ComplexVector;
 import com.harmoneye.math.window.BlackmanWindow;
 
 public class ReassignedSpectrograph implements MagnitudeSpectrograph {
-
-	private static final double TWO_PI_INV = 1 / (2 * Math.PI);
 
 	private int windowSize;
 	private int hopSize;
@@ -58,13 +55,20 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 	/** a single frame of magnitudes (only the positive freq. half) */
 	private double[] magnitudeSpectrum;
 
+	private ComplexVector spectrum;
+	private ComplexVector prevTimeSpectrum;
+	private ComplexVector prevFreqSpectrum;
+	private ComplexVector crossTimeSpectrum;
+	private ComplexVector crossFreqSpectrum;
+	private ComplexVector crossFreqTimeSpectrum;
+	
 	private ShortTimeFourierTransform fft;
 	private HarmonicCorrellation harmonicCorrellation;
 	private HighPassFilter highPassFilter = new HighPassFilter(boxFilterSize);
 
 	private Normalizer l2Normalizer = new Normalizer(new L2Norm(), normalizationThreshold);
 	private Normalizer maxNormalizer = new Normalizer(new MaxNorm(), normalizationThreshold);
-
+	
 	public ReassignedSpectrograph(int windowSize, double overlapRatio,
 		double sampleRate) {
 		this.windowSize = windowSize;
@@ -82,6 +86,13 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 		secondDerivatives = new double[positiveFreqCount];
 		magnitudeSpectrum = new double[positiveFreqCount];
 
+		spectrum = new ComplexVector(windowSize);
+		prevTimeSpectrum = new ComplexVector(windowSize);
+		prevFreqSpectrum = new ComplexVector(windowSize);
+		crossTimeSpectrum = new ComplexVector(windowSize);
+		crossFreqSpectrum = new ComplexVector(windowSize);
+		crossFreqTimeSpectrum = new ComplexVector(windowSize);
+		
 		System.out.println("sampleRate: " + sampleRate);
 		System.out.println("windowSize: " + windowSize);
 		System.out.println("overlapRatio: " + overlapRatio);
@@ -112,53 +123,9 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 
 		int lastPercent = 0;
 		double frameCountInv = 1.0 / frameCount;
-		ComplexVector spectrum = new ComplexVector(windowSize);
-		ComplexVector prevTimeSpectrum = new ComplexVector(windowSize);
-		ComplexVector prevFreqSpectrum = new ComplexVector(windowSize);
-		ComplexVector crossTimeSpectrum = new ComplexVector(windowSize);
-		ComplexVector crossFreqSpectrum = new ComplexVector(windowSize);
-		ComplexVector crossFreqTimeSpectrum = new ComplexVector(windowSize);
+		
 		for (int i = 0; i < frameCount; i++) {
-			// Make a phase difference of two frames shifted by one sample.
-			// We don't actually need the sample at position 0 since the window
-			// is almost zero there anyway. It introduces almost no error.
-			// Thus data from a single frame is practically sufficient.
-			int sourceIndex = i * hopSize;
-			System.arraycopy(amplitudes,
-				sourceIndex,
-				amplitudeFrame,
-				0,
-				windowSize);
-			spectrum = transformFrame(amplitudeFrame, spectrum);
-
-			shiftRight(amplitudeFrame);
-			prevTimeSpectrum = transformFrame(amplitudeFrame, prevTimeSpectrum);
-
-			shiftPrevFreqSpectrum(spectrum, prevFreqSpectrum);
-
-			ComplexVector.crossSpectrum(prevTimeSpectrum,
-				spectrum,
-				crossTimeSpectrum);
-			ComplexVector.crossSpectrum(prevFreqSpectrum,
-				spectrum,
-				crossFreqSpectrum);
-			ComplexVector.crossSpectrum(crossFreqSpectrum,
-				crossTimeSpectrum,
-				crossFreqTimeSpectrum);
-
-			freqEstimates = estimateFreqsByCrossSpectrum(crossTimeSpectrum,
-				freqEstimates);
-			groupDelays = estimateGroupDelays(crossFreqSpectrum, groupDelays);
-			secondDerivatives = estimateGroupDelays(crossFreqTimeSpectrum,
-				secondDerivatives);
-			magnitudeSpectrum = magnitudes(spectrum, magnitudeSpectrum);
-
-			reassignMagnitudes(magnitudeSpectrum,
-				freqEstimates,
-				groupDelays,
-				secondDerivatives,
-				reassignedMagFrames,
-				i);
+			computeFrame(amplitudes, reassignedMagFrames, i);
 
 			double percent = 10 * i * frameCountInv;
 
@@ -182,6 +149,46 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 			audio.getDurationMillis() / (double) stopWatch.getTime()));
 
 		return new MagnitudeSpectrogram(resultFrames, outputSize);
+	}
+
+	private void computeFrame(double[] amplitudes,
+		double[][] reassignedMagFrames, int i) {
+		// Make a phase difference of two frames shifted by one sample.
+		// We don't actually need the sample at position 0 since the window
+		// is almost zero there anyway. It introduces almost no error.
+		// Thus data from a single frame is practically sufficient.
+		int srcIndex = i * hopSize;
+		System.arraycopy(amplitudes, srcIndex, amplitudeFrame, 0, windowSize);
+		transformFrame(amplitudeFrame, spectrum);
+
+		SpectralReassigner.shiftRight(amplitudeFrame);
+		transformFrame(amplitudeFrame, prevTimeSpectrum);
+
+		SpectralReassigner.shiftPrevFreqSpectrum(spectrum, prevFreqSpectrum);
+
+		ComplexVector.crossSpectrum(prevTimeSpectrum,
+			spectrum,
+			crossTimeSpectrum);
+		ComplexVector.crossSpectrum(prevFreqSpectrum,
+			spectrum,
+			crossFreqSpectrum);
+		ComplexVector.crossSpectrum(crossFreqSpectrum,
+			crossTimeSpectrum,
+			crossFreqTimeSpectrum);
+
+		freqEstimates = SpectralReassigner.estimateFreqs(crossTimeSpectrum,
+			freqEstimates);
+		groupDelays = SpectralReassigner.estimateGroupDelays(crossFreqSpectrum, groupDelays);
+		secondDerivatives = SpectralReassigner.estimateSecondDerivatives(crossFreqTimeSpectrum,
+			secondDerivatives);
+		magnitudeSpectrum = magnitudes(spectrum, magnitudeSpectrum);
+
+		reassignMagnitudes(magnitudeSpectrum,
+			freqEstimates,
+			groupDelays,
+			secondDerivatives,
+			reassignedMagFrames,
+			i);
 	}
 
 	private double[] reassignMagnitudes(double[] magnitudes,
@@ -295,8 +302,6 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 				highPassFilter.filter(chromagram);
 			}
 
-			// normalize(reassignedMagnitudes);
-
 			if (correlationEnabled) {
 				computeHarmonicCorrellation(chromagram);
 			}
@@ -328,42 +333,18 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 			if (normalizationEnabled) {
 				l2Normalizer.filter(chromagram);
 			}
+
 			if (postScalingFactor != 1) {
 				for (int i = 1; i < chromagram.length; i++) {
 					chromagram[i] *= postScalingFactor;
 				}
 			}
 
-			// threshold(reassignedMagnitudes);
-
 			outputFrames[frameIndex] = chromagram;
 		}
 		return outputFrames;
 	}
-
-	private double[] shiftPrevFreqSpectrum(ComplexVector spectrum,
-		ComplexVector prevFreqSpectrum) {
-		double[] target = prevFreqSpectrum.getElements();
-		System.arraycopy(spectrum.getElements(),
-			2,
-			target,
-			0,
-			spectrum.getElements().length - 2);
-		target[0] = 0;
-		target[1] = 0;
-		return target;
-	}
-
-	// shifts all values one sample to the right with left zero padding
-	private void shiftRight(double[] values) {
-		System.arraycopy(values, 0, values, 1, values.length - 1);
-		values[0] = 0;
-	}
-
-	private double log2(double value) {
-		return FastMath.log(2, value);
-	}
-
+	
 	private void computeHarmonicCorrellation(double[] chromagram) {
 		double[] correlation = harmonicCorrellation.correlate(chromagram);
 		// mask out the chromagram by the correlation
@@ -384,78 +365,8 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 	 * @param frequency normalized frequency
 	 */
 	private double musicalBinByFrequency(double frequency) {
-		return log2(frequency * normalizedBaseFreqInv) * tonesPerOctave
+		return FastMath.log(2, frequency * normalizedBaseFreqInv) * tonesPerOctave
 			* binsPerTone;
-	}
-
-	/*
-	 * High-precision frequency estimates using single-sample phase difference.
-	 * It is a simple implementation of frequency reassignment.
-	 * 
-	 * Brown J.C. and Puckette M.S. (1993). A high resolution fundamental
-	 * frequency determination based on phase changes of the Fourier transform.
-	 * J. Acoust. Soc. Am. Volume 94, Issue 2, pp. 662-667
-	 * 
-	 * Frequencies are normalized: [0.0; 1.0] means [0.0; sampleRate].
-	 */
-	@SuppressWarnings("unused")
-	@Deprecated
-	private double[] estimateFreqsByPhaseDiff(ComplexVector frame,
-		ComplexVector nextFrame, double[] freqEstimates) {
-		int length = freqEstimates.length;
-		double[] frameElems = frame.getElements();
-		double[] nextFrameElems = nextFrame.getElements();
-		for (int i = 0; i < length; i++) {
-			int reIndex = 2 * i;
-			int imIndex = reIndex + 1;
-			double phase = FastMath.atan2(frameElems[imIndex],
-				frameElems[reIndex]);
-			double nextPhase = FastMath.atan2(nextFrameElems[imIndex],
-				nextFrameElems[reIndex]);
-			double phaseDiff = nextPhase - phase;
-			double freq = Modulo.modulo(phaseDiff * TWO_PI_INV, 1.0);
-			freqEstimates[i] = freq;
-		}
-		return freqEstimates;
-	}
-
-	// chanelled instantious frequency - derivative of phase by time
-	// cif = angle(crossSpectrumTime) * sampleRate / (2 * pi);
-	// in this case the return value is normalized (not multiples by sampleRate)
-	// [0.0; 1.0] instead of absolute [0.0; sampleRate]
-	private double[] estimateFreqsByCrossSpectrum(
-		ComplexVector crossTimeSpectrum, double[] freqEstimates) {
-		int length = freqEstimates.length;
-		double[] elems = crossTimeSpectrum.getElements();
-		for (int i = 0, reIndex = 0, imIndex = 1; i < length; i++, reIndex += 2, imIndex += 2) {
-			double phase = FastMath.atan2(elems[imIndex], elems[reIndex]);
-			double freq = phase * TWO_PI_INV;
-			freq = Modulo.modulo(freq, 1.0);
-
-			freqEstimates[i] = freq;
-		}
-		return freqEstimates;
-	}
-
-	// local group delay - derivative of phase by frequency
-	// lgd = angle(crossFreqSpectrum) * windowSize / (2 * pi * sampleRate);
-	// normalized to [-1; 1] without using the windowDuration
-	private double[] estimateGroupDelays(ComplexVector crossFreqSpectrum,
-		double[] groupDelays) {
-		int length = groupDelays.length;
-		double[] elems = crossFreqSpectrum.getElements();
-		for (int i = 0, reIndex = 0, imIndex = 1; i < length; i++, reIndex += 2, imIndex += 2) {
-			double phase = FastMath.atan2(elems[imIndex], elems[reIndex]);
-			double delay = phase * TWO_PI_INV;
-			delay = Modulo.modulo(delay, 1.0);
-			// the delay is relative to the window beginning, but we might
-			// relate the window time instant to the center
-			// delay = (delay - 0.5) * windowDuration;
-			delay = 2 * delay - 1;
-
-			groupDelays[i] = delay;
-		}
-		return groupDelays;
 	}
 
 	private double[] magnitudes(ComplexVector frame, double[] magnitudes) {
