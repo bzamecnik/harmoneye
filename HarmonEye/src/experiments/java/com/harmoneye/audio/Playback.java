@@ -90,7 +90,7 @@ public class Playback implements Runnable {
 		inputChannelsInv = 1.0 / inputChannels;
 		monoBufferSizeSamples = MONO_READ_BUFFER_SIZE_SAMPLES;
 		readBufferSizeSamples = inputChannels * monoBufferSizeSamples;
-		readBufferSizeBytes = 2 * monoBufferSizeSamples;
+		readBufferSizeBytes = 2 * readBufferSizeSamples;
 
 		byte[] readBuffer = new byte[readBufferSizeBytes];
 		double[] amplitudes = new double[readBufferSizeSamples];
