@@ -25,7 +25,6 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 	// minimum threshold for secondDerivatives [0; 1] to consider the
 	// energy as not being a transient
 	double transientThreshold = 0.4;
-	private boolean magnitudeSquaringEnabled = true;
 	private boolean highPassFilterEnabled = true;
 	private int boxFilterSize = 10;
 	private boolean correlationEnabled = true;
@@ -242,10 +241,6 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 				continue;
 			}
 
-			if (magnitudeSquaringEnabled) {
-				magnitude *= magnitude; // ^2
-			}
-
 			int lowerBin = (int) FastMath.floor(targetBin);
 			int upperBin = lowerBin + 1;
 			double upperContribution = targetBin - lowerBin;
@@ -371,7 +366,7 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 	}
 
 	private double[] magnitudes(ComplexVector frame, double[] magnitudes) {
-		return MagnitudeSpectrogram.toLogMagnitudeSpectrum(frame, magnitudes);
+		return MagnitudeSpectrogram.toLogPowerSpectrum(frame, magnitudes);
 	}
 
 	private ComplexVector transformFrame(double[] amplitudeFrame,

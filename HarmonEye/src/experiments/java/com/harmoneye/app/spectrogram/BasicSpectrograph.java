@@ -3,8 +3,6 @@ package com.harmoneye.app.spectrogram;
 import com.harmoneye.math.fft.ShortTimeFourierTransform;
 import com.harmoneye.math.matrix.ComplexVector;
 import com.harmoneye.math.window.BlackmanWindow;
-import com.harmoneye.math.window.HammingWindow;
-import com.harmoneye.math.window.HannWindow;
 
 public class BasicSpectrograph implements MagnitudeSpectrograph {
 

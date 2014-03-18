@@ -36,7 +36,7 @@ public class MagnitudeSpectrogram {
 		double[][] magnitudeFrames = new double[frameCount][];
 		for (int i = 0; i < frameCount; i++) {
 			ComplexVector complexFrame = spectrogram.getFrame(i);
-			magnitudeFrames[i] = toLogMagnitudeSpectrum(complexFrame,
+			magnitudeFrames[i] = toLogPowerSpectrum(complexFrame,
 				new double[binCount]);
 		}
 		return new MagnitudeSpectrogram(magnitudeFrames, binCount);
@@ -44,7 +44,7 @@ public class MagnitudeSpectrogram {
 
 	// for the positive-frequency magnitude spectrum, just pass a half-sized
 	// output array
-	public static double[] toLogMagnitudeSpectrum(ComplexVector cplxSpectrum,
+	public static double[] toLogPowerSpectrum(ComplexVector cplxSpectrum,
 		double[] magnitudeSpectrum) {
 		double[] elements = cplxSpectrum.getElements();
 		for (int i = 0, index = 0; i < magnitudeSpectrum.length; i++, index += 2) {
@@ -53,7 +53,8 @@ public class MagnitudeSpectrogram {
 			double amplitude = DComplex.abs(re, im);
 			double amplitudeDb = dbCalculator.amplitudeToDb(amplitude);
 			double value = dbCalculator.rescale(amplitudeDb);
-			magnitudeSpectrum[i] = value;
+			// power spectrum
+			magnitudeSpectrum[i] = value * value;
 		}
 		return magnitudeSpectrum;
 	}
