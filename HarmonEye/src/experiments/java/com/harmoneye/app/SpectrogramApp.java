@@ -54,6 +54,8 @@ public class SpectrogramApp extends PApplet {
 	private int startTime;
 	private float time;
 
+	private int overlapFactor;
+
 	public void setup() {
 		try {
 			prepareOptions();
@@ -165,8 +167,8 @@ public class SpectrogramApp extends PApplet {
 		// int frameStartX = (int) Math.min(frameIndex - framesPerWindowWidth/2,
 		// frameIndex);
 
-		float xScalingFactor = 1; 
-		float xScale = width / (spectrumImage.width * xScalingFactor);
+		// seconds per overlapped frame (horizontal pixel)
+		float xScalingFactor = (float)(audio.getSampleRate() / (windowSize * (double)overlapFactor));
 
 		// continuous scrolling, start&end at the center of the screen
 		// int frameStartX = Math.min(Math.max(frameIndex - width / 2, 0),
@@ -209,6 +211,7 @@ public class SpectrogramApp extends PApplet {
 
 		fill(1, 1, 0.85f);
 		noStroke();
+		float xScale = width / (float)spectrumImage.width;
 		line(frameIndex * xScale, 0, frameIndex * xScale, height);
 		rect(0, height - 3, frameIndex * xScale, 3);
 	}
@@ -325,7 +328,7 @@ public class SpectrogramApp extends PApplet {
 			windowSize = Integer.valueOf(cmd.getOptionValue("w"));
 		}
 		if (cmd.hasOption("l")) {
-			int overlapFactor = Integer.valueOf(cmd.getOptionValue("l"));
+			overlapFactor = Integer.valueOf(cmd.getOptionValue("l"));
 			overlapRatio = 1 - (1.0 / overlapFactor);
 		}
 		inputFile = cmd.getOptionValue("i");
