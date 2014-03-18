@@ -4,7 +4,6 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.math3.util.FastMath;
 
 import com.harmoneye.math.L2Norm;
-import com.harmoneye.math.MaxNorm;
 import com.harmoneye.math.fft.ShortTimeFourierTransform;
 import com.harmoneye.math.filter.Normalizer;
 import com.harmoneye.math.matrix.ComplexVector;
@@ -65,10 +64,11 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 	private ShortTimeFourierTransform fft;
 	private HarmonicCorrellation harmonicCorrellation;
 	private HighPassFilter highPassFilter = new HighPassFilter(boxFilterSize);
+	private Normalizer l2Normalizer = new Normalizer(new L2Norm(),
+		normalizationThreshold);
+	// private Normalizer maxNormalizer = new Normalizer(new MaxNorm(),
+	// normalizationThreshold);
 
-	private Normalizer l2Normalizer = new Normalizer(new L2Norm(), normalizationThreshold);
-	private Normalizer maxNormalizer = new Normalizer(new MaxNorm(), normalizationThreshold);
-	
 	public ReassignedSpectrograph(int windowSize, double overlapRatio,
 		double sampleRate) {
 		this.windowSize = windowSize;
@@ -92,7 +92,7 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 		crossTimeSpectrum = new ComplexVector(windowSize);
 		crossFreqSpectrum = new ComplexVector(windowSize);
 		crossFreqTimeSpectrum = new ComplexVector(windowSize);
-		
+
 		System.out.println("sampleRate: " + sampleRate);
 		System.out.println("windowSize: " + windowSize);
 		System.out.println("overlapRatio: " + overlapRatio);
@@ -344,20 +344,29 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 		}
 		return outputFrames;
 	}
-	
+
 	private void computeHarmonicCorrellation(double[] chromagram) {
 		double[] correlation = harmonicCorrellation.correlate(chromagram);
+		// maxNormalizer.filter(correlation);
+
 		// mask out the chromagram by the correlation
-		// max filter with kernel size 3
-		for (int i = 0; i < chromagramSize; i++) {
-			double max = correlation[i];
-			if (i - 1 >= 0) {
-				max = FastMath.max(max, correlation[i - 1]);
+		int maxFilterSize = 1;
+		if (maxFilterSize > 1) {
+			int maxFilterSizeHalf = maxFilterSize / 2;
+			for (int i = 0; i < chromagramSize; i++) {
+				double max = correlation[i];
+				for (int j = 0; j < maxFilterSize; j++) {
+					int k = i + j - maxFilterSizeHalf;
+					if (k >= 0 && k < chromagramSize) {
+						max = FastMath.max(max, correlation[k]);
+					}
+				}
+				chromagram[i] *= max;
 			}
-			if (i + 1 < chromagramSize) {
-				max = FastMath.max(max, correlation[i + 1]);
+		} else {
+			for (int i = 0; i < chromagramSize; i++) {
+				chromagram[i] *= correlation[i];
 			}
-			chromagram[i] *= max;
 		}
 	}
 
