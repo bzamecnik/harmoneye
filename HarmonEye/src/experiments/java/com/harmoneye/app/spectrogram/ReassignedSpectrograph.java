@@ -3,8 +3,11 @@ package com.harmoneye.app.spectrogram;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.math3.util.FastMath;
 
+import com.harmoneye.math.L2Norm;
+import com.harmoneye.math.MaxNorm;
 import com.harmoneye.math.Modulo;
 import com.harmoneye.math.fft.ShortTimeFourierTransform;
+import com.harmoneye.math.filter.Normalizer;
 import com.harmoneye.math.matrix.ComplexVector;
 import com.harmoneye.math.window.BlackmanWindow;
 
@@ -57,7 +60,10 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 
 	private ShortTimeFourierTransform fft;
 	private HarmonicCorrellation harmonicCorrellation;
-	private HighPassFilter highPassFilter = new HighPassFilter(boxFilterSize);	
+	private HighPassFilter highPassFilter = new HighPassFilter(boxFilterSize);
+
+	private Normalizer l2Normalizer = new Normalizer(new L2Norm(), normalizationThreshold);
+	private Normalizer maxNormalizer = new Normalizer(new MaxNorm(), normalizationThreshold);
 
 	public ReassignedSpectrograph(int windowSize, double overlapRatio,
 		double sampleRate) {
@@ -320,7 +326,7 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 			}
 
 			if (normalizationEnabled) {
-				normalize(chromagram);
+				l2Normalizer.filter(chromagram);
 			}
 			if (postScalingFactor != 1) {
 				for (int i = 1; i < chromagram.length; i++) {
@@ -356,20 +362,6 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 
 	private double log2(double value) {
 		return FastMath.log(2, value);
-	}
-
-	private void normalize(double[] values) {
-		// L2 norm
-		double norm = 0;
-		for (int i = 0; i < values.length; i++) {
-			double value = values[i];
-			norm += value * value;
-		}
-		norm = FastMath.sqrt(norm);
-		double normInv = (norm > normalizationThreshold) ? 1 / norm : 0;
-		for (int i = 0; i < values.length; i++) {
-			values[i] *= normInv;
-		}
 	}
 
 	private void computeHarmonicCorrellation(double[] chromagram) {
