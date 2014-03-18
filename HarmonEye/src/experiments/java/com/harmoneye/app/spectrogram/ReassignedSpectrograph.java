@@ -18,7 +18,7 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 	private double baseFrequency = 110.0 / 4;
 	private int tonesPerOctave = 12;
 	private int binsPerTone = 10;
-	private int wrappedBinsPerTone = 1; // 1 for plain PCP
+	private int wrappedBinsPerTone = 10; // 1 for plain PCP
 	private int octaveBinShift = 3; // A -> C
 	private int harmonicCount = 20;
 	private boolean transientFilterEnabled = true;
@@ -44,6 +44,7 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 	/** size of the target chromagram (log-frequency resampled spectrogram) */
 	private int chromagramSize;
 	private int wrappedChromagramSize;
+	private int binsPerOctave;
 
 	/** a single frame of time-domain signal (amplitudes) of windowSize length */
 	private double[] amplitudeFrame;
@@ -60,10 +61,11 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 	private ComplexVector crossTimeSpectrum;
 	private ComplexVector crossFreqSpectrum;
 	private ComplexVector crossFreqTimeSpectrum;
-	
+
 	private ShortTimeFourierTransform fft;
 	private HarmonicCorrellation harmonicCorrellation;
 	private HighPassFilter highPassFilter = new HighPassFilter(boxFilterSize);
+	private ChromagramWrapper chromagramWrapper;
 	private Normalizer l2Normalizer = new Normalizer(new L2Norm(),
 		normalizationThreshold);
 	// private Normalizer maxNormalizer = new Normalizer(new MaxNorm(),
@@ -75,6 +77,7 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 		this.hopSize = (int) (windowSize * (1 - overlapRatio));
 		this.normalizedBaseFreq = baseFrequency / sampleRate;
 		this.normalizedBaseFreqInv = 1.0 / normalizedBaseFreq;
+		binsPerOctave = binsPerTone * tonesPerOctave;
 		double bin = musicalBinByFrequency(0.5 - normalizedBaseFreq);
 		int positiveFreqCount = windowSize / 2;
 		chromagramSize = (int) FastMath.round(bin);
@@ -102,8 +105,15 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 		this.fft = new ShortTimeFourierTransform(windowSize,
 			new BlackmanWindow());
 
-		HarmonicPattern harmonicPattern = new HarmonicPattern(harmonicCount, binsPerTone * tonesPerOctave);
-		harmonicCorrellation = new HarmonicCorrellation(harmonicPattern, chromagramSize);
+		
+		HarmonicPattern harmonicPattern = new HarmonicPattern(harmonicCount,
+			binsPerOctave);
+		harmonicCorrellation = new HarmonicCorrellation(harmonicPattern,
+			chromagramSize);
+
+		chromagramWrapper = new ChromagramWrapper(tonesPerOctave, binsPerTone,
+			wrappedBinsPerTone, chromagramSize, octaveBinShift,
+			circleOfFifthsEnabled);
 	}
 
 	public MagnitudeSpectrogram computeMagnitudeSpectrogram(SampledAudio audio) {
@@ -123,7 +133,7 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 
 		int lastPercent = 0;
 		double frameCountInv = 1.0 / frameCount;
-		
+
 		for (int i = 0; i < frameCount; i++) {
 			computeFrame(amplitudes, reassignedMagFrames, i);
 
@@ -178,9 +188,10 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 
 		freqEstimates = SpectralReassigner.estimateFreqs(crossTimeSpectrum,
 			freqEstimates);
-		groupDelays = SpectralReassigner.estimateGroupDelays(crossFreqSpectrum, groupDelays);
-		secondDerivatives = SpectralReassigner.estimateSecondDerivatives(crossFreqTimeSpectrum,
-			secondDerivatives);
+		groupDelays = SpectralReassigner.estimateGroupDelays(crossFreqSpectrum,
+			groupDelays);
+		secondDerivatives = SpectralReassigner
+			.estimateSecondDerivatives(crossFreqTimeSpectrum, secondDerivatives);
 		magnitudeSpectrum = magnitudes(spectrum, magnitudeSpectrum);
 
 		reassignMagnitudes(magnitudeSpectrum,
@@ -307,27 +318,8 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 			}
 
 			if (octaveWrapEnabled) {
-				int octaveBins = tonesPerOctave * wrappedBinsPerTone;
-				double binReductionFactorInv = wrappedBinsPerTone
-					/ (double) binsPerTone;
-				double[] wrappedMagnitudes = outputFrames[frameIndex];
-				int sourceOctaves = (chromagramSize / octaveBins) - 1;
-				int maxIndex = sourceOctaves * octaveBins;
-				int middleBin = binsPerTone / 2;
-				for (int i = 0; i < maxIndex; i++) {
-					double value = chromagram[i];
-					int k = (int) ((i + middleBin) * binReductionFactorInv)
-						+ octaveBins - octaveBinShift * wrappedBinsPerTone;
-					if (circleOfFifthsEnabled) {
-						k = k * 7;
-						// map F as the first bin (make C key continuous)
-						// (F C G D A E B ...)
-						k += 1;
-					}
-					wrappedMagnitudes[k % octaveBins] += value;
-				}
-
-				chromagram = wrappedMagnitudes;
+				double[] wrappedChromagram = outputFrames[frameIndex];
+				chromagram = chromagramWrapper.wrap(chromagram, wrappedChromagram);
 			}
 
 			if (normalizationEnabled) {
@@ -374,8 +366,8 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 	 * @param frequency normalized frequency
 	 */
 	private double musicalBinByFrequency(double frequency) {
-		return FastMath.log(2, frequency * normalizedBaseFreqInv) * tonesPerOctave
-			* binsPerTone;
+		return FastMath.log(2, frequency * normalizedBaseFreqInv)
+			* binsPerOctave;
 	}
 
 	private double[] magnitudes(ComplexVector frame, double[] magnitudes) {
