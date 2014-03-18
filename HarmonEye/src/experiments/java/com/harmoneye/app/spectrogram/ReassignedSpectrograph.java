@@ -48,6 +48,7 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 	private double normalizedBaseFreqInv;
 	/** size of the target chromagram (log-frequency resampled spectrogram) */
 	private int chromagramSize;
+	private int wrappedChromagramSize;
 
 	/** a single frame of time-domain signal (amplitudes) of windowSize length */
 	private double[] amplitudeFrame;
@@ -57,18 +58,11 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 	private double[] secondDerivatives;
 	/** a single frame of magnitudes (only the positive freq. half) */
 	private double[] magnitudeSpectrum;
-
 	private double[] correlation;
 
 	private ShortTimeFourierTransform fft;
-
 	private HarmonicPattern harmonicPattern;
-
 	private BoxFilter boxFilter = new BoxFilter(boxFilterSize);
-
-	private int wrappedChromagramSize;
-
-	// private StandardDeviation stdDev = new StandardDeviation();
 
 	public ReassignedSpectrograph(int windowSize, double overlapRatio,
 		double sampleRate) {
@@ -163,10 +157,6 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 				secondDerivatives,
 				reassignedMagFrames,
 				i);
-
-			// reassignedMagFrames[i] = new double[chromagramSize];
-			// System.arraycopy(secondDerivatives, 0, reassignedMagFrames[i], 0,
-			// chromagramSize);
 
 			double percent = 10 * i * frameCountInv;
 
@@ -508,26 +498,10 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 		return MagnitudeSpectrogram.toLogMagnitudeSpectrum(frame, magnitudes);
 	}
 
-	// private ComplexVector transformFrame(double[] amplitudes,
-	// double[] amplitudeFrame, int index) {
-	// System.arraycopy(amplitudes, index, amplitudeFrame, 0, windowSize);
-	// return new ComplexVector(fft.transform(amplitudeFrame));
-	// }
-
 	private ComplexVector transformFrame(double[] amplitudeFrame,
 		ComplexVector spectrum) {
 		return fft.transform(amplitudeFrame, spectrum);
 	}
-
-	// private void threshold(double[] reassignedMagnitudes) {
-	// double threshold = 2.5 * stdDev.evaluate(reassignedMagnitudes,
-	// 0,
-	// reassignedMagnitudes.length);
-	// for (int i = 0; i < reassignedMagnitudes.length; i++) {
-	// reassignedMagnitudes[i] = reassignedMagnitudes[i] > threshold ? 1
-	// : 0;
-	// }
-	// }
 
 	private class HarmonicPattern {
 
