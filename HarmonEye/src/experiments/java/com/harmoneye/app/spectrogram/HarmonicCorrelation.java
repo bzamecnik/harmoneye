@@ -1,12 +1,12 @@
 package com.harmoneye.app.spectrogram;
 
-public class HarmonicCorrellation {
+public class HarmonicCorrelation {
 
 	private HarmonicPattern harmonicPattern;
 	private double[] correlation;
 	private int size;
 
-	public HarmonicCorrellation(HarmonicPattern harmonicPattern, int size) {
+	public HarmonicCorrelation(HarmonicPattern harmonicPattern, int size) {
 		this.harmonicPattern = harmonicPattern;
 		this.size = size;
 		this.correlation = new double[size];

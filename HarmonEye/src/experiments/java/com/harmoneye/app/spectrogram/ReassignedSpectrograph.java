@@ -63,7 +63,7 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 	private ComplexVector crossFreqTimeSpectrum;
 
 	private ShortTimeFourierTransform fft;
-	private HarmonicCorrellation harmonicCorrellation;
+	private HarmonicCorrelation harmonicCorrelation;
 	private HighPassFilter highPassFilter = new HighPassFilter(boxFilterSize);
 	private ChromagramWrapper chromagramWrapper;
 	private Normalizer l2Normalizer = new Normalizer(new L2Norm(),
@@ -108,7 +108,7 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 		
 		HarmonicPattern harmonicPattern = new HarmonicPattern(harmonicCount,
 			binsPerOctave);
-		harmonicCorrellation = new HarmonicCorrellation(harmonicPattern,
+		harmonicCorrelation = new HarmonicCorrelation(harmonicPattern,
 			chromagramSize);
 
 		chromagramWrapper = new ChromagramWrapper(tonesPerOctave, binsPerTone,
@@ -314,7 +314,7 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 			}
 
 			if (correlationEnabled) {
-				computeHarmonicCorrellation(chromagram);
+				computeHarmonicCorrelation(chromagram);
 			}
 
 			if (octaveWrapEnabled) {
@@ -337,8 +337,8 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 		return outputFrames;
 	}
 
-	private void computeHarmonicCorrellation(double[] chromagram) {
-		double[] correlation = harmonicCorrellation.correlate(chromagram);
+	private void computeHarmonicCorrelation(double[] chromagram) {
+		double[] correlation = harmonicCorrelation.correlate(chromagram);
 		// maxNormalizer.filter(correlation);
 
 		// mask out the chromagram by the correlation
