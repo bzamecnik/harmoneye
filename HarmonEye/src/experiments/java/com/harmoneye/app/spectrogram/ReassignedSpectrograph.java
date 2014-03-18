@@ -5,7 +5,6 @@ import org.apache.commons.math3.util.FastMath;
 
 import com.harmoneye.math.Modulo;
 import com.harmoneye.math.fft.ShortTimeFourierTransform;
-import com.harmoneye.math.filter.BoxFilter;
 import com.harmoneye.math.matrix.ComplexVector;
 import com.harmoneye.math.window.BlackmanWindow;
 
@@ -59,7 +58,7 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 
 	private ShortTimeFourierTransform fft;
 	private HarmonicPattern harmonicPattern;
-	private BoxFilter boxFilter = new BoxFilter(boxFilterSize);
+	private HighPassFilter highPassFilter = new HighPassFilter(boxFilterSize);
 
 	public ReassignedSpectrograph(int windowSize, double overlapRatio,
 		double sampleRate) {
@@ -287,7 +286,7 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 			double[] chromagram = reassignedMagFrames[frameIndex];
 
 			if (highPassFilterEnabled) {
-				highPassFilter(chromagram);
+				highPassFilter.filter(chromagram);
 			}
 
 			// normalize(reassignedMagnitudes);
@@ -373,14 +372,7 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 		}
 	}
 
-	private void highPassFilter(double[] values) {
-		double[] lowPass = boxFilter.filter(values);
-		for (int i = 0; i < values.length; i++) {
-			double value = values[i] - lowPass[i];
-			value = FastMath.max(value, 0);
-			values[i] = value;
-		}
-	}
+	
 
 	private void computeHarmonicCorrellation(double[] reassignedMagnitudes) {
 		if (correlation == null || correlation.length != chromagramSize) {
