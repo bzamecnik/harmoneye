@@ -335,7 +335,7 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 			}
 
 			if (postScalingFactor != 1) {
-				for (int i = 1; i < chromagram.length; i++) {
+				for (int i = 0; i < chromagram.length; i++) {
 					chromagram[i] *= postScalingFactor;
 				}
 			}
