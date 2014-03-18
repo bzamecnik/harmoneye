@@ -54,11 +54,10 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 	private double[] secondDerivatives;
 	/** a single frame of magnitudes (only the positive freq. half) */
 	private double[] magnitudeSpectrum;
-	private double[] correlation;
 
 	private ShortTimeFourierTransform fft;
-	private HarmonicPattern harmonicPattern;
-	private HighPassFilter highPassFilter = new HighPassFilter(boxFilterSize);
+	private HarmonicCorrellation harmonicCorrellation;
+	private HighPassFilter highPassFilter = new HighPassFilter(boxFilterSize);	
 
 	public ReassignedSpectrograph(int windowSize, double overlapRatio,
 		double sampleRate) {
@@ -86,7 +85,8 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 		this.fft = new ShortTimeFourierTransform(windowSize,
 			new BlackmanWindow());
 
-		harmonicPattern = new HarmonicPattern(harmonicCount, binsPerTone * tonesPerOctave);
+		HarmonicPattern harmonicPattern = new HarmonicPattern(harmonicCount, binsPerTone * tonesPerOctave);
+		harmonicCorrellation = new HarmonicCorrellation(harmonicPattern, chromagramSize);
 	}
 
 	public MagnitudeSpectrogram computeMagnitudeSpectrogram(SampledAudio audio) {
@@ -372,26 +372,9 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 		}
 	}
 
-	
-
-	private void computeHarmonicCorrellation(double[] reassignedMagnitudes) {
-		if (correlation == null || correlation.length != chromagramSize) {
-			correlation = new double[chromagramSize];
-		}
-		for (int i = 0; i < chromagramSize; i++) {
-			double acc = 0;
-
-			for (int harmonic = 0; harmonic < harmonicPattern.getLength(); harmonic++) {
-				int bin = i + harmonicPattern.getIndex(harmonic);
-				double weight = harmonicPattern.getWeight(harmonic);
-
-				if (bin < 0 || bin >= chromagramSize) {
-					continue;
-				}
-				acc += weight * reassignedMagnitudes[bin];
-			}
-			correlation[i] = acc;
-		}
+	private void computeHarmonicCorrellation(double[] chromagram) {
+		double[] correlation = harmonicCorrellation.correlate(chromagram);
+		// mask out the chromagram by the correlation
 		// max filter with kernel size 3
 		for (int i = 0; i < chromagramSize; i++) {
 			double max = correlation[i];
@@ -401,7 +384,7 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 			if (i + 1 < chromagramSize) {
 				max = FastMath.max(max, correlation[i + 1]);
 			}
-			reassignedMagnitudes[i] *= max;
+			chromagram[i] *= max;
 		}
 	}
 
