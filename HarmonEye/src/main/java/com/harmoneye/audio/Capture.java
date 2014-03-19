@@ -11,7 +11,7 @@ public class Capture implements Runnable {
 
 	// TODO: Automatically find out minimum usable buffer size.
 	// If its too small, buffer underruns make weird artifacts!!!
-	
+
 	private static final int DEFAULT_READ_BUFFER_SIZE_SAMPLES = 1024;
 
 	private Thread thread;
@@ -23,8 +23,16 @@ public class Capture implements Runnable {
 
 	private SoundConsumer soundConsumer;
 
-	public Capture(SoundConsumer soundConsumer, float sampleRate, int sampleSizeBits) {
+	public Capture(SoundConsumer soundConsumer, float sampleRate,
+		int sampleSizeBits) {
+		this(soundConsumer, sampleRate, sampleSizeBits,
+			DEFAULT_READ_BUFFER_SIZE_SAMPLES);
+	}
+
+	public Capture(SoundConsumer soundConsumer, float sampleRate,
+		int sampleSizeBits, int readBufferSizeSamples) {
 		this.soundConsumer = soundConsumer;
+		this.readBufferSizeInSamples = readBufferSizeSamples;
 
 		AudioFormat.Encoding encoding = AudioFormat.Encoding.PCM_SIGNED;
 		int channelCount = 1;
@@ -32,12 +40,12 @@ public class Capture implements Runnable {
 		int frameSizeBytes = channelCount * sampleSizeBytes;
 		boolean bigEndian = false;
 
-		format = new AudioFormat(encoding, sampleRate, sampleSizeBits, channelCount, frameSizeBytes, sampleRate,
-			bigEndian);
+		format = new AudioFormat(encoding, sampleRate, sampleSizeBits,
+			channelCount, frameSizeBytes, sampleRate, bigEndian);
 
-		readBufferSizeInSamples = DEFAULT_READ_BUFFER_SIZE_SAMPLES;
 		bufferSize = sampleSizeBytes * readBufferSizeInSamples;
-		System.out.println("buffer size: " + bufferSize + " B, " + readBufferSizeInSamples + " samples");
+		System.out.println("buffer size: " + bufferSize + " B, "
+			+ readBufferSizeInSamples + " samples");
 	}
 
 	public void start() {
