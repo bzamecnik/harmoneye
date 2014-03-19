@@ -1,5 +1,7 @@
 package com.harmoneye.app.spectrogram;
 
+import org.apache.commons.math3.util.FastMath;
+
 import com.harmoneye.math.Modulo;
 
 public class ChromagramWrapper {
@@ -32,22 +34,24 @@ public class ChromagramWrapper {
 	public double[] wrap(double[] chromaSpectrum, double[] wrappedChromaSpectrum) {
 		for (int srcBin = 0; srcBin < maxSourceIndex; srcBin++) {
 			double value = chromaSpectrum[srcBin];
-
-			double srcPitch = srcBin * binsPerToneInv - octaveBinShift;
-			int srcPitchInt = (int) Math.round(srcPitch);
-			if (circleOfFifthsEnabled) {
-				srcPitch = srcPitchInt * 7 + (srcPitch - srcPitchInt);
-				// map F as the first bin (make C key continuous)
-				// (F C G D A E B ...)
-				// srcPitch += 1;
-			}
-			int destBin = (int) Math.floor((srcPitch + 0.5)
-				* wrappedBinsPerTone);
-			int wrappedDestBin = Modulo.modulo(destBin, binsPerWrappedOctave);
-
+			int wrappedDestBin = (int) FastMath.floor(wrapBin(srcBin));
 			wrappedChromaSpectrum[wrappedDestBin] += value;
 		}
 
 		return wrappedChromaSpectrum;
+	}
+
+	public double wrapBin(double sourceBin) {
+		double srcPitch = sourceBin * binsPerToneInv - octaveBinShift;
+		int srcPitchInt = (int) FastMath.round(srcPitch);
+		if (circleOfFifthsEnabled) {
+			srcPitch = srcPitchInt * 7 + (srcPitch - srcPitchInt);
+			// map F as the first bin (make C key continuous)
+			// (F C G D A E B ...)
+			// srcPitch += 1;
+		}
+		double destBin = (srcPitch + 0.5) * wrappedBinsPerTone;
+		double wrappedDestBin = Modulo.modulo(destBin, binsPerWrappedOctave);
+		return wrappedDestBin;
 	}
 }
