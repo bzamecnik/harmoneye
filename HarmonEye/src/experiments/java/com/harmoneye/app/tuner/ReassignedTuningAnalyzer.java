@@ -31,6 +31,10 @@ public class ReassignedTuningAnalyzer implements SoundConsumer {
 
 	private double distToNeareastTone;
 
+	private double[] pitchHistory = new double[100];
+
+	private boolean pitchDetected;
+
 	public ReassignedTuningAnalyzer(int windowSize, double sampleRate) {
 		spectrograph = new StreamingReassignedSpectrograph(windowSize,
 			sampleRate);
@@ -42,9 +46,18 @@ public class ReassignedTuningAnalyzer implements SoundConsumer {
 		wrappedChromagram = outputFrame.getWrappedChromagram();
 		double[] chromagram = outputFrame.getChromagram();
 		findPitch(chromagram);
+		if (pitchDetected) {
+			System.arraycopy(pitchHistory,
+				1,
+				pitchHistory,
+				0,
+				pitchHistory.length - 1);
+			pitchHistory[pitchHistory.length - 1] = pitch;
+		}
 	}
 
 	private void findPitch(double[] chromagram) {
+		pitchDetected = false;
 		pitch = 0;
 		neareastTone = 0;
 		distToNeareastTone = 0;
@@ -56,7 +69,6 @@ public class ReassignedTuningAnalyzer implements SoundConsumer {
 		if (chromagram[maxChromaBin] < 0.1) {
 			return;
 		}
-		// pitch = maxChromaBin * sampleRate / chromagram.length;
 		double binFreq = spectrograph.frequencyForMusicalBin(maxChromaBin);
 		int linearBin = (int) FastMath.floor(spectrograph
 			.linearBinByFrequency(binFreq));
@@ -72,6 +84,7 @@ public class ReassignedTuningAnalyzer implements SoundConsumer {
 			* 12;
 		neareastTone = Modulo.modulo(Math.round(pitch - 0.5), 12) + 0.5;
 		distToNeareastTone = pitch - neareastTone;
+		pitchDetected = true;
 	}
 
 	private int findMaxBin(double[] values) {
@@ -111,4 +124,13 @@ public class ReassignedTuningAnalyzer implements SoundConsumer {
 	public double[] getSpectrum() {
 		return wrappedChromagram;
 	}
+
+	public double[] getPitchHistory() {
+		return pitchHistory;
+	}
+
+	public boolean isPitchDetected() {
+		return pitchDetected;
+	}
+
 }

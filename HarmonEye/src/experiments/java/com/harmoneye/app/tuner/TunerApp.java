@@ -57,11 +57,6 @@ public class TunerApp extends PApplet {
 	public void draw() {
 		background(1.0f);
 
-		// double pitch = tuningAnalyzer.getDetectedPitch();
-
-		// float y = (float)(1-pitch) * height;
-		// line(0, y, width, y);
-
 		double[] spectrum = tuningAnalyzer.getSpectrum();
 		if (spectrum == null) {
 			return;
@@ -76,8 +71,16 @@ public class TunerApp extends PApplet {
 		float yScale = height;
 
 		double pitch = tuningAnalyzer.getPitch();
-		boolean pitchDetected = pitch > 0;
+		boolean pitchDetected = tuningAnalyzer.isPitchDetected();
 
+
+		// grid
+		stroke(0.85f);
+		for (int i = 1; i <= 12; i++) {
+			float x = i / 12.0f * width;
+			line(x, 0, x, height);
+		}
+		
 		if (pitchDetected) {
 			{
 				float xSize = (float) (1 / 12.0 * width);
@@ -88,32 +91,42 @@ public class TunerApp extends PApplet {
 		}
 
 		// spectrum plot
-		stroke(0.75f);
-		for (int i = 1; i < spectrum.length; i++) {
-			float prevValue = (float) spectrum[i - 1];
-			float value = (float) spectrum[i];
-			line((i - 1) * xScale, prevValue * yScale, i * xScale, value
-				* yScale);
+//		stroke(0.75f);
+//		for (int i = 1; i < spectrum.length; i++) {
+//			float prevValue = (float) spectrum[i - 1];
+//			float value = (float) spectrum[i];
+//			line((i - 1) * xScale, prevValue * yScale, i * xScale, value
+//				* yScale);
+//		}
+
+//		if (pitchDetected) {
+//			// nearest tone line
+//			stroke(0.25f, 1, 1);
+//			float nearestX = (float) (tuningAnalyzer.getNearestTone() / 12.0 * width);
+//			line(nearestX, 0, nearestX, height);
+//
+//			// pitch line
+//			stroke(1, 1, 1);
+//			float pitchX = (float) (pitch / 12.0 * width);
+//			line(pitchX, 0, pitchX, height);
+//		}
+
+		// pitch curve
+		stroke(0);
+		double[] pitchHistory = tuningAnalyzer.getPitchHistory();
+		for (int i = 0; i < pitchHistory.length - 1; i++) {
+			double p1 = pitchHistory[i];
+			double p2 = pitchHistory[i + 1];
+			if (p1 <= 0 || p2 <= 0 || Math.abs(p1-p2) > 1) {
+				continue;
+			}
+			float x1 = (float) (p1 / 12.0 * width);
+			float x2 = (float) (p2 / 12.0 * width);
+			line(x1, i * height / pitchHistory.length, x2, (i + 1) * height
+				/ pitchHistory.length);
 		}
 
-		if (pitchDetected) {
-			// nearest tone line
-			stroke(0.25f, 1, 1);
-			float nearestX = (float) (tuningAnalyzer.getNearestTone() / 12.0 * width);
-			line(nearestX, 0, nearestX, height);
-
-			// pitch line
-			stroke(1, 1, 1);
-			float pitchX = (float) (pitch / 12.0 * width);
-			line(pitchX, 0, pitchX, height);
-		}
-
-		stroke(0.75f);
-		for (int i = 1; i <= 12; i++) {
-			float x = i / 12.0f * width;
-			line(x, 0, x, height);
-		}
-
+		// error indicator
 		{
 			double error = tuningAnalyzer.getDistToNearestTone();
 			fill(0.25f * (float) (1 - 2 * Math.abs(error)), 0.75f, 0.75f);
