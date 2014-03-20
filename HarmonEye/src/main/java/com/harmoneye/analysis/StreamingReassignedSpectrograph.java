@@ -237,7 +237,7 @@ public class StreamingReassignedSpectrograph {
 
 	private void computeHarmonicCorrellation(double[] chromagram) {
 		double[] correlation = harmonicCorrellation.correlate(chromagram);
-		maxNormalizer.filter(correlation);
+//		maxNormalizer.filter(correlation);
 		// mask out the chromagram by the correlation
 		int maxFilterSize = 1;
 		if (maxFilterSize > 1) {

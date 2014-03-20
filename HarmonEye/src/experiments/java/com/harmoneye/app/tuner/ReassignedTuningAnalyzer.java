@@ -31,29 +31,40 @@ public class ReassignedTuningAnalyzer implements SoundConsumer {
 
 	private double distToNeareastTone;
 
-	private double[] pitchHistory = new double[100];
+	private int historySize = 100;
+
+	private double[] pitchHistory = new double[historySize];
+	private double[] errorHistory = new double[historySize];
 
 	private boolean pitchDetected;
 
+	private double sampleRate;
+
+	private double[] samples;
+
 	public ReassignedTuningAnalyzer(int windowSize, double sampleRate) {
+		this.sampleRate = sampleRate;
 		spectrograph = new StreamingReassignedSpectrograph(windowSize,
 			sampleRate);
 	}
 
 	@Override
 	public void consume(double[] samples) {
+		this.samples = samples;
 		outputFrame = spectrograph.computeChromagram(samples);
 		wrappedChromagram = outputFrame.getWrappedChromagram();
 		double[] chromagram = outputFrame.getChromagram();
 		findPitch(chromagram);
 		if (pitchDetected) {
-			System.arraycopy(pitchHistory,
-				1,
-				pitchHistory,
-				0,
-				pitchHistory.length - 1);
+			shift(pitchHistory);
 			pitchHistory[pitchHistory.length - 1] = pitch;
+			shift(errorHistory);
+			errorHistory[errorHistory.length - 1] = distToNeareastTone;
 		}
+	}
+
+	private void shift(double[] values) {
+		System.arraycopy(values, 1, values, 0, values.length - 1);
 	}
 
 	private void findPitch(double[] chromagram) {
@@ -66,18 +77,22 @@ public class ReassignedTuningAnalyzer implements SoundConsumer {
 			return;
 		}
 		// too quiet
-		if (chromagram[maxChromaBin] < 0.1) {
+		if (chromagram[maxChromaBin] < 0.01) {
 			return;
 		}
 		double binFreq = spectrograph.frequencyForMusicalBin(maxChromaBin);
 		int linearBin = (int) FastMath.floor(spectrograph
 			.linearBinByFrequency(binFreq));
 		double secondD = outputFrame.getSecondDerivatives()[linearBin];
-		if (secondD > 0.1) {
+		if (Math.abs(secondD) > 0.1) {
 			return;
 		}
 		double[] instantFrequencies = outputFrame.getFrequencies();
 		double preciseFreq = instantFrequencies[linearBin];
+		if (preciseFreq <= 0) {
+			return;
+		}
+		// System.out.println(preciseFreq*sampleRate);
 		pitch = spectrograph.wrapMusicalBin(spectrograph
 			.musicalBinByFrequency(preciseFreq))
 			/ wrappedChromagram.length
@@ -129,8 +144,19 @@ public class ReassignedTuningAnalyzer implements SoundConsumer {
 		return pitchHistory;
 	}
 
+	public double[] getErrorHistory() {
+		return errorHistory;
+	}
+
 	public boolean isPitchDetected() {
 		return pitchDetected;
 	}
 
+	public OutputFrame getOutputFrame() {
+		return outputFrame;
+	}
+	
+	public double[] getSamples() {
+		return samples;
+	}
 }
