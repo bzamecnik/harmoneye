@@ -4,63 +4,79 @@ import org.apache.commons.math3.util.FastMath;
 
 import com.harmoneye.analysis.StreamingReassignedSpectrograph;
 import com.harmoneye.analysis.StreamingReassignedSpectrograph.OutputFrame;
+import com.harmoneye.audio.DoubleRingBuffer;
 import com.harmoneye.audio.SoundConsumer;
 import com.harmoneye.math.MaxNorm;
 import com.harmoneye.math.Modulo;
 import com.harmoneye.math.Norm;
 
-// TODO:
-// - use a ring buffer and process the samples not in consume()
-//   (allow arbitrary size of the input buffer)
-// - return a frame of features
-// - decorate this analyzer with a history (a ring buffer or a list)
-
 public class ReassignedTuningAnalyzer implements SoundConsumer {
 
-	private StreamingReassignedSpectrograph spectrograph;
+	int overlapFactor = 8;
+	private double historyInSecs = 3.0;
 
+	private DoubleRingBuffer samplesRingBuffer;
+	private StreamingReassignedSpectrograph spectrograph;
 	private Norm maxNorm = new MaxNorm();
 
-	private double pitch;
-
-	private OutputFrame outputFrame;
-
-	private double[] wrappedChromagram;
-
-	private double neareastTone;
-
-	private double distToNeareastTone;
-
-	private int historySize = 100;
-
-	private double[] pitchHistory = new double[historySize];
-	private double[] errorHistory = new double[historySize];
+	private int windowSize;
+	private int hopSize;
+	private int historySize;
 
 	private boolean pitchDetected;
-
-	private double sampleRate;
-
-	private double[] samples;
+	private double pitch;
+	private double neareastTone;
+	private double distToNeareastTone;
+	private OutputFrame outputFrame;
+	private double[] wrappedChromagram;
+	private double[] pitchHistory;
+	private double[] errorHistory;
+	private double[] sampleWindow;
 
 	public ReassignedTuningAnalyzer(int windowSize, double sampleRate) {
-		this.sampleRate = sampleRate;
+		this.windowSize = windowSize;
 		spectrograph = new StreamingReassignedSpectrograph(windowSize,
 			sampleRate);
+		samplesRingBuffer = new DoubleRingBuffer(4 * windowSize);
+		sampleWindow = new double[windowSize];
+
+		hopSize = windowSize / overlapFactor;
+
+		historySize = (int) (historyInSecs * sampleRate / hopSize);
+
+		pitchHistory = new double[historySize];
+		errorHistory = new double[historySize];
 	}
 
 	@Override
 	public void consume(double[] samples) {
-		this.samples = samples;
-		outputFrame = spectrograph.computeChromagram(samples);
-		wrappedChromagram = outputFrame.getWrappedChromagram();
-		double[] chromagram = outputFrame.getChromagram();
-		findPitch(chromagram);
-		if (pitchDetected) {
-			shift(pitchHistory);
-			pitchHistory[pitchHistory.length - 1] = pitch;
-			shift(errorHistory);
-			errorHistory[errorHistory.length - 1] = distToNeareastTone;
+		samplesRingBuffer.write(samples);
+	}
+
+	public void update() {
+		// StopWatch sw = new StopWatch();
+		// sw.start();
+		while (samplesRingBuffer.getCapacityForRead() > windowSize) {
+			samplesRingBuffer.read(windowSize, sampleWindow);
+			samplesRingBuffer.incrementReadIndex(hopSize);
+
+			if (maxNorm.norm(sampleWindow) < 1e-4) {
+				continue;
+			}
+
+			outputFrame = spectrograph.computeChromagram(sampleWindow);
+			wrappedChromagram = outputFrame.getWrappedChromagram();
+			double[] chromagram = outputFrame.getChromagram();
+			findPitch(chromagram);
+			if (pitchDetected) {
+				shift(pitchHistory);
+				pitchHistory[pitchHistory.length - 1] = pitch;
+				shift(errorHistory);
+				errorHistory[errorHistory.length - 1] = distToNeareastTone;
+			}
 		}
+		// sw.stop();
+		// System.out.println(sw.getNanoTime());
 	}
 
 	private void shift(double[] values) {
@@ -155,8 +171,8 @@ public class ReassignedTuningAnalyzer implements SoundConsumer {
 	public OutputFrame getOutputFrame() {
 		return outputFrame;
 	}
-	
+
 	public double[] getSamples() {
-		return samples;
+		return sampleWindow;
 	}
 }

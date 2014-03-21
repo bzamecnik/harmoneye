@@ -1,58 +1,46 @@
 package com.harmoneye.app.tuner;
 
-import org.apache.commons.cli.BasicParser;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.Options;
-
 import processing.core.PApplet;
 
-import com.harmoneye.analysis.StreamingReassignedSpectrograph.OutputFrame;
 import com.harmoneye.audio.Capture;
 
 public class TunerApp extends PApplet {
-	// private static final int FRAME_RATE = 30;
 
-	private static final long serialVersionUID = -1188263388156753697L;
+	private static final int WINDOW_SIZE = 4096;
+	private static final double SAMPLE_RATE = 44100;
+	private static final int BITS_PER_SAMPLE = 16;
+	private static final int INPUT_BUFFER_SIZE = 1024;
+	private static final int FRAME_RATE = 30;
+
+	// private static final String renderer = P2D;
+	private static final String renderer = "processing.core.PGraphicsRetina2D";
 
 	private static final String[] TONE_NAMES = { "C", "Db", "D", "Eb", "E",
 		"F", "Gb", "G", "Ab", "A", "Bb", "B" };
+
+	private static final long serialVersionUID = -1188263388156753697L;
 
 	public static void main(String args[]) {
 		PApplet.main(TunerApp.class.getName(), args);
 	}
 
-	private int windowSize = 4096;
-
-	private double sampleRate = 44100;
-	private int bitsPerSample = 16;
-
-	private int FRAME_RATE = (int) (sampleRate / windowSize);
-
 	private Capture audioCapture;
 	private ReassignedTuningAnalyzer tuningAnalyzer;
 
 	public void setup() {
+		size(1024, 480, renderer);
+		frameRate(FRAME_RATE);
 		frame.setTitle("Tuner");
+		colorMode(HSB, 1.0f);
+		smooth();
 		try {
-			prepareOptions();
-
-			size(1024, 480, JAVA2D);
-
-			// spectrograph = new StreamingReassignedSpectrograph(windowSize,
-			// overlapRatio, sampleRate);
-			tuningAnalyzer = new ReassignedTuningAnalyzer(windowSize,
-				sampleRate);
-			audioCapture = new Capture(tuningAnalyzer, (float) sampleRate,
-				bitsPerSample, windowSize);
+			tuningAnalyzer = new ReassignedTuningAnalyzer(WINDOW_SIZE,
+				SAMPLE_RATE);
+			audioCapture = new Capture(tuningAnalyzer, (float) SAMPLE_RATE,
+				BITS_PER_SAMPLE, INPUT_BUFFER_SIZE);
 
 			tuningAnalyzer.start();
 			audioCapture.start();
-
-			colorMode(HSB, 1.0f);
-			smooth();
-
-			frameRate(FRAME_RATE);
 		} catch (Exception e) {
 			e.printStackTrace();
 			exit();
@@ -60,48 +48,13 @@ public class TunerApp extends PApplet {
 	}
 
 	public void draw() {
+		tuningAnalyzer.update();
+
 		background(1.0f);
-
-		pushMatrix();
-
-		textSize(32);
-		textAlign(CENTER, CENTER);
-
-		scale(1, -1);
-		translate(0, -height);
 
 		// drawSingleTone();
 
-		// drawSecondDerivatives();
-
 		drawWholeOctave();
-
-		popMatrix();
-
-		// tone names
-		fill(0, 0, 0.75f);
-		for (int i = 0; i < 12; i++) {
-			text(TONE_NAMES[i], (i + 0.5f) / 12.0f * width, height - 32);
-		}
-	}
-
-	private void drawSecondDerivatives() {
-		OutputFrame outputFrame = tuningAnalyzer.getOutputFrame();
-		if (outputFrame == null) {
-			return;
-		}
-		double[] values = outputFrame.getSecondDerivatives();
-		int length = 500;// values.length;
-		for (int i = 0; i < length - 1; i++) {
-			double v1 = values[i];
-			double v2 = values[i + 1];
-			// if(Math.abs(v1)>0.01||Math.abs(v2)>0.01){
-			// continue;
-			// }
-			float y1 = (float) ((v1 * 0.25 + 0.5) * height);
-			float y2 = (float) ((v2 * 0.25 + 0.5) * height);
-			line(i * width / length, y1, (i + 1) * width / length, y2);
-		}
 	}
 
 	private void drawSingleTone() {
@@ -109,8 +62,12 @@ public class TunerApp extends PApplet {
 		// boolean pitchDetected = tuningAnalyzer.isPitchDetected();
 
 		// pitch curve
-		stroke(0);
+
 		double[] history = tuningAnalyzer.getErrorHistory();
+		if (history == null) {
+			return;
+		}
+		stroke(0);
 		for (int i = 0; i < history.length - 1; i++) {
 			// double p1 = history[i] + 0.5;
 			// double p2 = history[i + 1] + 0.5;
@@ -128,19 +85,22 @@ public class TunerApp extends PApplet {
 	}
 
 	private void drawWholeOctave() {
+		float margin = 64 + 20;
+
+		// grid
+		stroke(0.85f);
+		for (int i = 1; i <= 12; i++) {
+			float x = i / 12.0f * width;
+			line(x, 0, x, height);
+		}
+
 		double[] spectrum = tuningAnalyzer.getSpectrum();
 		if (spectrum == null) {
 			return;
 		}
 
-		float xScale = width / (float) spectrum.length;
-		float yScale = height;
-
-		double pitch = tuningAnalyzer.getPitch();
 		boolean pitchDetected = tuningAnalyzer.isPitchDetected();
-
-		float margin = 64+20;
-
+		
 		if (pitchDetected) {
 			{
 				float xSize = (float) (1 / 12.0 * width);
@@ -149,17 +109,9 @@ public class TunerApp extends PApplet {
 				rect(x, 0, xSize, height);
 			}
 		}
-		
-		// grid
-		stroke(0.85f);
-		for (int i = 1; i <= 12; i++) {
-			float x = i / 12.0f * width;
-			line(x, 0, x, height);
-		}
-		line(0, margin, width, margin);
-		line(0, margin-20, width, margin-20);
 
-		
+		line(0, height - margin, width, height - margin);
+		line(0, height - (margin - 20), width, height - (margin - 20));
 
 		// spectrum plot
 		// stroke(0.75f);
@@ -174,7 +126,7 @@ public class TunerApp extends PApplet {
 			// nearest tone line
 			stroke(0.25f, 0.5f, 0.5f);
 			float nearestX = (float) (tuningAnalyzer.getNearestTone() / 12.0 * width);
-			line(nearestX, margin, nearestX, height);
+			line(nearestX, 0, nearestX, height - margin);
 			//
 			// // pitch line
 			// stroke(1, 1, 1);
@@ -186,10 +138,11 @@ public class TunerApp extends PApplet {
 		{
 
 			float h = height - margin;
-			stroke(0);
+			
 			double[] pitchHistory = tuningAnalyzer.getPitchHistory();
 			double maxSkip = 0.7;
 			for (int i = 0; i < pitchHistory.length - 1; i++) {
+				stroke(1 - ((pitchDetected ? 1 : 0.25f)*(i/(float)pitchHistory.length)));
 				double p1 = pitchHistory[i];
 				double p2 = pitchHistory[i + 1];
 				float x1 = (float) (p1 / 12.0 * width);
@@ -199,8 +152,8 @@ public class TunerApp extends PApplet {
 				} else if (p1 - p2 < -maxSkip) {
 					x2 = x1;
 				}
-				line(x1, margin + i * h / pitchHistory.length, x2, margin
-					+ (i + 1) * h / pitchHistory.length);
+				line(x1, i * h / pitchHistory.length, x2, (i + 1) * h
+					/ pitchHistory.length);
 			}
 		}
 
@@ -211,20 +164,15 @@ public class TunerApp extends PApplet {
 			noStroke();
 			float x = width / 2;
 			float xSize = (float) (error * width);
-			rect(x, 64, xSize, 20);
+			rect(x, height - margin, xSize, 20);
 		}
-	}
 
-	private void prepareOptions() throws Exception {
-		Options options = new Options();
-		options.addOption("w", "window-size", true, "Window size");
-		options.addOption("l", "overlap-factor", true, "Overlap factor");
-
-		CommandLineParser parser = new BasicParser();
-		CommandLine cmd = parser.parse(options, args);
-
-		if (cmd.hasOption("w")) {
-			windowSize = Integer.valueOf(cmd.getOptionValue("w"));
+		// tone names
+		textSize(32);
+		textAlign(CENTER, CENTER);
+		for (int i = 0; i < 12; i++) {
+			fill(0, 0, (pitchDetected && (int)tuningAnalyzer.getNearestTone() == i) ? 0 : 0.75f);
+			text(TONE_NAMES[i], (i + 0.5f) / 12.0f * width, height - 32);
 		}
 	}
 
