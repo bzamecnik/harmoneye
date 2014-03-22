@@ -155,12 +155,12 @@ public class TunerApp extends PApplet {
 		// // line(pitchX, 0, pitchX, height);
 		// }
 
+		double[] pitchHistory = tuningAnalyzer.getPitchHistory();
+		double[] errorHistory = tuningAnalyzer.getErrorHistory();
+
 		// pitch curve
 		{
-
 			float h = height - margin;
-
-			double[] pitchHistory = tuningAnalyzer.getPitchHistory();
 			double maxSkip = 0.7;
 			for (int i = 0; i < pitchHistory.length - 1; i++) {
 				stroke(1 - ((pitchDetected ? 1 : 0.25f) * (i / (float) pitchHistory.length)));
@@ -173,6 +173,8 @@ public class TunerApp extends PApplet {
 				} else if (p1 - p2 < -maxSkip) {
 					x2 = x1;
 				}
+				double error = errorHistory[i];
+				stroke(errorHue(error), 0.75f, 0.75f);
 				line(x1, height - i * h / pitchHistory.length, x2, height
 					- (i + 1) * h / pitchHistory.length);
 			}
@@ -195,15 +197,25 @@ public class TunerApp extends PApplet {
 		ellipseMode(RADIUS);
 		noStroke();
 		for (int i = 0; i < 12; i++) {
-			fill(0,
-				0,
-				(pitchDetected && (int) tuningAnalyzer.getNearestTone() == i) ? 0
-					: 0.75f);
 			float x = (i + 0.5f) / 12.0f * width;
 			float y = width / (12 * 2.0f);
+			boolean isSelectedTone = pitchDetected
+				&& (int) tuningAnalyzer.getNearestTone() == i;
+			if (isSelectedTone) {
+				fill(errorHue(errorHistory[errorHistory.length - 1]),
+					0.75f,
+					0.75f);
+			} else {
+				fill(0, 0, 0.75f);
+			}
+
 			text(TONE_NAMES[i], x, y);
 			ellipse(x, margin - 3, 3, 3);
 		}
+	}
+
+	private float errorHue(double error) {
+		return 0.25f * (float) (1 - 2 * Math.abs(error));
 	}
 
 	@Override
