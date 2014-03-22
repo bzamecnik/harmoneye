@@ -27,6 +27,8 @@ public class TunerApp extends PApplet {
 	private Capture audioCapture;
 	private ReassignedTuningAnalyzer tuningAnalyzer;
 
+	private float[] toneSelectionWeights = new float[12];
+
 	public void setup() {
 		size(1024, 480, renderer);
 		frameRate(FRAME_RATE);
@@ -49,6 +51,18 @@ public class TunerApp extends PApplet {
 
 	public void draw() {
 		tuningAnalyzer.update();
+
+		float incr = 1 / (0.25f * frameRate);
+		for (int i = 0; i < toneSelectionWeights.length; i++) {
+			if (tuningAnalyzer.isPitchDetected()
+				&& (int) tuningAnalyzer.getNearestTone() == i) {
+				toneSelectionWeights[i] = Math.min(1, toneSelectionWeights[i]
+					+ incr);
+			} else {
+				toneSelectionWeights[i] = Math.max(0, toneSelectionWeights[i]
+					- incr);
+			}
+		}
 
 		background(1.0f);
 
@@ -90,11 +104,11 @@ public class TunerApp extends PApplet {
 
 		boolean pitchDetected = tuningAnalyzer.isPitchDetected();
 
-		if (pitchDetected) {
-			{
+		for (int i = 0; i < toneSelectionWeights.length; i++) {
+			if (toneSelectionWeights[i] > 0) {
 				float xSize = (float) (1 / 12.0 * width);
-				float x = (float) ((tuningAnalyzer.getNearestTone() - 0.5) * xSize);
-				fill(0, 0, 0.95f);
+				float x = (float) ((i) * xSize);
+				fill(0, 0, 1 - 0.05f * toneSelectionWeights[i]);
 				rect(x, 0, xSize, height);
 			}
 		}
