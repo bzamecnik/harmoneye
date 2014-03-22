@@ -122,7 +122,7 @@ public class TunerApp extends PApplet {
 		// tone center lines
 		for (int i = 0; i < 12; i++) {
 			float x = (i + 0.5f) / 12.0f * width;
-			line(x, 0, x, height - margin);
+			line(x, height, x, margin);
 		}
 
 		// double[] spectrum = tuningAnalyzer.getSpectrum();
@@ -173,8 +173,8 @@ public class TunerApp extends PApplet {
 				} else if (p1 - p2 < -maxSkip) {
 					x2 = x1;
 				}
-				line(x1, i * h / pitchHistory.length, x2, (i + 1) * h
-					/ pitchHistory.length);
+				line(x1, height - i * h / pitchHistory.length, x2, height
+					- (i + 1) * h / pitchHistory.length);
 			}
 		}
 
@@ -200,9 +200,9 @@ public class TunerApp extends PApplet {
 				(pitchDetected && (int) tuningAnalyzer.getNearestTone() == i) ? 0
 					: 0.75f);
 			float x = (i + 0.5f) / 12.0f * width;
-			float y = height - width / (12 * 2.0f);
+			float y = width / (12 * 2.0f);
 			text(TONE_NAMES[i], x, y);
-			ellipse(x, height - margin + 3, 3, 3);
+			ellipse(x, margin - 3, 3, 3);
 		}
 	}
 
