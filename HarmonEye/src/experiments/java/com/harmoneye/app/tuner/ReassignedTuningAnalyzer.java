@@ -113,7 +113,7 @@ public class ReassignedTuningAnalyzer implements SoundConsumer {
 			.musicalBinByFrequency(preciseFreq))
 			/ wrappedChromagram.length
 			* 12;
-		neareastTone = Modulo.modulo(Math.round(pitch - 0.5), 12) + 0.5;
+		neareastTone = Modulo.modulo(Math.round(pitch), 12);
 		distToNeareastTone = pitch - neareastTone;
 		pitchDetected = true;
 	}

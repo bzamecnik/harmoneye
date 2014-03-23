@@ -112,7 +112,7 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 
 		chromagramWrapper = new ChromagramWrapper(tonesPerOctave, binsPerTone,
 			wrappedBinsPerTone, chromagramSize, octaveBinShift,
-			circleOfFifthsEnabled);
+			circleOfFifthsEnabled, false);
 	}
 
 	public MagnitudeSpectrogram computeMagnitudeSpectrogram(SampledAudio audio) {

@@ -15,13 +15,16 @@ public class ChromagramWrapper {
 
 	private double binsPerToneInv;
 
+	private boolean tonesAtZero;
+
 	public ChromagramWrapper(int tonesPerOctave, int binsPerTone,
 		int wrappedBinsPerTone, int chromaSpectrumSize, int octaveBinShift,
-		boolean circleOfFifthsEnabled) {
+		boolean circleOfFifthsEnabled, boolean tonesAtZero) {
 
 		this.wrappedBinsPerTone = wrappedBinsPerTone;
 		this.octaveBinShift = octaveBinShift;
 		this.circleOfFifthsEnabled = circleOfFifthsEnabled;
+		this.tonesAtZero = tonesAtZero;
 
 		binsPerToneInv = 1.0 / binsPerTone;
 		binsPerWrappedOctave = tonesPerOctave * wrappedBinsPerTone;
@@ -50,7 +53,7 @@ public class ChromagramWrapper {
 			// (F C G D A E B ...)
 			// srcPitch += 1;
 		}
-		double destBin = (srcPitch + 0.5) * wrappedBinsPerTone;
+		double destBin = (srcPitch + (tonesAtZero ? 0 : 0.5)) * wrappedBinsPerTone;
 		double wrappedDestBin = Modulo.modulo(destBin, binsPerWrappedOctave);
 		return wrappedDestBin;
 	}
