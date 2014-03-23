@@ -72,7 +72,8 @@ public class TunerApp extends PApplet {
 		}
 
 		if (movementEnabled) {
-			double diff = phaseUnwrappedDiff(currentTone, centerPitch);
+			double diff = tuningAnalyzer.phaseUnwrappedDiff(currentTone,
+				centerPitch);
 			float velocity = 0.1f * (float) diff;
 			if (Math.abs(diff) > 0.01) {
 				centerPitch += velocity;
@@ -221,17 +222,6 @@ public class TunerApp extends PApplet {
 
 	double mod(double value) {
 		return ((value % 12) + 12) % 12;
-	}
-
-	double phaseUnwrappedDiff(double u, double v) {
-		double diff = u - v;
-		// simple phase unwrapping
-		if (diff > 6 && u > v) {
-			diff -= 12;
-		} else if (diff < -6 && u < v) {
-			diff += 12;
-		}
-		return diff;
 	}
 
 	double smoothstep(double x) {

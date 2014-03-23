@@ -114,7 +114,7 @@ public class ReassignedTuningAnalyzer implements SoundConsumer {
 			/ wrappedChromagram.length
 			* 12;
 		neareastTone = Modulo.modulo(Math.round(pitch), 12);
-		distToNeareastTone = pitch - neareastTone;
+		distToNeareastTone = phaseUnwrappedDiff(pitch, neareastTone);
 		pitchDetected = true;
 	}
 
@@ -130,6 +130,17 @@ public class ReassignedTuningAnalyzer implements SoundConsumer {
 		return 0;
 	}
 
+	double phaseUnwrappedDiff(double u, double v) {
+		double diff = u - v;
+		// simple phase unwrapping
+		if (diff > 6 && u > v) {
+			diff -= 12;
+		} else if (diff < -6 && u < v) {
+			diff += 12;
+		}
+		return diff;
+	}
+	
 	public void stop() {
 		// TODO Auto-generated method stub
 
