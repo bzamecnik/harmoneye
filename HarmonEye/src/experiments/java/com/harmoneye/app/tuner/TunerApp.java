@@ -10,7 +10,7 @@ public class TunerApp extends PApplet {
 	private static final double SAMPLE_RATE = 44100;
 	private static final int BITS_PER_SAMPLE = 16;
 	private static final int INPUT_BUFFER_SIZE = 1024;
-	private static final int FRAME_RATE = 30;
+	// private static final int FRAME_RATE = 30;
 
 	private static final String renderer = P3D;
 	// private static final String renderer =
@@ -21,22 +21,26 @@ public class TunerApp extends PApplet {
 
 	private static final long serialVersionUID = -1188263388156753697L;
 
-	public static void main(String args[]) {
-		PApplet.main(TunerApp.class.getName(), args);
-	}
-
 	private Capture audioCapture;
 	private ReassignedTuningAnalyzer tuningAnalyzer;
 
 	private float[] toneSelectionWeights = new float[12];
 
-	int currentTone = 0;
-	float centerPitch = 5.5f;// currentTone;
+	private int currentTone = 0;
+	private float centerPitch = 5.5f;// currentTone;
 
 	private boolean movementEnabled = false;
 
+	// private ScalarExpSmoother errorSmoother = new ScalarExpSmoother(0.1);
+	// private double e;
+
+	public static void main(String args[]) {
+		PApplet.main(TunerApp.class.getName(), args);
+	}
+
 	public void setup() {
 		size(1024, 480, renderer);
+		// size(320, 480, renderer);
 		// frameRate(FRAME_RATE);
 		frame.setTitle("Tuner");
 		colorMode(HSB, 1.0f);
@@ -84,7 +88,7 @@ public class TunerApp extends PApplet {
 
 		background(1.0f);
 
-		// drawSingleTone();
+		drawSingleTone();
 
 		drawWholeOctave();
 	}
@@ -101,17 +105,41 @@ public class TunerApp extends PApplet {
 
 		strokeWeight(1.5f);
 		stroke(0.85f);
-		float h = height - margin;
-		line(width / 2, 0, width / 2, height);
+		float yStep = 1.0f / history.length;
+		float h = (height - margin) * yStep;
+		int xHalf = width / 2;
+		line(xHalf, margin, xHalf, height);
 		for (int i = 0; i < history.length - 1; i++) {
 			double p1 = history[i] + 0.5;
 			double p2 = history[i + 1] + 0.5;
 			float x1 = (float) (p1 * width);
 			float x2 = (float) (p2 * width);
 			stroke(errorHue(p1 - 0.5), 0.75f, 0.75f);
-			line(x1, height - i * h, x2, height - (i + 1) * h);
-		}
 
+			if (Math.abs(p1 - p2) <= 0.5) {
+				float y1 = height - i * h;
+				line(x1, y1, x2, height - (i + 1) * h);
+			} else {
+				// the line crosses left border
+				if (p1 < p2) {
+					float y1 = height - i * h;
+					float y2 = height - (float) (i + (-p1) / (-1 + p2 - p1))
+						* h;
+					line(x1, y1, 0, y2);
+					y2 = height - (i + 1) * h;
+					line(width, y2, x2, y2);
+				}
+				// the line crosses right border
+				if (p1 >= p2) {
+					float y1 = height - i * h;
+					float y2 = height - (float) (i + (1 - p1) / (1 + p2 - p1))
+						* h;
+					line(x1, y1, width, y2);
+					y2 = height - (i + 1) * h;
+					line(0, y2, x2, y2);
+				}
+			}
+		}
 	}
 
 	private void drawWholeOctave() {
@@ -119,26 +147,32 @@ public class TunerApp extends PApplet {
 
 		boolean pitchDetected = tuningAnalyzer.isPitchDetected();
 
+		noStroke();
 		for (int i = 0; i < toneSelectionWeights.length; i++) {
 			if (toneSelectionWeights[i] > 0) {
-				float x = (float) (lensify(mod(i - 0.5 + 6 - centerPitch) / 12.0) * width);
-				float xSize = (float) ((lensify(mod(i + 0.5 + 6 - centerPitch) / 12.0) - lensify(mod(i
-					- 0.5 + 6 - centerPitch) / 12.0)) * width);
+				double from = mod(i - 0.5 + 6 - centerPitch) / 12.0;
+				double to = mod(i + 0.5 + 6 - centerPitch) / 12.0;
+				if (to < from) {
+					to = 1;
+				}
+				float xFrom = (float) (lensify(from) * width);
+				float xTo = (float) (lensify(to) * width);
+				float xSize = xTo - xFrom;
 				fill(0, 0, 1 - 0.05f * toneSelectionWeights[i]);
-				rect(x, 0, xSize, height);
+				rect(xFrom, 0, xSize, height);
 			}
 		}
 
 		// tone center lines
-		for (int i = 0; i < 12; i++) {
-			float pos = (float) lensify(mod(i + 6 - centerPitch) / 12.0);
-			float x = pos * width;
-			stroke(movementEnabled ? (0.5f + (float) Math.abs(pos - 0.5))
-				: 0.85f);
-			line(x, height, x, margin);
-		}
+		// for (int i = 0; i < 12; i++) {
+		// float pos = (float) lensify(mod(i + 6 - centerPitch) / 12.0);
+		// float x = pos * width;
+		// stroke(movementEnabled ? (0.5f + (float) Math.abs(pos - 0.5))
+		// : 0.85f);
+		// line(x, height, x, margin);
+		// }
 
-		double[] pitchHistory = tuningAnalyzer.getPitchHistory();
+		// double[] pitchHistory = tuningAnalyzer.getPitchHistory();
 		double[] errorHistory = tuningAnalyzer.getErrorHistory();
 
 		if (pitchDetected) {
@@ -146,31 +180,32 @@ public class TunerApp extends PApplet {
 		}
 
 		// pitch curve
-		{
-			float h = height - margin;
-			double maxSkip = 0.7 / 12;
-			float yStep = 1.0f / pitchHistory.length;
-			for (int i = 0; i < pitchHistory.length - 1; i++) {
-				double p1 = mod(pitchHistory[i] - centerPitch + 6) / 12.0;
-				double p2 = mod(pitchHistory[i + 1] - centerPitch + 6) / 12.0;
-				if (p1 - p2 > maxSkip) {
-					p1 = p2;
-				} else if (p1 - p2 < -maxSkip) {
-					p2 = p1;
-				}
-				float x1 = (float) lensify(p1) * width;
-				float x2 = (float) lensify(p2) * width;
-
-				double error = errorHistory[i];
-				float weight = (i * yStep);
-				stroke(errorHue(error),
-					0.25f + 0.75f * weight,
-					1 - 0.25f * weight);
-				line(x1, height - i * h * yStep, x2, height - (i + 1) * h
-					* yStep);
-			}
-
-		}
+		// {
+		// float h = height - margin;
+		// double maxSkip = 0.7 / 12;
+		// float yStep = 1.0f / pitchHistory.length;
+		// // System.out.println(Arrays.toString(pitchHistory));
+		// for (int i = 0; i < pitchHistory.length - 1; i++) {
+		// double p1 = mod(pitchHistory[i] - centerPitch + 6) / 12.0;
+		// double p2 = mod(pitchHistory[i + 1] - centerPitch + 6) / 12.0;
+		// if (p1 - p2 > maxSkip) {
+		// p1 = p2;
+		// } else if (p1 - p2 < -maxSkip) {
+		// p2 = p1;
+		// }
+		// float x1 = (float) lensify(p1) * width;
+		// float x2 = (float) lensify(p2) * width;
+		//
+		// double error = errorHistory[i];
+		// float weight = (i * yStep);
+		// stroke(errorHue(error),
+		// 0.25f + 0.75f * weight,
+		// 1 - 0.25f * weight);
+		// line(x1, height - i * h * yStep, x2, height - (i + 1) * h
+		// * yStep);
+		// }
+		//
+		// }
 
 		// error indicator
 		// {
@@ -206,6 +241,32 @@ public class TunerApp extends PApplet {
 			text(TONE_NAMES[i], x, y);
 			ellipse(x, margin - 3, 3, 3);
 		}
+
+		// error magnitude indicator
+		// double error = Math.abs(errorHistory[errorHistory.length - 1]);
+
+		// double precisionOrder = 8;
+		// if (tuningAnalyzer.isPitchDetected()) {
+		// // if (error == 0) {
+		// // e = 1;
+		// // } else {
+		// // e = Math.min(-FastMath.log(10, error), precisionOrder) /
+		// precisionOrder;
+		// // }
+		// // e = errorSmoother.smooth(e);
+		// e = error;
+		// }
+		// fill(1);
+		// rect(0, height - margin, width, height);
+		// // System.out.println(error + " " + e);
+		// fill(errorHue(error), 0.75f, 0.9f);
+		// rect((float) (0.5 * (1 - e) * width), height - margin, (float) (e *
+		// width), height);
+		// stroke(0.75f);
+		// for (int i = 0; i < 2 * precisionOrder; i++) {
+		// float x = i * width / (2 * (float)precisionOrder);
+		// line(x, height - margin, x, height);
+		// }
 	}
 
 	private float errorHue(double error) {

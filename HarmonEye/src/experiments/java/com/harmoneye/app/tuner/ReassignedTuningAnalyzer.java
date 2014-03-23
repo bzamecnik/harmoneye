@@ -32,9 +32,12 @@ public class ReassignedTuningAnalyzer implements SoundConsumer {
 	private double[] pitchHistory;
 	private double[] errorHistory;
 	private double[] sampleWindow;
+	private double frequency;
+	private double sampleRate;
 
 	public ReassignedTuningAnalyzer(int windowSize, double sampleRate) {
 		this.windowSize = windowSize;
+		this.sampleRate = sampleRate;
 		spectrograph = new StreamingReassignedSpectrograph(windowSize,
 			sampleRate);
 		samplesRingBuffer = new DoubleRingBuffer(4 * windowSize);
@@ -109,6 +112,7 @@ public class ReassignedTuningAnalyzer implements SoundConsumer {
 			return;
 		}
 		// System.out.println(preciseFreq*sampleRate);
+		frequency = preciseFreq * sampleRate;
 		pitch = spectrograph.wrapMusicalBin(spectrograph
 			.musicalBinByFrequency(preciseFreq))
 			/ wrappedChromagram.length
@@ -185,5 +189,9 @@ public class ReassignedTuningAnalyzer implements SoundConsumer {
 
 	public double[] getSamples() {
 		return sampleWindow;
+	}
+	
+	public double getFrequency() {
+		return frequency;
 	}
 }

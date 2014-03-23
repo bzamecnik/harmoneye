@@ -1,6 +1,6 @@
 package com.harmoneye.analysis;
 
-class MovingAverageAccumulator {
+public class MovingAverageAccumulator {
 	double[] data;
 	int frameCount;
 
