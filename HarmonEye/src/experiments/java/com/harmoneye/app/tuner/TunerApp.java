@@ -12,8 +12,9 @@ public class TunerApp extends PApplet {
 	private static final int INPUT_BUFFER_SIZE = 1024;
 	private static final int FRAME_RATE = 30;
 
-	// private static final String renderer = P2D;
-	private static final String renderer = "processing.core.PGraphicsRetina2D";
+	private static final String renderer = P3D;
+	// private static final String renderer =
+	// "processing.core.PGraphicsRetina2D";
 
 	private static final String[] TONE_NAMES = { "C", "Db", "D", "Eb", "E",
 		"F", "Gb", "G", "Ab", "A", "Bb", "B" };
@@ -29,9 +30,14 @@ public class TunerApp extends PApplet {
 
 	private float[] toneSelectionWeights = new float[12];
 
+	int currentTone = 0;
+	float centerPitch = 5.5f;// currentTone;
+
+	private boolean movementEnabled = false;
+
 	public void setup() {
 		size(1024, 480, renderer);
-		frameRate(FRAME_RATE);
+		// frameRate(FRAME_RATE);
 		frame.setTitle("Tuner");
 		colorMode(HSB, 1.0f);
 		smooth();
@@ -47,6 +53,7 @@ public class TunerApp extends PApplet {
 			e.printStackTrace();
 			exit();
 		}
+		// noLoop();
 	}
 
 	public void draw() {
@@ -64,6 +71,16 @@ public class TunerApp extends PApplet {
 			}
 		}
 
+		if (movementEnabled) {
+			double diff = phaseUnwrappedDiff(currentTone, centerPitch);
+			float velocity = 0.1f * (float) diff;
+			if (Math.abs(diff) > 0.01) {
+				centerPitch += velocity;
+			} else {
+				centerPitch = currentTone;
+			}
+		}
+
 		background(1.0f);
 
 		// drawSingleTone();
@@ -72,112 +89,86 @@ public class TunerApp extends PApplet {
 	}
 
 	private void drawSingleTone() {
-		// double pitch = tuningAnalyzer.getPitch();
-		// boolean pitchDetected = tuningAnalyzer.isPitchDetected();
-
 		// pitch curve
 
 		double[] history = tuningAnalyzer.getErrorHistory();
 		if (history == null) {
 			return;
 		}
-		stroke(0);
-		for (int i = 0; i < history.length - 1; i++) {
-			// double p1 = history[i] + 0.5;
-			// double p2 = history[i + 1] + 0.5;
-			// float x1 = (float) (p1 * width);
-			// float x2 = (float) (p2 * width);
-			// line(x1, i * height / history.length, x2, (i + 1) * height
-			// / history.length);
 
+		float margin = width / 12f;
+
+		strokeWeight(1.5f);
+		stroke(0.85f);
+		float h = height - margin;
+		line(width / 2, 0, width / 2, height);
+		for (int i = 0; i < history.length - 1; i++) {
 			double p1 = history[i] + 0.5;
+			double p2 = history[i + 1] + 0.5;
 			float x1 = (float) (p1 * width);
-			line(width / 2, i * height / history.length, x1, i * height
-				/ history.length);
+			float x2 = (float) (p2 * width);
+			stroke(errorHue(p1 - 0.5), 0.75f, 0.75f);
+			line(x1, height - i * h, x2, height - (i + 1) * h);
 		}
 
 	}
 
 	private void drawWholeOctave() {
-		// float margin = 64;// + 20;
 		float margin = width / 12f;
 
 		boolean pitchDetected = tuningAnalyzer.isPitchDetected();
 
 		for (int i = 0; i < toneSelectionWeights.length; i++) {
 			if (toneSelectionWeights[i] > 0) {
-				float xSize = (float) (1 / 12.0 * width);
-				float x = (float) ((i) * xSize);
+				float x = (float) (lensify(mod(i - 0.5 + 6 - centerPitch) / 12.0) * width);
+				float xSize = (float) ((lensify(mod(i + 0.5 + 6 - centerPitch) / 12.0) - lensify(mod(i
+					- 0.5 + 6 - centerPitch) / 12.0)) * width);
 				fill(0, 0, 1 - 0.05f * toneSelectionWeights[i]);
 				rect(x, 0, xSize, height);
 			}
 		}
 
-		// grid
-		stroke(0.85f);
-		// for (int i = 1; i <= 12; i++) {
-		// float x = i / 12.0f * width;
-		// line(x, 0, x, height);
-		// }
 		// tone center lines
 		for (int i = 0; i < 12; i++) {
-			float x = (i + 0.5f) / 12.0f * width;
+			float pos = (float) lensify(mod(i + 6 - centerPitch) / 12.0);
+			float x = pos * width;
+			stroke(movementEnabled ? (0.5f + (float) Math.abs(pos - 0.5))
+				: 0.85f);
 			line(x, height, x, margin);
 		}
-
-		// double[] spectrum = tuningAnalyzer.getSpectrum();
-		// if (spectrum == null) {
-		// return;
-		// }
-
-		// line(0, height - margin, width, height - margin);
-		// line(0, height - (margin - 20), width, height - (margin - 20));
-
-		// spectrum plot
-		// stroke(0.75f);
-		// for (int i = 1; i < spectrum.length; i++) {
-		// float prevValue = (float) spectrum[i - 1];
-		// float value = (float) spectrum[i];
-		// line((i - 1) * xScale, prevValue * yScale, i * xScale, value
-		// * yScale);
-		// }
-
-		// if (pitchDetected) {
-		// // nearest tone line
-		// stroke(0.25f, 0.5f, 0.5f);
-		// float nearestX = (float) (tuningAnalyzer.getNearestTone() / 12.0 *
-		// width);
-		// line(nearestX, 0, nearestX, height - margin);
-		// //
-		// // // pitch line
-		// // stroke(1, 1, 1);
-		// // float pitchX = (float) (pitch / 12.0 * width);
-		// // line(pitchX, 0, pitchX, height);
-		// }
 
 		double[] pitchHistory = tuningAnalyzer.getPitchHistory();
 		double[] errorHistory = tuningAnalyzer.getErrorHistory();
 
+		if (pitchDetected) {
+			currentTone = (int) tuningAnalyzer.getNearestTone();
+		}
+
 		// pitch curve
 		{
 			float h = height - margin;
-			double maxSkip = 0.7;
+			double maxSkip = 0.7 / 12;
+			float yStep = 1.0f / pitchHistory.length;
 			for (int i = 0; i < pitchHistory.length - 1; i++) {
-				stroke(1 - ((pitchDetected ? 1 : 0.25f) * (i / (float) pitchHistory.length)));
-				double p1 = pitchHistory[i];
-				double p2 = pitchHistory[i + 1];
-				float x1 = (float) (p1 / 12.0 * width);
-				float x2 = (float) (p2 / 12.0 * width);
+				double p1 = mod(pitchHistory[i] - centerPitch + 6) / 12.0;
+				double p2 = mod(pitchHistory[i + 1] - centerPitch + 6) / 12.0;
 				if (p1 - p2 > maxSkip) {
-					x1 = x2;
+					p1 = p2;
 				} else if (p1 - p2 < -maxSkip) {
-					x2 = x1;
+					p2 = p1;
 				}
+				float x1 = (float) lensify(p1) * width;
+				float x2 = (float) lensify(p2) * width;
+
 				double error = errorHistory[i];
-				stroke(errorHue(error), 0.75f, 0.75f);
-				line(x1, height - i * h / pitchHistory.length, x2, height
-					- (i + 1) * h / pitchHistory.length);
+				float weight = (i * yStep);
+				stroke(errorHue(error),
+					0.25f + 0.75f * weight,
+					1 - 0.25f * weight);
+				line(x1, height - i * h * yStep, x2, height - (i + 1) * h
+					* yStep);
 			}
+
 		}
 
 		// error indicator
@@ -197,7 +188,8 @@ public class TunerApp extends PApplet {
 		ellipseMode(RADIUS);
 		noStroke();
 		for (int i = 0; i < 12; i++) {
-			float x = (i + 0.5f) / 12.0f * width;
+			double pos = lensify(mod(i + 6 - centerPitch) / 12.0f);
+			float x = (float) (pos * width);
 			float y = width / (12 * 2.0f);
 			boolean isSelectedTone = pitchDetected
 				&& (int) tuningAnalyzer.getNearestTone() == i;
@@ -206,7 +198,8 @@ public class TunerApp extends PApplet {
 					0.75f,
 					0.75f);
 			} else {
-				fill(0, 0, 0.75f);
+				fill(movementEnabled ? (0.5f + (float) Math.abs(pos - 0.5))
+					: 0.75f);
 			}
 
 			text(TONE_NAMES[i], x, y);
@@ -216,6 +209,41 @@ public class TunerApp extends PApplet {
 
 	private float errorHue(double error) {
 		return 0.25f * (float) (1 - 2 * Math.abs(error));
+	}
+
+	int mod(int value) {
+		return ((value % 12) + 12) % 12;
+	}
+
+	float mod(float value) {
+		return ((value % 12) + 12) % 12;
+	}
+
+	double mod(double value) {
+		return ((value % 12) + 12) % 12;
+	}
+
+	double phaseUnwrappedDiff(double u, double v) {
+		double diff = u - v;
+		// simple phase unwrapping
+		if (diff > 6 && u > v) {
+			diff -= 12;
+		} else if (diff < -6 && u < v) {
+			diff += 12;
+		}
+		return diff;
+	}
+
+	double smoothstep(double x) {
+		return (x * x * (3 - 2 * x));
+	}
+
+	double lensify(double x) {
+		int smoothStepCount = 0;
+		for (int i = 0; i < smoothStepCount; i++) {
+			x = smoothstep(x);
+		}
+		return x;
 	}
 
 	@Override
