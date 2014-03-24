@@ -2,6 +2,7 @@ package com.harmoneye.app.tuner;
 
 import processing.core.PApplet;
 
+import com.harmoneye.analysis.ScalarExpSmoother;
 import com.harmoneye.audio.Capture;
 
 public class TunerApp extends PApplet {
@@ -10,7 +11,7 @@ public class TunerApp extends PApplet {
 	private static final double SAMPLE_RATE = 44100;
 	private static final int BITS_PER_SAMPLE = 16;
 	private static final int INPUT_BUFFER_SIZE = 1024;
-	// private static final int FRAME_RATE = 30;
+	private static final int FRAME_RATE = 60;
 
 	private static final String renderer = P3D;
 	// private static final String renderer =
@@ -31,7 +32,9 @@ public class TunerApp extends PApplet {
 
 	private boolean movementEnabled = false;
 
-	// private ScalarExpSmoother errorSmoother = new ScalarExpSmoother(0.1);
+	private ScalarExpSmoother errorSmoother = new ScalarExpSmoother(0.1);
+	private double error;
+
 	// private double e;
 
 	public static void main(String args[]) {
@@ -39,9 +42,10 @@ public class TunerApp extends PApplet {
 	}
 
 	public void setup() {
-		size(1024, 480, renderer);
+		// size(1024, 480, renderer);
 		// size(320, 480, renderer);
-		// frameRate(FRAME_RATE);
+		size(512, 512, renderer);
+		frameRate(50);
 		frame.setTitle("Tuner");
 		colorMode(HSB, 1.0f);
 		smooth();
@@ -88,9 +92,68 @@ public class TunerApp extends PApplet {
 
 		background(1.0f);
 
-		drawSingleTone();
+		error = tuningAnalyzer.getDistToNearestTone();
+		error = errorSmoother.smooth(error);
+		drawCircularStrobe(error);
 
-		drawWholeOctave();
+		// drawSingleTone();
+
+		// drawWholeOctave();
+	}
+
+	private void drawCircularStrobe(double error) {
+		pushMatrix();
+		translate(width / 2, height / 2);
+
+		boolean pitchDetected = tuningAnalyzer.isPitchDetected();
+		int tone = (int) tuningAnalyzer.getNearestTone();
+		if (pitchDetected) {
+			String toneName = TONE_NAMES[tone];
+			textSize(width / 4.5f);
+			textAlign(CENTER, CENTER);
+			//fill(errorHue(error), 0.25f, 0.85f, 1 - 2 * (float) Math.abs(error));
+			fill(errorHue(error), 0.4f, 0.75f);
+			text(toneName, 0, 0);
+		}
+
+		// fill(0);
+		noStroke();
+//		fill(errorHue(error),
+//			pitchDetected ? 0.25f : 0.05f,
+//			pitchDetected ? 0.85f : 0.95f);
+		// 12, 0.7, 1.5
+		int count = 12;
+		float bigRadius = (float) (0.7 * 0.5 * Math.min(width, height));
+		float size = bigRadius / 2;
+		float t = millis() * 0.001f;
+		float freq = (float) (2 * error);
+		float aFreq = Math.abs(freq);
+		for (int i = 0; i < count; i++) {
+			fill(errorHue(error),
+				pitchDetected && (tone == i)? 0.4f : 0.1f,
+				pitchDetected && (tone == i) ? 0.75f : 0.9f);
+			float p = i / (float) count;
+			float s = (float) mod((p + (error > 0 ? 1 : -1) * t), 1);
+			s = aFreq * s + (1 - aFreq);
+			//float r = bigRadius * s;
+			float r = bigRadius * (0.5f + 0.5f * s);
+			float re = s * size;
+			float angle = p * TWO_PI - PI / 2;
+			float x = r * (float) Math.cos(angle);
+			float y = r * (float) Math.sin(angle);
+			ellipse(x, y, re, re);
+		}
+
+//		noFill();
+//		strokeWeight(3);
+//		stroke(1);
+//		float r = 2*bigRadius;
+//		ellipse(0, 0, r, r);
+//		stroke(errorHue(error), 0.4f, 0.75f);
+//		r = (float)(bigRadius+(error+1)*bigRadius);
+//		ellipse(0, 0, r, r);
+
+		popMatrix();
 	}
 
 	private void drawSingleTone() {
@@ -282,7 +345,11 @@ public class TunerApp extends PApplet {
 	}
 
 	double mod(double value) {
-		return ((value % 12) + 12) % 12;
+		return mod(value, 12);
+	}
+
+	double mod(double value, double base) {
+		return ((value % base) + base) % base;
 	}
 
 	double smoothstep(double x) {
