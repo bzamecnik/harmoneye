@@ -102,7 +102,7 @@ public class StreamingReassignedSpectrograph {
 		this.fft = new ShortTimeFourierTransform(windowSize,
 			new BlackmanWindow());
 
-		HarmonicPattern harmonicPattern = new HarmonicPattern(harmonicCount,
+		HarmonicPattern harmonicPattern = HarmonicPattern.create(harmonicCount,
 			binsPerOctave);
 		harmonicCorrellation = new HarmonicCorrelation(harmonicPattern,
 			chromagramSize);

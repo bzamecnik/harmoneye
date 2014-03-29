@@ -105,7 +105,7 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 			new BlackmanWindow());
 
 		
-		HarmonicPattern harmonicPattern = new HarmonicPattern(harmonicCount,
+		HarmonicPattern harmonicPattern = HarmonicPattern.create(harmonicCount,
 			binsPerOctave);
 		harmonicCorrelation = new HarmonicCorrelation(harmonicPattern,
 			chromagramSize);

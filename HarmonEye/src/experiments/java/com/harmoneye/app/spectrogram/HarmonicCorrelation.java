@@ -13,17 +13,19 @@ public class HarmonicCorrelation {
 	}
 
 	public double[] correlate(double[] reassignedMagnitudes) {
+		int[] indexes = harmonicPattern.getIndexes();
+		double[] weights = harmonicPattern.getWeights();
+		int length = indexes.length;
 		for (int i = 0; i < size; i++) {
 			double acc = 0;
 
-			for (int harmonic = 0; harmonic < harmonicPattern.getLength(); harmonic++) {
-				int bin = i + harmonicPattern.getIndex(harmonic);
-				double weight = harmonicPattern.getWeight(harmonic);
+			for (int harmonic = 0; harmonic < length; harmonic++) {
+				int bin = i + indexes[harmonic];
+				double weight = weights[harmonic];
 
-				if (bin < 0 || bin >= size) {
-					continue;
+				if (bin >= 0 && bin < size) {
+					acc += weight * reassignedMagnitudes[bin];
 				}
-				acc += weight * reassignedMagnitudes[bin];
 			}
 			correlation[i] = acc;
 		}
