@@ -54,6 +54,7 @@ dependencies {
 	// experiments
 	compile 'commons-cli:commons-cli:1.2'
 	compile ':p5-core:'
+	compile ':minim:'
 }
 
 jar {
