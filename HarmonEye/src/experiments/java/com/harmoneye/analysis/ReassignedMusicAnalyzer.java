@@ -1,9 +1,7 @@
 package com.harmoneye.analysis;
 
-import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.commons.math3.stat.descriptive.rank.Max;
 import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.apache.commons.math3.util.FastMath;
 

@@ -1,7 +1,9 @@
 package com.harmoneye.app.tuner;
 
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.math3.util.FastMath;
 
+import com.harmoneye.analysis.ScalarExpSmoother;
 import com.harmoneye.analysis.StreamingReassignedSpectrograph;
 import com.harmoneye.analysis.StreamingReassignedSpectrograph.OutputFrame;
 import com.harmoneye.audio.DoubleRingBuffer;
@@ -19,6 +21,7 @@ public class ReassignedTuningAnalyzer implements SoundConsumer {
 	private StreamingReassignedSpectrograph spectrograph;
 	private Norm maxNorm = new MaxNorm();
 
+	private double sampleRate;
 	private int windowSize;
 	private int hopSize;
 	private int historySize;
@@ -33,7 +36,9 @@ public class ReassignedTuningAnalyzer implements SoundConsumer {
 	private double[] errorHistory;
 	private double[] sampleWindow;
 	private double frequency;
-	private double sampleRate;
+
+	private ScalarExpSmoother errorSmoother = new ScalarExpSmoother(0.1);
+	private double smoothedDistToNearestTone;
 
 	public ReassignedTuningAnalyzer(int windowSize, double sampleRate) {
 		this.windowSize = windowSize;
@@ -57,8 +62,9 @@ public class ReassignedTuningAnalyzer implements SoundConsumer {
 	}
 
 	public void update() {
-		// StopWatch sw = new StopWatch();
-		// sw.start();
+//		StopWatch sw = new StopWatch();
+//		sw.start();
+//		int updatedFrames = 0;
 		while (samplesRingBuffer.getCapacityForRead() > windowSize) {
 			samplesRingBuffer.read(windowSize, sampleWindow);
 			samplesRingBuffer.incrementReadIndex(hopSize);
@@ -77,9 +83,11 @@ public class ReassignedTuningAnalyzer implements SoundConsumer {
 				shift(errorHistory);
 				errorHistory[errorHistory.length - 1] = distToNearestTone;
 			}
+//			updatedFrames++;
 		}
-		// sw.stop();
-		// System.out.println(sw.getNanoTime());
+//		sw.stop();
+//		System.out.println("updated " + updatedFrames + " frames in "
+//			+ (sw.getNanoTime() * 1e-6) + " ms");
 	}
 
 	private void shift(double[] values) {
@@ -119,6 +127,7 @@ public class ReassignedTuningAnalyzer implements SoundConsumer {
 			* 12;
 		neareastTone = Modulo.modulo(Math.round(pitch), 12);
 		distToNearestTone = phaseUnwrappedDiff(pitch, neareastTone);
+		smoothedDistToNearestTone = errorSmoother.smooth(distToNearestTone);
 		pitchDetected = true;
 	}
 
@@ -144,7 +153,7 @@ public class ReassignedTuningAnalyzer implements SoundConsumer {
 		}
 		return diff;
 	}
-	
+
 	public void stop() {
 		// TODO Auto-generated method stub
 
@@ -165,6 +174,10 @@ public class ReassignedTuningAnalyzer implements SoundConsumer {
 
 	public double getDistToNearestTone() {
 		return distToNearestTone;
+	}
+
+	public double getSmoothedDistToNearestTone() {
+		return smoothedDistToNearestTone;
 	}
 
 	public double[] getSpectrum() {
@@ -190,7 +203,7 @@ public class ReassignedTuningAnalyzer implements SoundConsumer {
 	public double[] getSamples() {
 		return sampleWindow;
 	}
-	
+
 	public double getFrequency() {
 		return frequency;
 	}

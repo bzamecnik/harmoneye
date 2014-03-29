@@ -2,7 +2,6 @@ package com.harmoneye.app.tuner;
 
 import processing.core.PApplet;
 
-import com.harmoneye.analysis.ScalarExpSmoother;
 import com.harmoneye.audio.Capture;
 
 public class TunerApp extends PApplet {
@@ -32,7 +31,7 @@ public class TunerApp extends PApplet {
 
 	private boolean movementEnabled = false;
 
-	private ScalarExpSmoother errorSmoother = new ScalarExpSmoother(0.1);
+	
 	private double error;
 
 	// private double e;
@@ -92,8 +91,7 @@ public class TunerApp extends PApplet {
 
 		background(1.0f);
 
-		error = tuningAnalyzer.getDistToNearestTone();
-		error = errorSmoother.smooth(error);
+		error = tuningAnalyzer.getSmoothedDistToNearestTone();
 		drawCircularStrobe(error);
 
 		// drawSingleTone();
