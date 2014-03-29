@@ -26,7 +26,7 @@ public class ReassignedTuningAnalyzer implements SoundConsumer {
 	private boolean pitchDetected;
 	private double pitch;
 	private double neareastTone;
-	private double distToNeareastTone;
+	private double distToNearestTone;
 	private OutputFrame outputFrame;
 	private double[] wrappedChromagram;
 	private double[] pitchHistory;
@@ -75,7 +75,7 @@ public class ReassignedTuningAnalyzer implements SoundConsumer {
 				shift(pitchHistory);
 				pitchHistory[pitchHistory.length - 1] = pitch;
 				shift(errorHistory);
-				errorHistory[errorHistory.length - 1] = distToNeareastTone;
+				errorHistory[errorHistory.length - 1] = distToNearestTone;
 			}
 		}
 		// sw.stop();
@@ -90,7 +90,7 @@ public class ReassignedTuningAnalyzer implements SoundConsumer {
 		pitchDetected = false;
 		pitch = 0;
 		neareastTone = 0;
-		distToNeareastTone = 0;
+		distToNearestTone = 0;
 		int maxChromaBin = findMaxBin(chromagram);
 		if (maxChromaBin == 0) {
 			return;
@@ -118,7 +118,7 @@ public class ReassignedTuningAnalyzer implements SoundConsumer {
 			/ wrappedChromagram.length
 			* 12;
 		neareastTone = Modulo.modulo(Math.round(pitch), 12);
-		distToNeareastTone = phaseUnwrappedDiff(pitch, neareastTone);
+		distToNearestTone = phaseUnwrappedDiff(pitch, neareastTone);
 		pitchDetected = true;
 	}
 
@@ -164,7 +164,7 @@ public class ReassignedTuningAnalyzer implements SoundConsumer {
 	}
 
 	public double getDistToNearestTone() {
-		return distToNeareastTone;
+		return distToNearestTone;
 	}
 
 	public double[] getSpectrum() {
