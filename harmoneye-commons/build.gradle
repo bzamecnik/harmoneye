@@ -26,3 +26,15 @@ dependencies {
 
 	testCompile 'junit:junit:4.10'
 }
+
+// remove test dependencies from configuration-to-scope mapping
+// this also removes them from the maven pom file
+conf2ScopeMappings.mappings.remove(configurations.testCompile)
+
+uploadArchives {
+    repositories {
+         mavenDeployer {
+            repository(url: "file:///${System.env.HOME}/.m2/")
+        }
+    }
+}
