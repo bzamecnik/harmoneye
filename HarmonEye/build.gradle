@@ -26,10 +26,6 @@ configurations {
 	} 
 }
 
-sourceSets {
-	experiments
-}
-
 dependencies {
 	//compile 'colt:colt:1.2.0'
 	compile 'edu.emory.mathcs:JTransforms:2.4'
