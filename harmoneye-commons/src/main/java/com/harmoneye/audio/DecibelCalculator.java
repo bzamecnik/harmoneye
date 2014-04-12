@@ -1,6 +1,5 @@
 package com.harmoneye.audio;
 
-import org.apache.commons.math3.util.FastMath;
 
 public class DecibelCalculator {
 
@@ -47,7 +46,9 @@ public class DecibelCalculator {
 	}
 
 	private static double toDecibel(double amplitude) {
-		return 20 * FastMath.log10(amplitude);
+		// Don't use FastMath.log since it creates temporary objects
+		// which makes trouble with GC on Android.
+		return 20 * Math.log10(amplitude);
 	}
 
 	/** rescale: [DB_THRESHOLD; 0] -> [-1; 0] -> [0; 1] */
