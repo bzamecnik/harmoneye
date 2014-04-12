@@ -1,6 +1,9 @@
 package com.harmoneye.audio;
 
 import java.util.Arrays;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Lock-free ring buffer.
@@ -13,6 +16,9 @@ public class DoubleRingBuffer {
 	private double[] buffer;
 	private volatile int writeIndex = 0;
 	private volatile int readIndex = 0;
+
+	private Lock lock = new ReentrantLock();
+	private Condition notEmptyBuffer = lock.newCondition();
 
 	public DoubleRingBuffer(int bufferSize) {
 		this.bufferSize = bufferSize;
@@ -30,6 +36,12 @@ public class DoubleRingBuffer {
 		// println("wrappedDestCopy(values, 0, buffer, writeIndex="+writeIndex+", values.length="+values.length+")");
 		wrappedDestCopy(values, 0, buffer, writeIndex, values.length);
 		writeIndex = mod(writeIndex + values.length);
+		lock.lock();
+		try {
+			notEmptyBuffer.signal();
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	/** Reads data from the read index. The read index itself is not updated. */
@@ -41,6 +53,7 @@ public class DoubleRingBuffer {
 	/**
 	 * Reads last {@code length} elements appended to the buffer (from the end)
 	 * into the provided {@code result} array.
+	 * 
 	 * @param length can be lower or equal to result.length
 	 * @param result
 	 */
@@ -60,6 +73,15 @@ public class DoubleRingBuffer {
 
 	public int getCapacityForRead() {
 		return mod(writeIndex - readIndex);
+	}
+
+	public void awaitNotEmpty() throws InterruptedException {
+		lock.lock();
+		try {
+			notEmptyBuffer.await();
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	private void wrappedSrcCopy(double[] src, int srcPos, double[] dest,
