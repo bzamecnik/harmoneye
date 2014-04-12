@@ -1,0 +1,40 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+buildscript {
+	repositories {
+		mavenCentral()
+	}
+}
+
+repositories {
+	mavenLocal()
+	mavenCentral()
+	flatDir {
+		dirs 'libs'
+	}
+}
+
+dependencies {
+	compile 'com.harmoneye:harmoneye-commons:1.0'
+
+	compile 'edu.emory.mathcs:JTransforms:2.4'
+	compile 'org.apache.commons:commons-math3:3.2'
+	compile 'org.apache.commons:commons-lang3:3.1'
+
+	compile ':jlayer:1.0.1'
+	compile ':mp3spi:1.9.5'
+	compile ':tritonus-share:0.3.6'
+
+	compile ':jogl-all:'
+	runtime ':jogl-all-natives-macosx-universal:'
+	compile ':gluegen-rt:'
+	runtime ':gluegen-rt-natives-macosx-universal:'
+
+	compile 'commons-cli:commons-cli:1.2'
+	compile ':p5-core:'
+	compile ':minim:'
+	compile ':jsminim:'
+
+	testCompile 'junit:junit:4.10'
+}

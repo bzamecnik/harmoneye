@@ -3,7 +3,7 @@
 /bin/
 /build/
 /dist/
-/lib/
+/libs/
 .classpath
 .project
 *.dmg

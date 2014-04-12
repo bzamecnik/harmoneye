@@ -1,0 +1,24 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'maven'
+
+buildscript {
+	repositories {
+		mavenCentral()
+	}
+}
+
+repositories {
+	mavenCentral()
+	flatDir {
+		dirs 'libs'
+	}
+}
+
+dependencies {
+	compile 'edu.emory.mathcs:JTransforms:2.4'
+	compile 'org.apache.commons:commons-math3:3.2'
+	compile 'org.apache.commons:commons-lang3:3.1'
+
+	testCompile 'junit:junit:4.10'
+}

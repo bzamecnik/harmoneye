@@ -13,6 +13,7 @@ buildscript {
 }
 
 repositories {
+	mavenLocal()
 	mavenCentral()
 	flatDir {
 		dirs 'lib'
@@ -27,16 +28,14 @@ configurations {
 }
 
 dependencies {
+	compile 'com.harmoneye:harmoneye-commons:1.0'
+
 	//compile 'colt:colt:1.2.0'
 	compile 'edu.emory.mathcs:JTransforms:2.4'
 	compile 'org.apache.commons:commons-math3:3.2'
 	compile 'org.apache.commons:commons-lang3:3.1'
 
 	compile 'org.simplericity.macify:macify:1.6'
-
-	compile ':jlayer:1.0.1'
-	compile ':mp3spi:1.9.5'
-	compile ':tritonus-share:0.3.6'
 
 	macBundleApp ':appbundler:1.0'
 	
@@ -46,11 +45,6 @@ dependencies {
 	macRuntime ':gluegen-rt-natives-macosx-universal:'
 
 	testCompile 'junit:junit:4.10'
-	
-	// experiments
-	compile 'commons-cli:commons-cli:1.2'
-	compile ':p5-core:'
-	compile ':minim:'
 }
 
 jar {
