@@ -62,8 +62,8 @@ public class DoubleRingBuffer {
 	}
 
 	private double[] read(int length, int fromIndex, double[] result) {
-		// println("wrappedSrcCopy(buffer, readIndex="+readIndex+", result, 0, length="+length+");");
-		wrappedSrcCopy(buffer, readIndex, result, 0, length);
+		// println("wrappedSrcCopy(buffer, readIndex="+fromIndex+", result, 0, length="+length+");");
+		wrappedSrcCopy(buffer, fromIndex, result, 0, length);
 		return result;
 	}
 
