@@ -12,16 +12,17 @@ import com.harmoneye.math.Modulo;
 public class PitchClassSetNamer {
 
 	private Map<Integer, Map<String, Object>> names;
+	private PitchClassNamer pitchClassNamer;
 
-	private static final String[] TONE_NAMES = { "C", "Db", "D", "Eb", "E",
-		"F", "Gb", "G", "Ab", "A", "Bb", "B" };
-
-	private PitchClassSetNamer(Map<Integer, Map<String, Object>> names) {
+	private PitchClassSetNamer(Map<Integer, Map<String, Object>> names,
+		PitchClassNamer pitchClassNamer) {
 		this.names = names;
+		this.pitchClassNamer = pitchClassNamer;
 	}
 
 	@SuppressWarnings("unchecked")
-	public static PitchClassSetNamer fromJson(InputStream inputStream) {
+	public static PitchClassSetNamer fromJson(InputStream inputStream,
+		PitchClassNamer pitchClassNamer) {
 		try {
 			JsonFactory f = new JsonFactory();
 			f.enable(JsonParser.Feature.ALLOW_COMMENTS);
@@ -29,7 +30,8 @@ public class PitchClassSetNamer {
 			Object n = objectMapper.readValue(inputStream,
 				new TypeReference<Map<Integer, Map<String, Object>>>() {
 				});
-			return new PitchClassSetNamer((Map<Integer, Map<String, Object>>) n);
+			return new PitchClassSetNamer(
+				(Map<Integer, Map<String, Object>>) n, pitchClassNamer);
 		} catch (Exception e) {
 			if (e instanceof RuntimeException) {
 				throw (RuntimeException) e;
@@ -50,7 +52,7 @@ public class PitchClassSetNamer {
 		}
 		int root = Modulo.modulo(templateRoot + tones.getRoot(),
 			PitchClassSet.OCTAVE_SIZE);
-		String rootName = TONE_NAMES[root];
+		String rootName = pitchClassNamer.getName(root);
 		String chordName = (String) details.get("chord");
 		if (chordName == null) {
 			chordName = "";
