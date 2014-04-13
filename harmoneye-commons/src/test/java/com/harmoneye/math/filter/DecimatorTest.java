@@ -1,6 +1,6 @@
 package com.harmoneye.math.filter;
 
-import static com.harmoneye.audio.TextSignalPrinter.printSignal;
+import static com.harmoneye.audio.util.TextSignalPrinter.printSignal;
 import static org.junit.Assert.*;
 
 import org.junit.Test;

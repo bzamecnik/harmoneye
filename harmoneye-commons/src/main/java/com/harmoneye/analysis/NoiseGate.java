@@ -2,7 +2,7 @@ package com.harmoneye.analysis;
 
 import com.harmoneye.math.filter.ScalarExpSmoother;
 
-
+@Deprecated
 public class NoiseGate {
 	private int signalLength;
 	

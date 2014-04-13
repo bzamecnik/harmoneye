@@ -1,8 +1,11 @@
-package com.harmoneye.audio;
+package com.harmoneye.audio.util;
 
-import static com.harmoneye.audio.TextSignalPrinter.printSignal;
+import static com.harmoneye.audio.util.TextSignalPrinter.printSignal;
 
 import org.junit.Test;
+
+import com.harmoneye.audio.util.ToneGenerator;
+
 import static org.junit.Assert.*;
 
 public class ToneGeneratorTest {

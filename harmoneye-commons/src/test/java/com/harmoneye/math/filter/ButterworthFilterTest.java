@@ -1,14 +1,14 @@
 package com.harmoneye.math.filter;
 
+import static com.harmoneye.audio.util.TextSignalPrinter.printSignal;
 import static org.junit.Assert.assertTrue;
-import static com.harmoneye.audio.TextSignalPrinter.*;
 
 import java.util.Arrays;
 
 import org.junit.Test;
 
-import com.harmoneye.audio.RmsCalculator;
-import com.harmoneye.audio.ToneGenerator;
+import com.harmoneye.audio.util.RmsCalculator;
+import com.harmoneye.audio.util.ToneGenerator;
 
 public class ButterworthFilterTest {
 

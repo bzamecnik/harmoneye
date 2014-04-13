@@ -1,4 +1,4 @@
-package com.harmoneye.audio;
+package com.harmoneye.audio.util;
 
 public class RmsCalculator {
 

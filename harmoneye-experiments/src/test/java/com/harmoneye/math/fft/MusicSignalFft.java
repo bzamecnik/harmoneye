@@ -6,8 +6,8 @@ import org.apache.commons.math3.transform.FastFourierTransformer;
 import org.apache.commons.math3.transform.TransformType;
 import org.junit.Test;
 
-import com.harmoneye.audio.TextSignalPrinter;
-import com.harmoneye.audio.ToneGenerator;
+import com.harmoneye.audio.util.TextSignalPrinter;
+import com.harmoneye.audio.util.ToneGenerator;
 import com.harmoneye.math.matrix.ComplexUtils;
 import com.harmoneye.math.matrix.ComplexVector;
 

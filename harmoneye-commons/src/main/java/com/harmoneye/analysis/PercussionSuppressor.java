@@ -10,6 +10,7 @@ import com.harmoneye.math.stats.Median;
  * International Conference on Digital Audio Effects (DAFX10), Graz, Austria,
  * 2010.
  */
+@Deprecated
 public class PercussionSuppressor {
 	private int size;
 	private int historySize;

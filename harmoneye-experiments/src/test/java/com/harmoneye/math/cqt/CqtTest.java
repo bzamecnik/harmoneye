@@ -5,8 +5,8 @@ import org.junit.Test;
 
 import com.harmoneye.audio.DecibelCalculator;
 import com.harmoneye.audio.MultiRateRingBufferBank;
-import com.harmoneye.audio.TextSignalPrinter;
-import com.harmoneye.audio.ToneGenerator;
+import com.harmoneye.audio.util.TextSignalPrinter;
+import com.harmoneye.audio.util.ToneGenerator;
 import com.harmoneye.math.matrix.ComplexUtils;
 
 public class CqtTest {

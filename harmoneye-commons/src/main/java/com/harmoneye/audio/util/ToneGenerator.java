@@ -1,4 +1,4 @@
-package com.harmoneye.audio;
+package com.harmoneye.audio.util;
 
 import com.harmoneye.math.window.HammingWindow;
 import com.harmoneye.math.window.WindowFunction;

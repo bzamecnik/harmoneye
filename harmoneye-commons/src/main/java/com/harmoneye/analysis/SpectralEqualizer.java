@@ -4,6 +4,7 @@ import org.apache.commons.math3.util.FastMath;
 
 import com.harmoneye.math.stats.Median;
 
+@Deprecated
 public class SpectralEqualizer {
 
 	private static final double MEDIAN_WEIGHT = 0.75;

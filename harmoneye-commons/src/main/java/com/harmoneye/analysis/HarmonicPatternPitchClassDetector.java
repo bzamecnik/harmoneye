@@ -5,6 +5,7 @@ import org.apache.commons.math3.util.FastMath;
 
 import com.harmoneye.math.cqt.CqtContext;
 
+@Deprecated
 public class HarmonicPatternPitchClassDetector {
 
 	private static final int DEFAULT_HARMONIC_COUNT = 6;

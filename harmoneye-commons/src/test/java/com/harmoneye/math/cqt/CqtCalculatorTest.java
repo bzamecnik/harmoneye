@@ -2,7 +2,7 @@ package com.harmoneye.math.cqt;
 
 import org.junit.Test;
 
-import com.harmoneye.audio.TextSignalPrinter;
+import com.harmoneye.audio.util.TextSignalPrinter;
 import com.harmoneye.math.matrix.ComplexVector;
 
 public class CqtCalculatorTest {

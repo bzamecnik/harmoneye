@@ -2,7 +2,7 @@ package com.harmoneye.math.filter;
 
 import org.junit.Test;
 
-import static com.harmoneye.audio.TextSignalPrinter.*;
+import static com.harmoneye.audio.util.TextSignalPrinter.*;
 
 public class ZeroPhaseButterworthFilterTest {
 

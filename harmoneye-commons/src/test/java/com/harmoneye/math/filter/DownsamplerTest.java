@@ -1,12 +1,11 @@
 package com.harmoneye.math.filter;
 
-import static org.junit.Assert.*;
-import static com.harmoneye.audio.TextSignalPrinter.*;
+import static com.harmoneye.audio.util.TextSignalPrinter.printSignal;
 
 import org.junit.Test;
 
-import com.harmoneye.audio.RmsCalculator;
-import com.harmoneye.audio.ToneGenerator;
+import com.harmoneye.audio.util.RmsCalculator;
+import com.harmoneye.audio.util.ToneGenerator;
 
 public class DownsamplerTest {
 

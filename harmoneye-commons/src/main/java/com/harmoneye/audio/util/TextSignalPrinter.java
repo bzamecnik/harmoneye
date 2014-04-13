@@ -1,4 +1,4 @@
-package com.harmoneye.audio;
+package com.harmoneye.audio.util;
 
 import com.harmoneye.math.matrix.ComplexVector;
 import com.harmoneye.math.matrix.DComplex;

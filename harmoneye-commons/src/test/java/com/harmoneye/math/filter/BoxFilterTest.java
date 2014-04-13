@@ -1,10 +1,10 @@
 package com.harmoneye.math.filter;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
 
 import org.junit.Test;
 
-import com.harmoneye.audio.TextSignalPrinter;
+import com.harmoneye.audio.util.TextSignalPrinter;
 
 public class BoxFilterTest {
 
