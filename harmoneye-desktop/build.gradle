@@ -33,7 +33,7 @@ configurations {
 }
 
 dependencies {
-	compile 'com.harmoneye:harmoneye-commons:1.1-SNAPSHOT'
+	compile 'com.harmoneye:harmoneye-commons:1.2-SNAPSHOT'
 
 	//compile 'colt:colt:1.2.0'
 	compile 'edu.emory.mathcs:JTransforms:2.4'
