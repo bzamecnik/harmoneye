@@ -1,5 +1,6 @@
 package com.harmoneye.app.spectrogram;
 
+import com.harmoneye.analysis.MagnitudeSpectrogram;
 import com.harmoneye.math.fft.ShortTimeFourierTransform;
 import com.harmoneye.math.matrix.ComplexVector;
 import com.harmoneye.math.window.BlackmanWindow;
@@ -21,8 +22,8 @@ public class BasicSpectrograph implements MagnitudeSpectrograph {
 	}
 
 	public MagnitudeSpectrogram computeMagnitudeSpectrogram(SampledAudio audio) {
-		return MagnitudeSpectrogram
-			.fromComplexSpectrogram(computeSpectrogram(audio));
+		return 
+			fromComplexSpectrogram(computeSpectrogram(audio));
 	}
 
 	public ComplexSpectrogram computeSpectrogram(SampledAudio audio) {
@@ -43,5 +44,19 @@ public class BasicSpectrograph implements MagnitudeSpectrograph {
 			spectrumFrames[i] = new ComplexVector(fft.transform(amplitudeFrame));
 		}
 		return new ComplexSpectrogram(spectrumFrames, windowSize);
+	}
+	
+	public static MagnitudeSpectrogram fromComplexSpectrogram(
+		ComplexSpectrogram spectrogram) {
+		// only positive frequencies
+		int binCount = spectrogram.getBinCount() / 2;
+		int frameCount = spectrogram.getFrameCount();
+		double[][] magnitudeFrames = new double[frameCount][];
+		for (int i = 0; i < frameCount; i++) {
+			ComplexVector complexFrame = spectrogram.getFrame(i);
+			magnitudeFrames[i] = MagnitudeSpectrogram.toLogPowerSpectrum(complexFrame,
+				new double[binCount]);
+		}
+		return new MagnitudeSpectrogram(magnitudeFrames, binCount);
 	}
 }

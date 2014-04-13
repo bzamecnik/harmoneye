@@ -1,4 +1,4 @@
-package com.harmoneye.app.spectrogram;
+package com.harmoneye.analysis;
 
 import java.util.ArrayList;
 import java.util.List;

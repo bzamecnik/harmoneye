@@ -1,9 +1,7 @@
 package com.harmoneye.app.tuner;
 
-import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.math3.util.FastMath;
 
-import com.harmoneye.analysis.ScalarExpSmoother;
 import com.harmoneye.analysis.StreamingReassignedSpectrograph;
 import com.harmoneye.analysis.StreamingReassignedSpectrograph.OutputFrame;
 import com.harmoneye.audio.DoubleRingBuffer;
@@ -11,6 +9,7 @@ import com.harmoneye.audio.SoundConsumer;
 import com.harmoneye.math.MaxNorm;
 import com.harmoneye.math.Modulo;
 import com.harmoneye.math.Norm;
+import com.harmoneye.math.filter.ScalarExpSmoother;
 
 public class ReassignedTuningAnalyzer implements SoundConsumer {
 

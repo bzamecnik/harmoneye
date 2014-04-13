@@ -9,6 +9,7 @@ import com.harmoneye.analysis.StreamingReassignedSpectrograph.OutputFrame;
 import com.harmoneye.audio.DoubleRingBuffer;
 import com.harmoneye.audio.SoundConsumer;
 import com.harmoneye.math.cqt.CqtContext;
+import com.harmoneye.math.filter.ExpSmoother;
 import com.harmoneye.viz.Visualizer;
 
 public class ReassignedMusicAnalyzer implements SoundConsumer {

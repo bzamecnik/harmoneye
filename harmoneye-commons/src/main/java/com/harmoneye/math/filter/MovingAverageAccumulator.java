@@ -1,4 +1,4 @@
-package com.harmoneye.analysis;
+package com.harmoneye.math.filter;
 
 public class MovingAverageAccumulator {
 	double[] data;

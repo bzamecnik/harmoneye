@@ -1,6 +1,6 @@
-package com.harmoneye.analysis;
+package com.harmoneye.math.filter;
 
-class ExpSmoother {
+public class ExpSmoother {
 	double[] data;
 	double currentWeight;
 	double previousWeight;

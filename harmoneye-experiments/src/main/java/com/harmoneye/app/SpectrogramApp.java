@@ -9,9 +9,9 @@ import org.apache.commons.lang3.time.StopWatch;
 import processing.core.PApplet;
 import processing.core.PImage;
 
+import com.harmoneye.analysis.MagnitudeSpectrogram;
 import com.harmoneye.app.spectrogram.AudioReader;
 import com.harmoneye.app.spectrogram.BasicSpectrograph;
-import com.harmoneye.app.spectrogram.MagnitudeSpectrogram;
 import com.harmoneye.app.spectrogram.MagnitudeSpectrograph;
 import com.harmoneye.app.spectrogram.ReassignedSpectrograph;
 import com.harmoneye.app.spectrogram.SampledAudio;

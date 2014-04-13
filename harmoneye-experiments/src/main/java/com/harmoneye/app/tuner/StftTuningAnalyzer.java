@@ -1,6 +1,6 @@
 package com.harmoneye.app.tuner;
 
-import com.harmoneye.app.spectrogram.MagnitudeSpectrogram;
+import com.harmoneye.analysis.MagnitudeSpectrogram;
 import com.harmoneye.audio.SoundConsumer;
 import com.harmoneye.math.MaxNorm;
 import com.harmoneye.math.Norm;

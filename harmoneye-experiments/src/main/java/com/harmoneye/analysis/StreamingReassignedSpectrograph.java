@@ -4,15 +4,10 @@ import java.util.Arrays;
 
 import org.apache.commons.math3.util.FastMath;
 
-import com.harmoneye.app.spectrogram.ChromagramWrapper;
-import com.harmoneye.app.spectrogram.HarmonicCorrelation;
-import com.harmoneye.app.spectrogram.HarmonicPattern;
-import com.harmoneye.app.spectrogram.HighPassFilter;
-import com.harmoneye.app.spectrogram.MagnitudeSpectrogram;
-import com.harmoneye.app.spectrogram.SpectralReassigner;
 import com.harmoneye.math.L2Norm;
 import com.harmoneye.math.MaxNorm;
 import com.harmoneye.math.fft.ShortTimeFourierTransform;
+import com.harmoneye.math.filter.HighPassFilter;
 import com.harmoneye.math.filter.Normalizer;
 import com.harmoneye.math.matrix.ComplexVector;
 import com.harmoneye.math.window.BlackmanWindow;

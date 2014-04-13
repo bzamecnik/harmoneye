@@ -1,4 +1,4 @@
-package com.harmoneye.app.spectrogram;
+package com.harmoneye.analysis;
 
 import com.harmoneye.audio.DecibelCalculator;
 import com.harmoneye.math.matrix.ComplexVector;
@@ -26,20 +26,6 @@ public class MagnitudeSpectrogram {
 
 	public int getFrameCount() {
 		return spectrumFrames.length;
-	}
-
-	public static MagnitudeSpectrogram fromComplexSpectrogram(
-		ComplexSpectrogram spectrogram) {
-		// only positive frequencies
-		int binCount = spectrogram.getBinCount() / 2;
-		int frameCount = spectrogram.getFrameCount();
-		double[][] magnitudeFrames = new double[frameCount][];
-		for (int i = 0; i < frameCount; i++) {
-			ComplexVector complexFrame = spectrogram.getFrame(i);
-			magnitudeFrames[i] = toLogPowerSpectrum(complexFrame,
-				new double[binCount]);
-		}
-		return new MagnitudeSpectrogram(magnitudeFrames, binCount);
 	}
 
 	// for the positive-frequency magnitude spectrum, just pass a half-sized

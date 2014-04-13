@@ -1,9 +1,6 @@
-package com.harmoneye.app.spectrogram;
+package com.harmoneye.math.filter;
 
 import org.apache.commons.math3.util.FastMath;
-
-import com.harmoneye.math.filter.BoxFilter;
-import com.harmoneye.math.filter.Filter;
 
 public class HighPassFilter implements Filter {
 
