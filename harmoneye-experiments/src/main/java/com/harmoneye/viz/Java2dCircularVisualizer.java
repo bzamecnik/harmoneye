@@ -10,14 +10,19 @@ import java.awt.Graphics2D;
 import org.apache.commons.math3.util.FastMath;
 
 import com.harmoneye.analysis.AnalyzedFrame;
+import com.harmoneye.music.PitchClassNamer;
 
 public class Java2dCircularVisualizer extends AbstractJava2dVisualizer {
+
+	private static final int OCTAVE_SIZE = 12;
 
 	private static final long serialVersionUID = 1L;
 	
 	private double[] pcBins;
 	private int pitchBinCount;
 	private int binsPerHalftone;
+
+	private PitchClassNamer pitchClassNamer = PitchClassNamer.defaultInstance();
 
 	@Override
 	public void update(AnalyzedFrame pcProfile) {
@@ -91,14 +96,14 @@ public class Java2dCircularVisualizer extends AbstractJava2dVisualizer {
 		graphics.setFont(font);
 		FontMetrics fm = graphics.getFontMetrics();
 		int offsetY = fm.getAscent() / 2;
-		double angleStep = 2 * FastMath.PI / HALFTONE_NAMES.length;
+		double angleStep = 2 * FastMath.PI / OCTAVE_SIZE;
 		double angle = 9 * angleStep;
-		for (int i = 0; i < HALFTONE_NAMES.length; i++, angle += angleStep) {
+		for (int i = 0; i < OCTAVE_SIZE; i++, angle += angleStep) {
 			int index = (i * getPitchStep()) % 12;
 			float value = getMaxBinValue(index);
 			Color color = getColor(value);
 			graphics.setColor(color);
-			String str = HALFTONE_NAMES[index];
+			String str = pitchClassNamer .getName(index);
 			int offsetX = fm.stringWidth(str) / 2;
 			graphics.drawString(str, (int) (x + center + 0.43 * size * FastMath.cos(angle) - offsetX), (int) (y + center
 				+ 0.43 * size * FastMath.sin(angle) + offsetY));

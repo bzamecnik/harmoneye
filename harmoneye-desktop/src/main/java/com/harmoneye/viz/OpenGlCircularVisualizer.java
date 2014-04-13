@@ -17,6 +17,7 @@ import org.apache.commons.math3.util.FastMath;
 
 import com.harmoneye.analysis.AnalyzedFrame;
 import com.harmoneye.math.cqt.CqtContext;
+import com.harmoneye.music.PitchClassNamer;
 import com.jogamp.opengl.util.Animator;
 import com.jogamp.opengl.util.awt.TextRenderer;
 
@@ -28,8 +29,7 @@ public class OpenGlCircularVisualizer implements
 	private static final float DEFAULT_LINE_WIDTH = 1f;
 	private static final float WAIT_SCROBBLER_LINE_WIDTH = 1.5f;
 
-	protected static final String[] HALFTONE_NAMES = { "C", "Db", "D", "Eb",
-		"E", "F", "Gb", "G", "Ab", "A", "Bb", "B" };
+	private static final int OCTAVE_SIZE = 12;
 
 	private int pitchStep = 1;
 
@@ -43,6 +43,8 @@ public class OpenGlCircularVisualizer implements
 	private double stepAngle;
 
 	private TextRenderer renderer;
+	
+	private PitchClassNamer pitchClassNamer = PitchClassNamer.defaultInstance();
 
 	public OpenGlCircularVisualizer() {
 		GLProfile glp = GLProfile.getDefault();
@@ -109,12 +111,12 @@ public class OpenGlCircularVisualizer implements
 		float phaseOffset = (float) (millisInSecond * 0.001);
 
 		gl.glLineWidth(WAIT_SCROBBLER_LINE_WIDTH);
-		double halfToneCountInv = 1.0 / HALFTONE_NAMES.length;
+		double halfToneCountInv = 1.0 / OCTAVE_SIZE;
 		double maxRadius = 0.09;
 		double innerRadius = maxRadius * 0.25;
 		double outerRadius = maxRadius * 0.75;
 		gl.glBegin(GL.GL_LINES);
-		for (int i = 0; i < HALFTONE_NAMES.length; i++) {
+		for (int i = 0; i < OCTAVE_SIZE; i++) {
 			double unitAngle = (i - 0.5) * halfToneCountInv;
 			double angle = 2 * FastMath.PI * unitAngle;
 
@@ -142,9 +144,9 @@ public class OpenGlCircularVisualizer implements
 		gl.glEnd();
 
 		// lines between bins
-		double halfToneCountInv = 1.0 / HALFTONE_NAMES.length;
+		double halfToneCountInv = 1.0 / OCTAVE_SIZE;
 		gl.glBegin(GL.GL_LINES);
-		for (int i = 0; i < HALFTONE_NAMES.length; i++) {
+		for (int i = 0; i < OCTAVE_SIZE; i++) {
 			double angle = 2 * FastMath.PI * ((i - 0.5) * halfToneCountInv);
 			double x = 0.9 * FastMath.sin(angle);
 			double y = 0.9 * FastMath.cos(angle);
@@ -211,18 +213,18 @@ public class OpenGlCircularVisualizer implements
 		double centerX = width / 2;
 		double centerY = height / 2;
 		double size = 0.9 * FastMath.min(width, height);
-		double angleStep = 2 * FastMath.PI / HALFTONE_NAMES.length;
+		double angleStep = 2 * FastMath.PI / OCTAVE_SIZE;
 		double angle = 0;
 		float scaleFactor = (float) (0.0015f * size);
 
 		renderer.beginRendering(width, height);
 
-		for (int i = 0; i < HALFTONE_NAMES.length; i++, angle += angleStep) {
-			int index = (i * pitchStep) % HALFTONE_NAMES.length;
+		for (int i = 0; i < OCTAVE_SIZE; i++, angle += angleStep) {
+			int index = (i * pitchStep) % OCTAVE_SIZE;
 			float value = getMaxBinValue(index);
 			Color color = colorFunction.toColor((float) value);
 			renderer.setColor(color);
-			String str = HALFTONE_NAMES[index];
+			String str = pitchClassNamer.getName(index);
 			Rectangle2D bounds = renderer.getBounds(str);
 			int offsetX = (int) (scaleFactor * 0.5f * bounds.getWidth());
 			int offsetY = (int) (scaleFactor * 0.5f * bounds.getHeight());

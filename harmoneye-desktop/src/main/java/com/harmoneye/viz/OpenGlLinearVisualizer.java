@@ -25,8 +25,7 @@ public class OpenGlLinearVisualizer implements SwingVisualizer<AnalyzedFrame>,
 	private static final float DEFAULT_LINE_WIDTH = 1f;
 	private static final float WAIT_SCROBBLER_LINE_WIDTH = 1.5f;
 
-	protected static final String[] HALFTONE_NAMES = { "C", "Db", "D", "Eb",
-		"E", "F", "Gb", "G", "Ab", "A", "Bb", "B" };
+	private static final int OCTAVE_SIZE = 12;
 
 	private ColorFunction colorFunction = new TemperatureColorFunction();
 	private Component component;
@@ -90,12 +89,12 @@ public class OpenGlLinearVisualizer implements SwingVisualizer<AnalyzedFrame>,
 		float phaseOffset = (float) (millisInSecond * 0.001);
 
 		gl.glLineWidth(WAIT_SCROBBLER_LINE_WIDTH);
-		double halfToneCountInv = 1.0 / HALFTONE_NAMES.length;
+		double halfToneCountInv = 1.0 / OCTAVE_SIZE;
 		double maxRadius = 0.09;
 		double innerRadius = maxRadius * 0.25;
 		double outerRadius = maxRadius * 0.75;
 		gl.glBegin(GL.GL_LINES);
-		for (int i = 0; i < HALFTONE_NAMES.length; i++) {
+		for (int i = 0; i < OCTAVE_SIZE; i++) {
 			double unitAngle = (i - 0.5) * halfToneCountInv;
 			double angle = 2 * FastMath.PI * unitAngle;
 

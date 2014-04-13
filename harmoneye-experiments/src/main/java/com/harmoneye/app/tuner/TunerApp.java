@@ -3,6 +3,7 @@ package com.harmoneye.app.tuner;
 import processing.core.PApplet;
 
 import com.harmoneye.audio.Capture;
+import com.harmoneye.music.PitchClassNamer;
 
 public class TunerApp extends PApplet {
 
@@ -15,9 +16,6 @@ public class TunerApp extends PApplet {
 	private static final String renderer = P3D;
 	// private static final String renderer =
 	// "processing.core.PGraphicsRetina2D";
-
-	private static final String[] TONE_NAMES = { "C", "Db", "D", "Eb", "E",
-		"F", "Gb", "G", "Ab", "A", "Bb", "B" };
 
 	private static final long serialVersionUID = -1188263388156753697L;
 
@@ -36,6 +34,8 @@ public class TunerApp extends PApplet {
 
 	// private double e;
 
+	private PitchClassNamer pitchClassNamer = PitchClassNamer.defaultInstance();
+	
 	public static void main(String args[]) {
 		PApplet.main(TunerApp.class.getName(), args);
 	}
@@ -106,7 +106,7 @@ public class TunerApp extends PApplet {
 		boolean pitchDetected = tuningAnalyzer.isPitchDetected();
 		int tone = (int) tuningAnalyzer.getNearestTone();
 		if (pitchDetected) {
-			String toneName = TONE_NAMES[tone];
+			String toneName = pitchClassNamer.getName(tone);
 			textSize(width / 4.5f);
 			textAlign(CENTER, CENTER);
 			//fill(errorHue(error), 0.25f, 0.85f, 1 - 2 * (float) Math.abs(error));
@@ -299,7 +299,7 @@ public class TunerApp extends PApplet {
 					: 0.75f);
 			}
 
-			text(TONE_NAMES[i], x, y);
+			text(pitchClassNamer.getName(i), x, y);
 			ellipse(x, margin - 3, 3, 3);
 		}
 
