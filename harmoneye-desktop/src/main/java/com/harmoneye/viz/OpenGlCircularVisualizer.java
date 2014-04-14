@@ -141,7 +141,7 @@ public class OpenGlCircularVisualizer implements
 	}
 
 	private void drawPitchClassFrame(GL2 gl) {
-		gl.glColor3f(0.5f, 0.5f, 0.5f);
+		gl.glColor3f(0.25f, 0.25f, 0.25f);
 
 		// outer circle
 		gl.glBegin(GL.GL_LINE_LOOP);
@@ -268,12 +268,12 @@ public class OpenGlCircularVisualizer implements
 		float radius = 0.09f;
 		int steps = 30;
 
-		gl.glColor3f(0.25f, 0.25f, 0.25f);
+		gl.glColor3f(0.1f, 0.1f, 0.1f);
 		gl.glBegin(GL.GL_TRIANGLE_FAN);
 		drawCircle(gl, radius, steps);
 		gl.glEnd();
 
-		gl.glColor3f(0.5f, 0.5f, 0.5f);
+		gl.glColor3f(0.25f, 0.25f, 0.25f);
 		gl.glBegin(GL.GL_LINE_LOOP);
 		drawCircle(gl, radius, steps);
 		gl.glEnd();
@@ -322,7 +322,7 @@ public class OpenGlCircularVisualizer implements
 		gl.glHint(GL.GL_LINE_SMOOTH_HINT, GL.GL_DONT_CARE);
 		gl.glLineWidth(0.5f);
 
-		gl.glClearColor(0.25f, 0.25f, 0.25f, 1f);
+		gl.glClearColor(0.1f, 0.1f, 0.1f, 1f);
 
 		renderer = new TextRenderer(new Font("SansSerif", Font.BOLD, 50), true,
 			true, null, true);
