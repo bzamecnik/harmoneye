@@ -18,6 +18,7 @@ import org.apache.commons.math3.util.FastMath;
 import com.harmoneye.analysis.AnalyzedFrame;
 import com.harmoneye.math.cqt.CqtContext;
 import com.harmoneye.music.PitchClassNamer;
+import com.harmoneye.music.TonicDistance;
 import com.jogamp.opengl.util.Animator;
 import com.jogamp.opengl.util.awt.TextRenderer;
 
@@ -46,6 +47,7 @@ public class OpenGlCircularVisualizer implements
 	
 	private PitchClassNamer pitchClassNamer = PitchClassNamer.defaultInstance();
 	private int key;
+	private TonicDistance tonicDistance = new TonicDistance(OCTAVE_SIZE);
 
 	public OpenGlCircularVisualizer() {
 		GLProfile glp = GLProfile.getDefault();
@@ -191,7 +193,7 @@ public class OpenGlCircularVisualizer implements
 			double value = values[index];
 			//Color color = colorFunction.toColor((float) value);
 			
-			float hue = proximityToHue(tonicProximity(movedPitchClass, key));
+			float hue = tonicDistance.distanceToHue(tonicDistance.distance(movedPitchClass, key));
 			float saturation = (float)(0.1 + 0.75 * value);
 			float brightness = (float)(0.25 + 0.75 * value);
 			Color color = Color.getHSBColor(hue, saturation, brightness);
@@ -335,15 +337,5 @@ public class OpenGlCircularVisualizer implements
 	@Override
 	public Component getComponent() {
 		return component;
-	}
-	
-	private float tonicProximity(float tone, int tonic) {
-		float i = ((tone - tonic + OCTAVE_SIZE) * 7) % OCTAVE_SIZE;
-		return (i < 6 ? i : OCTAVE_SIZE - 1 + 6 - i) / (OCTAVE_SIZE - 1.0f);
-	}
-
-	// [0.0; 1.0] -> [1/3; 0.0]
-	private float proximityToHue(float value) {
-		return (1.0f - value) / 3.0f;
 	}
 }
