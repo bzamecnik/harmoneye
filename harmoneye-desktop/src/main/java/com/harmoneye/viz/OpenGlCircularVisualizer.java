@@ -45,6 +45,7 @@ public class OpenGlCircularVisualizer implements
 	private TextRenderer renderer;
 	
 	private PitchClassNamer pitchClassNamer = PitchClassNamer.defaultInstance();
+	private int key;
 
 	public OpenGlCircularVisualizer() {
 		GLProfile glp = GLProfile.getDefault();
@@ -65,17 +66,19 @@ public class OpenGlCircularVisualizer implements
 	}
 
 	@Override
-	public void update(AnalyzedFrame pcProfile) {
-		if (pcProfile == null) {
+	public void update(AnalyzedFrame frame) {
+		if (frame == null) {
 			return;
 		}
 
-		CqtContext ctx = pcProfile.getCtxContext();
+		CqtContext ctx = frame.getCtxContext();
 
 		binsPerHalftone = ctx.getBinsPerHalftone();
 		halftoneCount = ctx.getHalftonesPerOctave();
 
-		values = pcProfile.getOctaveBins();
+		values = frame.getOctaveBins();
+		
+		key = frame.getKey();
 
 		segmentCountInv = 1.0 / values.length;
 		stepAngle = 2 * FastMath.PI * segmentCountInv;
@@ -222,8 +225,9 @@ public class OpenGlCircularVisualizer implements
 		for (int i = 0; i < OCTAVE_SIZE; i++, angle += angleStep) {
 			int index = (i * pitchStep) % OCTAVE_SIZE;
 			float value = getMaxBinValue(index);
-			Color color = colorFunction.toColor((float) value);
-			renderer.setColor(color);
+			//Color color = colorFunction.toColor((float) value);
+			
+			renderer.setColor(i == key ? Color.LIGHT_GRAY : Color.GRAY);
 			String str = pitchClassNamer.getName(index);
 			Rectangle2D bounds = renderer.getBounds(str);
 			int offsetX = (int) (scaleFactor * 0.5f * bounds.getWidth());
