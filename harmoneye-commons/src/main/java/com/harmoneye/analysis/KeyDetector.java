@@ -1,5 +1,6 @@
 package com.harmoneye.analysis;
 
+import com.harmoneye.math.L2Norm;
 import com.harmoneye.math.filter.ExpSmoother;
 import com.harmoneye.math.window.BlackmanWindow;
 import com.harmoneye.math.window.WindowSampler;
@@ -13,6 +14,8 @@ class KeyDetector {
 	private double[] window;
 	private double[] pitchClasses;
 
+	private L2Norm norm = new L2Norm();
+	
 	public KeyDetector(int binsPerHalfTone, int octaveSize) {
 		this.binsPerHalfTone = binsPerHalfTone;
 		this.octaveSize = octaveSize;
@@ -22,7 +25,7 @@ class KeyDetector {
 		pitchClasses = new double[octaveSize];
 	}
 	
-	public int detectKey(double[] octaveBins) {
+	public Integer detectKey(double[] octaveBins) {
 		int sourceIndex = 0;
 		for (int pitchClass = 0; pitchClass < octaveSize; pitchClass++) {
 			double sum = 0;
@@ -32,6 +35,10 @@ class KeyDetector {
 			pitchClasses[pitchClass] = sum;
 		}
 		pitchClasses = smoother.smooth(pitchClasses);
+		double n = norm.norm(pitchClasses);
+		if (n < 1e-1) {
+			return null;
+		}
 		return classifier.classifyKey(pitchClasses);
 	}
 }

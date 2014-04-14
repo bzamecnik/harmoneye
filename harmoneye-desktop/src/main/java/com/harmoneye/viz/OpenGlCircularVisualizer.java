@@ -46,7 +46,7 @@ public class OpenGlCircularVisualizer implements
 	private TextRenderer renderer;
 	
 	private PitchClassNamer pitchClassNamer = PitchClassNamer.defaultInstance();
-	private int key;
+	private Integer key;
 	private TonicDistance tonicDistance = new TonicDistance(OCTAVE_SIZE);
 
 	public OpenGlCircularVisualizer() {
@@ -193,8 +193,8 @@ public class OpenGlCircularVisualizer implements
 			double value = values[index];
 			//Color color = colorFunction.toColor((float) value);
 			
-			float hue = tonicDistance.distanceToHue(tonicDistance.distance(movedPitchClass, key));
-			float saturation = (float)(0.1 + 0.75 * value);
+			float hue = key != null ? tonicDistance.distanceToHue(tonicDistance.distance(movedPitchClass, key)) : 0;
+			float saturation = key != null ? (float)(0.1 + 0.75 * value) : 0;
 			float brightness = (float)(0.25 + 0.75 * value);
 			Color color = Color.getHSBColor(hue, saturation, brightness);
 			
@@ -239,7 +239,7 @@ public class OpenGlCircularVisualizer implements
 			float value = getMaxBinValue(index);
 			//Color color = colorFunction.toColor((float) value);
 			
-			renderer.setColor(i == key ? Color.LIGHT_GRAY : Color.GRAY);
+			renderer.setColor(key != null && i == key ? Color.LIGHT_GRAY : Color.GRAY);
 			String str = pitchClassNamer.getName(index);
 			Rectangle2D bounds = renderer.getBounds(str);
 			int offsetX = (int) (scaleFactor * 0.5f * bounds.getWidth());

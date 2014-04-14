@@ -170,7 +170,7 @@ public class MusicAnalyzer implements SoundConsumer {
 			noiseGate.filter(smoothedOctaveBins);
 		}
 
-		int estimatedKey = keyDetector.detectKey(accumulatedOctaveBins);
+		Integer estimatedKey = keyDetector.detectKey(accumulatedOctaveBins);
 
 		AnalyzedFrame pcProfile = new AnalyzedFrame(ctx, allBins,
 			smoothedOctaveBins, detectedPitchClasses, estimatedKey);
