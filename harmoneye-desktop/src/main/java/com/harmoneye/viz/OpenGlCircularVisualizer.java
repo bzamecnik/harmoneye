@@ -179,13 +179,23 @@ public class OpenGlCircularVisualizer implements
 
 		gl.glBegin(GL.GL_TRIANGLES);
 		double angle = 0.5 * (1 - binsPerHalftone) * stepAngle;
+//		double angle = 0.5 * stepAngle;
 		for (int i = 0; i < values.length; i++, angle += stepAngle) {
 			int pitchClass = i / binsPerHalftone;
 			int binInPitchClass = i % binsPerHalftone;
 			int movedPitchClass = (pitchClass * pitchStep) % halftoneCount;
 			int index = movedPitchClass * binsPerHalftone + binInPitchClass;
+			
+			//index = (index - binsPerHalftone / 2 + values.length) % values.length;
+			
 			double value = values[index];
-			Color color = colorFunction.toColor((float) value);
+			//Color color = colorFunction.toColor((float) value);
+			
+			float hue = proximityToHue(tonicProximity(movedPitchClass, key));
+			float saturation = (float)(0.1 + 0.75 * value);
+			float brightness = (float)(0.25 + 0.75 * value);
+			Color color = Color.getHSBColor(hue, saturation, brightness);
+			
 			gl.glColor3ub((byte) color.getRed(),
 				(byte) color.getGreen(),
 				(byte) color.getBlue());
@@ -325,5 +335,15 @@ public class OpenGlCircularVisualizer implements
 	@Override
 	public Component getComponent() {
 		return component;
+	}
+	
+	private float tonicProximity(float tone, int tonic) {
+		float i = ((tone - tonic + OCTAVE_SIZE) * 7) % OCTAVE_SIZE;
+		return (i < 6 ? i : OCTAVE_SIZE - 1 + 6 - i) / (OCTAVE_SIZE - 1.0f);
+	}
+
+	// [0.0; 1.0] -> [1/3; 0.0]
+	private float proximityToHue(float value) {
+		return (1.0f - value) / 3.0f;
 	}
 }
