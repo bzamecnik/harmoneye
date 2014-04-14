@@ -3,6 +3,7 @@ package com.harmoneye.math.fft;
 import com.harmoneye.math.matrix.ComplexVector;
 import com.harmoneye.math.window.WindowFunction;
 import com.harmoneye.math.window.WindowIntegrator;
+import com.harmoneye.math.window.WindowSampler;
 
 import edu.emory.mathcs.jtransforms.fft.DoubleFFT_1D;
 
@@ -17,18 +18,9 @@ public class ShortTimeFourierTransform {
 	public ShortTimeFourierTransform(int windowSize, WindowFunction window) {
 		this.fft = new DoubleFFT_1D(windowSize);
 		dataRI = new ComplexVector(windowSize);
-		sampledWindow = sampleWindow(window, windowSize);
+		sampledWindow = new WindowSampler().sampleWindow(window, windowSize);
 		double windowIntegral = new WindowIntegrator().integral(window);
 		normalizationFactor = 2.0 / windowIntegral;
-	}
-
-	private double[] sampleWindow(WindowFunction window, int size) {
-		double[] coeffs = new double[size];
-		double sizeInv = 1.0 / size;
-		for (int i = 0; i < size; i++) {
-			coeffs[i] = window.value(i * sizeInv) * sizeInv;
-		}
-		return coeffs;
 	}
 
 	public ComplexVector transform(double[] signal, ComplexVector spectrum) {
