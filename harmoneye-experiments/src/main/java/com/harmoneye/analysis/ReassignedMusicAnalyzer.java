@@ -8,6 +8,8 @@ import org.apache.commons.math3.util.FastMath;
 import com.harmoneye.analysis.StreamingReassignedSpectrograph.OutputFrame;
 import com.harmoneye.audio.DoubleRingBuffer;
 import com.harmoneye.audio.SoundConsumer;
+import com.harmoneye.math.L1Norm;
+import com.harmoneye.math.L2Norm;
 import com.harmoneye.math.cqt.CqtContext;
 import com.harmoneye.math.filter.ExpSmoother;
 import com.harmoneye.viz.Visualizer;
@@ -44,10 +46,10 @@ public class ReassignedMusicAnalyzer implements SoundConsumer {
 	private AtomicBoolean accumulatorEnabled = new AtomicBoolean();
 
 	private static final boolean BIN_SMOOTHER_ENABLED = false;
-	private static final boolean OCTAVE_BIN_SMOOTHER_ENABLED = true;
-	private static final boolean HARMONIC_DETECTOR_ENABLED = true;
-	private static final boolean PERCUSSION_SUPPRESSOR_ENABLED = true;
-	private static final boolean SPECTRAL_EQUALIZER_ENABLED = true;
+	private static final boolean OCTAVE_BIN_SMOOTHER_ENABLED = false;
+	private static final boolean HARMONIC_DETECTOR_ENABLED = false;
+	private static final boolean PERCUSSION_SUPPRESSOR_ENABLED = false;
+	private static final boolean SPECTRAL_EQUALIZER_ENABLED = false;
 	private static final boolean NOISE_GATE_ENABLED = false;
 	private static final boolean NOISE_GATE_MEDIAN_THRESHOLD_ENABLED = false;
 
@@ -60,6 +62,10 @@ public class ReassignedMusicAnalyzer implements SoundConsumer {
 	private AtomicBoolean ringBufferLock = new AtomicBoolean();
 
 	private PeakFilter peakFilter;
+
+	private double[] accumulatedOctaveBins;
+
+	private KeyDetector keyDetector;
 	
 	public ReassignedMusicAnalyzer(Visualizer<AnalyzedFrame> visualizer,
 		float sampleRate, int bitsPerSample) {
@@ -100,8 +106,11 @@ public class ReassignedMusicAnalyzer implements SoundConsumer {
 		}
 		percussionSuppressor = new PercussionSuppressor(ctx.getTotalBins(), 7);
 		spectralEqualizer = new SpectralEqualizer(ctx.getTotalBins(), 30);
-		peakFilter = new PeakFilter(ctx.getBinsPerHalftone() * ctx.getHalftonesPerOctave(), 1-1.0/30);
+//		peakFilter = new PeakFilter(ctx.getBinsPerHalftone() * ctx.getHalftonesPerOctave(), 1-1.0/30);
+		peakFilter = new PeakFilter(ctx.getBinsPerHalftone() * ctx.getHalftonesPerOctave(), 1-1.0/60);
 
+		keyDetector = new KeyDetector(ctx.getBinsPerHalftone(), ctx.getHalftonesPerOctave());
+		
 		// cqt = new FastCqt(ctx);
 
 		chromagraph = new StreamingReassignedSpectrograph(windowSize, sampleRate);
@@ -132,18 +141,19 @@ public class ReassignedMusicAnalyzer implements SoundConsumer {
 //		System.out.println(System.nanoTime() + " compute spectrogram - begin");
 		OutputFrame outputFrame = chromagraph.computeChromagram(samples);
 		chromagram = outputFrame.getChromagram();
-
-		wrappedChromagram = chromagraph.postProcessChromagram(chromagram);
+		wrappedChromagram = outputFrame.getWrappedChromagram();
 		
-		wrappedChromagram = peakFilter .smooth(wrappedChromagram);
+		wrappedChromagram = peakFilter.smooth(wrappedChromagram);
 		
-//		wrappedChromagram = smooth(wrappedChromagram);
+		wrappedChromagram = smooth(wrappedChromagram);
+		
+		int estimatedKey = keyDetector.detectKey(accumulatedOctaveBins);
 		
 		// ugly hack
 		if (frame == null) {
 			outputWrappedChromagram = new double[wrappedChromagram.length];
-			frame = new AnalyzedFrame(ctx, outputWrappedChromagram, outputWrappedChromagram);
 		}
+		frame = new AnalyzedFrame(ctx, outputWrappedChromagram, outputWrappedChromagram, null, estimatedKey);
 		// here is still a place for a race condition...
 		System.arraycopy(wrappedChromagram, 0, outputWrappedChromagram, 0, wrappedChromagram.length); 
 		visualizer.update(frame);
@@ -185,7 +195,7 @@ public class ReassignedMusicAnalyzer implements SoundConsumer {
 		}
 
 		AnalyzedFrame pcProfile = new AnalyzedFrame(ctx, allBins,
-			smoothedOctaveBins, detectedPitchClasses);
+			smoothedOctaveBins, detectedPitchClasses, 0);
 		return pcProfile;
 	}
 
@@ -205,7 +215,7 @@ public class ReassignedMusicAnalyzer implements SoundConsumer {
 
 	private double[] smooth(double[] octaveBins) {
 		double[] smoothedOctaveBins = null;
-		double[] accumulatedOctaveBins = accumulator.smooth(octaveBins);
+		accumulatedOctaveBins = accumulator.smooth(octaveBins);
 		if (accumulatorEnabled.get()) {
 			// accumulator.add(octaveBins);
 			// smoothedOctaveBins = accumulator.getAverage();
