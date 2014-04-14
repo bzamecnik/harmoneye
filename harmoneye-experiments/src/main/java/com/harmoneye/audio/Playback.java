@@ -29,7 +29,7 @@ public class Playback implements Runnable {
 
 	private Thread thread;
 
-	private MusicAnalyzer soundAnalyzer;
+	private SoundConsumer soundAnalyzer;
 	private String inputFileName;
 	private int inputChannels;
 	private int monoBufferSizeSamples;
@@ -37,7 +37,7 @@ public class Playback implements Runnable {
 	private int readBufferSizeSamples;
 	private double inputChannelsInv;
 
-	public Playback(MusicAnalyzer soundAnalyzer, String inputFileName) {
+	public Playback(SoundConsumer soundAnalyzer, String inputFileName) {
 		this.soundAnalyzer = soundAnalyzer;
 		this.inputFileName = inputFileName;
 	}
