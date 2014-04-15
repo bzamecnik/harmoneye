@@ -9,8 +9,6 @@ import com.harmoneye.analysis.MusicAnalyzer.AnalyzedFrame;
 import com.harmoneye.analysis.StreamingReassignedSpectrograph.OutputFrame;
 import com.harmoneye.audio.DoubleRingBuffer;
 import com.harmoneye.audio.SoundConsumer;
-import com.harmoneye.math.L1Norm;
-import com.harmoneye.math.L2Norm;
 import com.harmoneye.math.cqt.CqtContext;
 import com.harmoneye.math.filter.ExpSmoother;
 import com.harmoneye.viz.Visualizer;

@@ -1,11 +1,8 @@
 package com.harmoneye.analysis;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
-
-import com.harmoneye.music.PitchClassNamer;
-import com.harmoneye.music.PitchClassSet;
 
 public class KeyClassifierTest {
 

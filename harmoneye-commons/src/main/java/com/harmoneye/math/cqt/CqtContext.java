@@ -3,7 +3,6 @@ package com.harmoneye.math.cqt;
 import org.apache.commons.math3.util.FastMath;
 
 import com.harmoneye.math.window.BlackmanWindow;
-import com.harmoneye.math.window.HammingWindow;
 import com.harmoneye.math.window.WindowFunction;
 import com.harmoneye.math.window.WindowIntegrator;
 
