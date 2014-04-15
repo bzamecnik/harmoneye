@@ -2,6 +2,8 @@ package com.harmoneye.viz;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
@@ -34,6 +36,8 @@ public class OpenGlLinearVisualizer implements SwingVisualizer<AnalyzedFrame>,
 
 	private boolean isLandscape;
 	private double aspectRatio = 1.0;
+	
+	private Map<String, Object> config = new HashMap<String, Object>();
 
 	public OpenGlLinearVisualizer() {
 		GLProfile glp = GLProfile.getDefault();
@@ -59,10 +63,6 @@ public class OpenGlLinearVisualizer implements SwingVisualizer<AnalyzedFrame>,
 		}
 
 		this.frame = frame;
-	}
-
-	@Override
-	public void setPitchStep(int i) {
 	}
 
 	@Override
@@ -257,5 +257,10 @@ public class OpenGlLinearVisualizer implements SwingVisualizer<AnalyzedFrame>,
 	@Override
 	public Component getComponent() {
 		return component;
+	}
+
+	@Override
+	public Map<String, Object> getConfig() {
+		return config;
 	}
 }

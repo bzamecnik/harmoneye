@@ -57,12 +57,12 @@ public class Java2dCircularVisualizer extends AbstractJava2dVisualizer {
 	}
 
 	private void drawPitchClassBins(Graphics2D graphics, int size, float center, float x, float y) {
-		
+		int pitchStep = getPitchStep();
 		float arcAngleStep = 360.0f / pitchBinCount;
 		for (int i = 0; i < pitchBinCount; i++) {
 			int pitchClass = i / binsPerHalftone;
 			int binInPitchClass = i % binsPerHalftone;
-			int movedPitchClass = (pitchClass * getPitchStep()) % 12;
+			int movedPitchClass = (pitchClass * pitchStep) % 12;
 			int index = movedPitchClass * binsPerHalftone + binInPitchClass;
 			
 			float value = (float) pcBins[index];
@@ -92,6 +92,7 @@ public class Java2dCircularVisualizer extends AbstractJava2dVisualizer {
 	}
 
 	private void drawHalftoneNames(Graphics2D graphics, int size, float center, float x, float y) {
+		int pitchStep = getPitchStep();
 		Font font = new Font("Arial", Font.BOLD, size / 15);
 		graphics.setFont(font);
 		FontMetrics fm = graphics.getFontMetrics();
@@ -99,7 +100,7 @@ public class Java2dCircularVisualizer extends AbstractJava2dVisualizer {
 		double angleStep = 2 * FastMath.PI / OCTAVE_SIZE;
 		double angle = 9 * angleStep;
 		for (int i = 0; i < OCTAVE_SIZE; i++, angle += angleStep) {
-			int index = (i * getPitchStep()) % 12;
+			int index = (i * pitchStep) % 12;
 			float value = getMaxBinValue(index);
 			Color color = getColor(value);
 			graphics.setColor(color);

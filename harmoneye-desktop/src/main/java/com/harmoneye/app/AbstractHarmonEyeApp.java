@@ -195,7 +195,7 @@ public class AbstractHarmonEyeApp {
 
 		public void actionPerformed(ActionEvent e) {
 			fifthsEnabled = !fifthsEnabled;
-			visualizer.setPitchStep(fifthsEnabled ? 7 : 1);
+			visualizer.getConfig().put("pitchStep", fifthsEnabled ? 7 : 1);
 			//visualizer.getPanel().repaint();
 		}
 	}

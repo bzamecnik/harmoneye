@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
 import java.awt.geom.Rectangle2D;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
@@ -32,8 +34,8 @@ public class OpenGlCircularVisualizer implements
 
 	private static final int OCTAVE_SIZE = 12;
 
-	private int pitchStep = 1;
-
+	private Map<String, Object> config;
+	
 	private double[] values;
 
 	private ColorFunction colorFunction = new TemperatureColorFunction();
@@ -50,6 +52,9 @@ public class OpenGlCircularVisualizer implements
 	private TonicDistance tonicDistance = new TonicDistance(OCTAVE_SIZE);
 
 	public OpenGlCircularVisualizer() {
+		config = new HashMap<String, Object>();
+		config.put("pitchStep", 1);
+		
 		GLProfile glp = GLProfile.getDefault();
 		GLCapabilities caps = new GLCapabilities(glp);
 
@@ -84,11 +89,6 @@ public class OpenGlCircularVisualizer implements
 
 		segmentCountInv = 1.0 / values.length;
 		stepAngle = 2 * FastMath.PI * segmentCountInv;
-	}
-
-	@Override
-	public void setPitchStep(int i) {
-		this.pitchStep = i;
 	}
 
 	@Override
@@ -177,6 +177,8 @@ public class OpenGlCircularVisualizer implements
 			return;
 		}
 
+		int pitchStep = getPitchStep();
+		
 		double radius = 0.68;
 
 		gl.glBegin(GL.GL_TRIANGLES);
@@ -222,6 +224,8 @@ public class OpenGlCircularVisualizer implements
 	}
 
 	private void drawHalftoneNames(GLAutoDrawable drawable) {
+		int pitchStep = getPitchStep();
+		
 		int width = drawable.getWidth();
 		int height = drawable.getHeight();
 
@@ -252,6 +256,11 @@ public class OpenGlCircularVisualizer implements
 		}
 
 		renderer.endRendering();
+	}
+
+	private int getPitchStep() {
+		Integer pitchStep = (Integer) config.get("pitchStep");
+		return pitchStep != null ? pitchStep : 1;
 	}
 
 	private float getMaxBinValue(int halftoneIndex) {
@@ -337,5 +346,10 @@ public class OpenGlCircularVisualizer implements
 	@Override
 	public Component getComponent() {
 		return component;
+	}
+	
+	@Override
+	public Map<String, Object> getConfig() {
+		return config;
 	}
 }

@@ -6,23 +6,27 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.Rectangle2D;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.JPanel;
 
-import com.harmoneye.analysis.AnalyzedFrame;
+import com.harmoneye.analysis.MusicAnalyzer.AnalyzedFrame;
 
 abstract class AbstractJava2dVisualizer extends JPanel implements SwingVisualizer<AnalyzedFrame> {
 
 	private static final long serialVersionUID = 1L;
 
-	protected static final String[] HALFTONE_NAMES = { "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B" };
-	private static final int DEFAULT_PITCH_STEP = 1;
-
-	private int pitchStep = DEFAULT_PITCH_STEP;
 	private AnalyzedFrame pcProfile;
 	protected Rectangle2D.Float line = new Rectangle2D.Float();
 	private ColorFunction colorFunction = new TemperatureColorFunction();
 
+	private Map<String, Object> config = new  HashMap<String, Object>();
+
+	public AbstractJava2dVisualizer() {
+		config.put("pitchStep", 1);
+	}
+	
 	public void update(AnalyzedFrame pcProfile) {
 		this.pcProfile = pcProfile;
 		repaint();
@@ -34,11 +38,8 @@ abstract class AbstractJava2dVisualizer extends JPanel implements SwingVisualize
 	}
 
 	public int getPitchStep() {
-		return pitchStep;
-	}
-
-	public void setPitchStep(int pitchStep) {
-		this.pitchStep = pitchStep;
+		Integer pitchStep = (Integer) config.get("pitchStep");
+		return pitchStep != null ? pitchStep : 1;
 	}
 
 	@Override
@@ -59,6 +60,11 @@ abstract class AbstractJava2dVisualizer extends JPanel implements SwingVisualize
 
 	protected AnalyzedFrame getPcProfile() {
 		return pcProfile;
+	}
+	
+	@Override
+	public Map<String, Object> getConfig() {
+		return config;
 	}
 
 }
