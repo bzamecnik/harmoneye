@@ -2,7 +2,7 @@ package com.harmoneye.app.tuner;
 
 import processing.core.PApplet;
 
-import com.harmoneye.audio.Capture;
+import com.harmoneye.audio.SoundCapture;
 import com.harmoneye.music.PitchClassNamer;
 
 public class TunerApp extends PApplet {
@@ -19,7 +19,7 @@ public class TunerApp extends PApplet {
 
 	private static final long serialVersionUID = -1188263388156753697L;
 
-	private Capture audioCapture;
+	private SoundCapture audioCapture;
 	private ReassignedTuningAnalyzer tuningAnalyzer;
 
 	private float[] toneSelectionWeights = new float[12];
@@ -51,7 +51,7 @@ public class TunerApp extends PApplet {
 		try {
 			tuningAnalyzer = new ReassignedTuningAnalyzer(WINDOW_SIZE,
 				SAMPLE_RATE);
-			audioCapture = new Capture(tuningAnalyzer, (float) SAMPLE_RATE,
+			audioCapture = new SoundCapture(tuningAnalyzer, SAMPLE_RATE,
 				BITS_PER_SAMPLE, INPUT_BUFFER_SIZE);
 
 			tuningAnalyzer.start();

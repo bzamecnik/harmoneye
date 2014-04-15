@@ -1,22 +1,22 @@
 package com.harmoneye.app;
 
-import com.harmoneye.audio.Capture;
+import com.harmoneye.audio.SoundCapture;
 
 public class CaptureHarmonEyeApp extends AbstractHarmonEyeApp {
 
-	private Capture capture;
+	private SoundCapture soundCapture;
 
 	public CaptureHarmonEyeApp() {
-		capture = new Capture(soundAnalyzer, AUDIO_SAMPLE_RATE, AUDIO_BITS_PER_SAMPLE);
+		soundCapture = new SoundCapture(soundAnalyzer, AUDIO_SAMPLE_RATE, AUDIO_BITS_PER_SAMPLE);
 	}
 
 	public void start() {
 		super.start();
-		capture.start();
+		soundCapture.start();
 	}
 
 	public void stop() {
 		super.stop();
-		capture.stop();
+		soundCapture.stop();
 	}
 }

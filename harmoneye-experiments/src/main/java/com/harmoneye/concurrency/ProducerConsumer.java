@@ -1,7 +1,7 @@
 package com.harmoneye.concurrency;
 
 import com.harmoneye.audio.ByteConverter;
-import com.harmoneye.audio.SoundCapture;
+import com.harmoneye.audio.RawSoundCapture;
 
 /**
  * 1 producer and 3 consumers producing/consuming 10 items
@@ -35,10 +35,10 @@ public class ProducerConsumer {
 
 	class Producer implements Runnable {
 
-		private SoundCapture soundCapture;
+		private RawSoundCapture soundCapture;
 
 		public Producer() throws Exception {
-			soundCapture = SoundCapture.createWithDefaultAudioFormat(INPUT_BUFFER_SAMPLE_COUNT);
+			soundCapture = RawSoundCapture.createWithDefaultAudioFormat(INPUT_BUFFER_SAMPLE_COUNT);
 		}
 
 		public void produce() {

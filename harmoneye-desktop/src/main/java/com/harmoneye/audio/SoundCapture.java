@@ -7,45 +7,45 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.TargetDataLine;
 
-public class Capture implements Runnable {
+public class SoundCapture implements Runnable {
 
 	// TODO: Automatically find out minimum usable buffer size.
 	// If its too small, buffer underruns make weird artifacts!!!
 
 	private static final int DEFAULT_READ_BUFFER_SIZE_SAMPLES = 1024;
 
+	private SoundConsumer soundConsumer;
+
 	private Thread thread;
 	private AtomicBoolean isRunning = new AtomicBoolean();
 
-	private int readBufferSizeInSamples;
-	private AudioFormat format;
-	private int bufferSize;
+	private int bufferSizeInBytes;
+	private int bufferSizeInSamples;
+	private AudioFormat audioFormat;
 
-	private SoundConsumer soundConsumer;
-
-	public Capture(SoundConsumer soundConsumer, float sampleRate,
+	public SoundCapture(SoundConsumer soundConsumer, double sampleRate,
 		int sampleSizeBits) {
 		this(soundConsumer, sampleRate, sampleSizeBits,
 			DEFAULT_READ_BUFFER_SIZE_SAMPLES);
 	}
 
-	public Capture(SoundConsumer soundConsumer, float sampleRate,
-		int sampleSizeBits, int readBufferSizeSamples) {
+	public SoundCapture(SoundConsumer soundConsumer, double sampleRate,
+		int bitsPerSample, int bufferSizeSamples) {
 		this.soundConsumer = soundConsumer;
-		this.readBufferSizeInSamples = readBufferSizeSamples;
+		this.bufferSizeInSamples = bufferSizeSamples;
 
 		AudioFormat.Encoding encoding = AudioFormat.Encoding.PCM_SIGNED;
 		int channelCount = 1;
-		int sampleSizeBytes = sampleSizeBits / 8;
+		int sampleSizeBytes = bitsPerSample / 8;
 		int frameSizeBytes = channelCount * sampleSizeBytes;
 		boolean bigEndian = false;
 
-		format = new AudioFormat(encoding, sampleRate, sampleSizeBits,
-			channelCount, frameSizeBytes, sampleRate, bigEndian);
+		audioFormat = new AudioFormat(encoding, (float)sampleRate, bitsPerSample,
+			channelCount, frameSizeBytes, (float)sampleRate, bigEndian);
 
-		bufferSize = sampleSizeBytes * readBufferSizeInSamples;
-		System.out.println("buffer size: " + bufferSize + " B, "
-			+ readBufferSizeInSamples + " samples");
+		bufferSizeInBytes = sampleSizeBytes * bufferSizeInSamples;
+		System.out.println("buffer size: " + bufferSizeInBytes + " B, "
+			+ bufferSizeInSamples + " samples");
 	}
 
 	public void start() {
@@ -69,24 +69,24 @@ public class Capture implements Runnable {
 	}
 
 	private void capture() throws Exception {
-
-		DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
+		DataLine.Info info = new DataLine.Info(TargetDataLine.class,
+			audioFormat);
 
 		TargetDataLine line = (TargetDataLine) AudioSystem.getLine(info);
 
-		line.open(format, bufferSize);
+		line.open(audioFormat, bufferSizeInBytes);
 
-		byte[] data = new byte[bufferSize];
-		double[] amplitudes = new double[readBufferSizeInSamples];
+		byte[] samples = new byte[bufferSizeInBytes];
+		double[] amplitudes = new double[bufferSizeInSamples];
 
 		line.start();
 
 		while (isRunning.get()) {
-			int readBytesCount = line.read(data, 0, bufferSize);
+			int readBytesCount = line.read(samples, 0, bufferSizeInBytes);
 			if (readBytesCount == -1) {
 				break;
 			}
-			ByteConverter.littleEndianBytesToDoubles(data, amplitudes);
+			ByteConverter.littleEndianBytesToDoubles(samples, amplitudes);
 
 			soundConsumer.consume(amplitudes);
 		}

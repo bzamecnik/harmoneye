@@ -31,7 +31,7 @@ import javax.sound.sampled.TargetDataLine;
  * When there is nothing more to read the next() method automatically stops the
  * capturing.
  */
-public class SoundCapture {
+public class RawSoundCapture {
 
 	/** sound input line */
 	private TargetDataLine line;
@@ -42,7 +42,7 @@ public class SoundCapture {
 
 	private boolean started;
 
-	public SoundCapture(int bufferSizeInSamples, int bytesPerSample, AudioFormat format)
+	public RawSoundCapture(int bufferSizeInSamples, int bytesPerSample, AudioFormat format)
 		throws LineUnavailableException {
 		this.bufferSizeInBytes = bytesPerSample * bufferSizeInSamples;
 
@@ -53,7 +53,7 @@ public class SoundCapture {
 		this.rawSampleBuffer = new byte[bufferSizeInBytes];
 	}
 
-	public static SoundCapture createWithDefaultAudioFormat(int bufferSizeInSamples) throws LineUnavailableException {
+	public static RawSoundCapture createWithDefaultAudioFormat(int bufferSizeInSamples) throws LineUnavailableException {
 		AudioFormat.Encoding encoding = AudioFormat.Encoding.PCM_SIGNED;
 		float sampleRate = 11025.0f;
 		int channelCount = 1;
@@ -63,7 +63,7 @@ public class SoundCapture {
 		boolean bigEndian = false;
 		AudioFormat format = new AudioFormat(encoding, sampleRate, sampleSizeInBits, channelCount, frameSizeInBytes,
 			sampleRate, bigEndian);
-		return new SoundCapture(bufferSizeInSamples, bytesPerSample, format);
+		return new RawSoundCapture(bufferSizeInSamples, bytesPerSample, format);
 	}
 
 	public void start() {
