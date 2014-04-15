@@ -10,7 +10,6 @@ public class TunerApp extends PApplet {
 	private static final int WINDOW_SIZE = 4096;
 	private static final double SAMPLE_RATE = 44100;
 	private static final int BITS_PER_SAMPLE = 16;
-	private static final int INPUT_BUFFER_SIZE = 1024;
 	private static final int FRAME_RATE = 60;
 
 	private static final String renderer = P3D;
@@ -52,7 +51,7 @@ public class TunerApp extends PApplet {
 			tuningAnalyzer = new ReassignedTuningAnalyzer(WINDOW_SIZE,
 				SAMPLE_RATE);
 			audioCapture = new SoundCapture(tuningAnalyzer, SAMPLE_RATE,
-				BITS_PER_SAMPLE, INPUT_BUFFER_SIZE);
+				BITS_PER_SAMPLE);
 
 			tuningAnalyzer.start();
 			audioCapture.start();
