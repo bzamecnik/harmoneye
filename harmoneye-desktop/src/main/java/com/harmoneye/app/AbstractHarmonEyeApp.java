@@ -21,10 +21,9 @@ import javax.swing.KeyStroke;
 import org.simplericity.macify.eawt.ApplicationEvent;
 import org.simplericity.macify.eawt.ApplicationListener;
 
-import com.harmoneye.analysis.AnalyzedFrame;
 import com.harmoneye.analysis.MusicAnalyzer;
+import com.harmoneye.analysis.MusicAnalyzer.AnalyzedFrame;
 import com.harmoneye.viz.OpenGlCircularVisualizer;
-import com.harmoneye.viz.OpenGlLinearVisualizer;
 import com.harmoneye.viz.SwingVisualizer;
 
 public class AbstractHarmonEyeApp {
@@ -170,7 +169,7 @@ public class AbstractHarmonEyeApp {
 	}
 
 	public void init() {
-		soundAnalyzer.init();
+		soundAnalyzer.initialize();
 		initialized.set(true);
 	}
 

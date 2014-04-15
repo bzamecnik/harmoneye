@@ -5,8 +5,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 
-import com.harmoneye.analysis.AnalyzedFrame;
-import com.harmoneye.viz.AbstractJava2dVisualizer;
+import com.harmoneye.analysis.MusicAnalyzer.AnalyzedFrame;
 
 public class Java2dLinearVisualizer extends AbstractJava2dVisualizer {
 

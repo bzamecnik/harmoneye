@@ -15,8 +15,6 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 
 import javazoom.spi.mpeg.sampled.file.MpegAudioFileFormat;
 
-import com.harmoneye.analysis.MusicAnalyzer;
-
 // TODO: allow rewinding
 // - find out the total length of the file
 // - find out current position

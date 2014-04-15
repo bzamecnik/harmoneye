@@ -9,7 +9,7 @@ import java.awt.Graphics2D;
 
 import org.apache.commons.math3.util.FastMath;
 
-import com.harmoneye.analysis.AnalyzedFrame;
+import com.harmoneye.analysis.MusicAnalyzer.AnalyzedFrame;
 import com.harmoneye.music.PitchClassNamer;
 
 public class Java2dCircularVisualizer extends AbstractJava2dVisualizer {

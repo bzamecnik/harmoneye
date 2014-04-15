@@ -2,7 +2,7 @@ package com.harmoneye.app;
 
 import javax.swing.JFrame;
 
-import com.harmoneye.analysis.AnalyzedFrame;
+import com.harmoneye.analysis.MusicAnalyzer.AnalyzedFrame;
 import com.harmoneye.math.cqt.CqtContext;
 import com.harmoneye.viz.Java2dCircularVisualizer;
 

@@ -11,7 +11,6 @@ import com.harmoneye.audio.SoundConsumer;
 import com.harmoneye.math.cqt.CqtContext;
 import com.harmoneye.math.cqt.FastCqt;
 import com.harmoneye.math.filter.ExpSmoother;
-import com.harmoneye.math.filter.MovingAverageAccumulator;
 import com.harmoneye.math.matrix.ComplexVector;
 import com.harmoneye.math.matrix.DComplex;
 import com.harmoneye.viz.Visualizer;
@@ -42,6 +41,7 @@ public class MusicAnalyzer implements SoundConsumer {
 	/** peak amplitude spectrum */
 	private double[] amplitudeSpectrumDb;
 	private double[] octaveBins;
+	private double[] accumulatedOctaveBins;
 
 	private AtomicBoolean initialized = new AtomicBoolean();
 	private AtomicBoolean accumulatorEnabled = new AtomicBoolean();
@@ -54,17 +54,14 @@ public class MusicAnalyzer implements SoundConsumer {
 	private static final boolean NOISE_GATE_ENABLED = false;
 	private static final boolean NOISE_GATE_MEDIAN_THRESHOLD_ENABLED = false;
 
-	private double[] accumulatedOctaveBins;
-
 	public MusicAnalyzer(Visualizer<AnalyzedFrame> visualizer,
-		float sampleRate, int bitsPerSample) {
+		double sampleRate, int bitsPerSample) {
 		this.visualizer = visualizer;
 
 		//@formatter:off
 		ctx = CqtContext.create()
 			.samplingFreq(sampleRate)
 //			.maxFreq((2 << 6) * 65.4063913251)
-//			.octaves(2)
 			.kernelOctaves(1)
 			.binsPerHalftone(9)
 			.build();
@@ -90,20 +87,21 @@ public class MusicAnalyzer implements SoundConsumer {
 			}
 		}
 		percussionSuppressor = new PercussionSuppressor(ctx.getTotalBins(), 7);
-		spectralEqualizer = new SpectralEqualizer(ctx.getTotalBins(), 30);
+		spectralEqualizer = new SpectralEqualizer(ctx.getTotalBins(), 50);
 		keyDetector = new KeyDetector(ctx.getBinsPerHalftone(),
 			ctx.getHalftonesPerOctave());
 
 		cqt = new FastCqt(ctx);
 	}
 
-	public void init() {
+	public void initialize() {
 		cqt.init();
 		initialized.set(true);
 	}
 
 	@Override
 	public void consume(double[] samples) {
+		removeMean(samples);
 		ringBufferBank.write(samples);
 	}
 
@@ -210,6 +208,65 @@ public class MusicAnalyzer implements SoundConsumer {
 		accumulatorEnabled.set(!accumulatorEnabled.get());
 		if (accumulatorEnabled.get()) {
 			// accumulator.reset();
+		}
+	}
+
+	// remove DC bias
+	private void removeMean(double[] values) {
+		double mean = mean(values);
+		for (int i = 0; i < values.length; i++) {
+			values[i] -= mean; 
+		}
+	}
+	
+	private double mean(double[] values) {
+		double mean = 0;
+		for (int i = 0; i < values.length; i++) {
+			mean += values[i];
+		}
+		mean /= values.length;
+		return mean;
+	}
+	
+	public static class AnalyzedFrame {
+
+		private final double[] allBins;
+		private final double[] octaveBins;
+		private final CqtContext ctx;
+		private double[] detectedPitchClasses;
+		private Integer key;
+
+		public AnalyzedFrame(CqtContext ctx, double[] allBins, double[] octaveBins) {
+			this(ctx, allBins, octaveBins, null, null);
+		}
+
+		public AnalyzedFrame(CqtContext ctx, double[] allBins, double[] octaveBins,
+			double[] detectedPitchClasses, Integer key) {
+			this.allBins = allBins;
+			this.octaveBins = octaveBins;
+			this.ctx = ctx;
+			this.detectedPitchClasses = detectedPitchClasses;
+			this.key = key;
+		}
+
+		public double[] getAllBins() {
+			return allBins;
+		}
+
+		public double[] getOctaveBins() {
+			return octaveBins;
+		}
+
+		public CqtContext getCtxContext() {
+			return ctx;
+		}
+
+		public double[] getDetectedPitchClasses() {
+			return detectedPitchClasses;
+		}
+
+		public Integer getKey() {
+			return key;
 		}
 	}
 }

@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.apache.commons.math3.util.FastMath;
 
+import com.harmoneye.analysis.MusicAnalyzer.AnalyzedFrame;
 import com.harmoneye.analysis.StreamingReassignedSpectrograph.OutputFrame;
 import com.harmoneye.audio.DoubleRingBuffer;
 import com.harmoneye.audio.SoundConsumer;

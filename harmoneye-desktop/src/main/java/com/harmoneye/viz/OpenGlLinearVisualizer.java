@@ -15,7 +15,7 @@ import javax.media.opengl.awt.GLCanvas;
 
 import org.apache.commons.math3.util.FastMath;
 
-import com.harmoneye.analysis.AnalyzedFrame;
+import com.harmoneye.analysis.MusicAnalyzer.AnalyzedFrame;
 import com.harmoneye.math.cqt.CqtContext;
 import com.jogamp.opengl.util.Animator;
 
