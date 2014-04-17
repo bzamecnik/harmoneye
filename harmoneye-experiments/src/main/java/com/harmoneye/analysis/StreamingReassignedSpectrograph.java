@@ -104,7 +104,7 @@ public class StreamingReassignedSpectrograph {
 
 		chromagramWrapper = new ChromagramWrapper(tonesPerOctave, binsPerTone,
 			wrappedBinsPerTone, chromagramSize, octaveBinShift,
-			circleOfFifthsEnabled, true);
+			circleOfFifthsEnabled, false);
 	}
 
 	/**
