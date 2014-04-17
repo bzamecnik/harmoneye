@@ -35,7 +35,7 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 	private int boxFilterSize = 10;
 	private boolean correlationEnabled = true;
 	private boolean octaveWrapEnabled = true;
-	private boolean circleOfFifthsEnabled = true;
+	private boolean circleOfFifthsEnabled = false;
 	// enable L2-norm normalization, otherwise use just plain constant scaling
 	private boolean normalizationEnabled = true;
 	// prevent zero-division - zero out too weak signals

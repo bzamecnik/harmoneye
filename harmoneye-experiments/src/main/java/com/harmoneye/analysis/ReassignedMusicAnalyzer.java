@@ -9,8 +9,13 @@ import com.harmoneye.analysis.MusicAnalyzer.AnalyzedFrame;
 import com.harmoneye.analysis.StreamingReassignedSpectrograph.OutputFrame;
 import com.harmoneye.audio.DoubleRingBuffer;
 import com.harmoneye.audio.SoundConsumer;
+import com.harmoneye.math.L2Norm;
 import com.harmoneye.math.cqt.CqtContext;
 import com.harmoneye.math.filter.ExpSmoother;
+import com.harmoneye.math.filter.HighPassFilter;
+import com.harmoneye.math.filter.MovingAverageAccumulator;
+import com.harmoneye.math.filter.Normalizer;
+import com.harmoneye.math.filter.NormalizingHighPassFilter;
 import com.harmoneye.viz.Visualizer;
 
 public class ReassignedMusicAnalyzer implements SoundConsumer {
@@ -26,7 +31,7 @@ public class ReassignedMusicAnalyzer implements SoundConsumer {
 	// private DecibelCalculator dbCalculator;
 	private HarmonicPatternPitchClassDetector pcDetector;
 	private Visualizer<AnalyzedFrame> visualizer;
-	// private MovingAverageAccumulator accumulator;
+//	 private MovingAverageAccumulator accumulator;
 	private ExpSmoother accumulator;
 	private ExpSmoother allBinSmoother;
 	private ExpSmoother octaveBinSmoother;
@@ -45,7 +50,7 @@ public class ReassignedMusicAnalyzer implements SoundConsumer {
 	private AtomicBoolean accumulatorEnabled = new AtomicBoolean();
 
 	private static final boolean BIN_SMOOTHER_ENABLED = false;
-	private static final boolean OCTAVE_BIN_SMOOTHER_ENABLED = false;
+	private static final boolean OCTAVE_BIN_SMOOTHER_ENABLED = true;
 	private static final boolean HARMONIC_DETECTOR_ENABLED = false;
 	private static final boolean PERCUSSION_SUPPRESSOR_ENABLED = false;
 	private static final boolean SPECTRAL_EQUALIZER_ENABLED = false;
@@ -55,6 +60,7 @@ public class ReassignedMusicAnalyzer implements SoundConsumer {
 	AtomicBoolean bufferLocked = new AtomicBoolean();
 
 	private double[] outputWrappedChromagram;
+	private double[] outputChromagram;
 
 	private AnalyzedFrame frame;
 
@@ -65,7 +71,9 @@ public class ReassignedMusicAnalyzer implements SoundConsumer {
 	private double[] accumulatedOctaveBins;
 
 	private KeyDetector keyDetector;
-	
+
+	private L2Norm l2Norm = new L2Norm();
+
 	public ReassignedMusicAnalyzer(Visualizer<AnalyzedFrame> visualizer,
 		float sampleRate, int bitsPerSample) {
 		this.visualizer = visualizer;
@@ -95,7 +103,7 @@ public class ReassignedMusicAnalyzer implements SoundConsumer {
 		octaveBinSmoother = new ExpSmoother(ctx.getBinsPerOctave(),
 			SMOOTHING_FACTOR);
 		allBinSmoother = new ExpSmoother(ctx.getTotalBins(), SMOOTHING_FACTOR);
-		// accumulator = new MovingAverageAccumulator(ctx.getBinsPerOctave());
+//		 accumulator = new MovingAverageAccumulator(ctx.getBinsPerOctave());
 		accumulator = new ExpSmoother(ctx.getBinsPerOctave(), 0.005);
 		if (NOISE_GATE_ENABLED) {
 			noiseGate = new NoiseGate(ctx.getBinsPerOctave());
@@ -105,60 +113,77 @@ public class ReassignedMusicAnalyzer implements SoundConsumer {
 		}
 		percussionSuppressor = new PercussionSuppressor(ctx.getTotalBins(), 7);
 		spectralEqualizer = new SpectralEqualizer(ctx.getTotalBins(), 30);
-//		peakFilter = new PeakFilter(ctx.getBinsPerHalftone() * ctx.getHalftonesPerOctave(), 1-1.0/30);
-		peakFilter = new PeakFilter(ctx.getBinsPerHalftone() * ctx.getHalftonesPerOctave(), 1-1.0/60);
+		// peakFilter = new PeakFilter(ctx.getBinsPerHalftone() *
+		// ctx.getHalftonesPerOctave(), 1-1.0/30);
+		peakFilter = new PeakFilter(ctx.getBinsPerHalftone()
+			* ctx.getHalftonesPerOctave(), 1 - 1.0 / 60);
 
-		keyDetector = new KeyDetector(ctx.getBinsPerHalftone(), ctx.getHalftonesPerOctave());
-		
+		keyDetector = new KeyDetector(ctx.getBinsPerHalftone(),
+			ctx.getHalftonesPerOctave());
+
 		// cqt = new FastCqt(ctx);
 
-		chromagraph = new StreamingReassignedSpectrograph(windowSize, sampleRate);
+		chromagraph = new StreamingReassignedSpectrograph(windowSize,
+			sampleRate);
 	}
 
-	public void init() {
+	public void initialize() {
 		// cqt.init();
 		initialized.set(true);
 	}
 
 	@Override
 	public void consume(double[] samples) {
-//		if (ringBufferLock.compareAndSet(false, true)) {
-			//System.out.println("update():" + Arrays.toString(samples));
-			ringBuffer.write(samples);
-//			ringBufferLock.set(false);
-//		}
+		// if (ringBufferLock.compareAndSet(false, true)) {
+		// System.out.println("update():" + Arrays.toString(samples));
+		ringBuffer.write(samples);
+		// ringBufferLock.set(false);
+		// }
 	}
 
 	public void updateSignal() {
 		if (!initialized.get()) {
 			return;
 		}
-//		if (ringBufferLock.compareAndSet(false, true)) {
+		// if (ringBufferLock.compareAndSet(false, true)) {
 		ringBuffer.readLast(samples.length, samples);
-//		System.out.println(Arrays.toString(samples));
-		
-//		System.out.println(System.nanoTime() + " compute spectrogram - begin");
+		// System.out.println(Arrays.toString(samples));
+
+		// System.out.println(System.nanoTime() +
+		// " compute spectrogram - begin");
 		OutputFrame outputFrame = chromagraph.computeChromagram(samples);
 		chromagram = outputFrame.getChromagram();
 		wrappedChromagram = outputFrame.getWrappedChromagram();
-		
-		wrappedChromagram = peakFilter.smooth(wrappedChromagram);
-		
+
+//		 wrappedChromagram = peakFilter.smooth(wrappedChromagram);
+
 		wrappedChromagram = smooth(wrappedChromagram);
-		
-		int estimatedKey = keyDetector.detectKey(accumulatedOctaveBins);
-		
+
+		Integer estimatedKey = keyDetector.detectKey(wrappedChromagram);
+
 		// ugly hack
 		if (frame == null) {
 			outputWrappedChromagram = new double[wrappedChromagram.length];
+			outputChromagram = new double[chromagram.length];
 		}
-		frame = new AnalyzedFrame(ctx, outputWrappedChromagram, outputWrappedChromagram, null, estimatedKey);
+
+		frame = new AnalyzedFrame(ctx, outputChromagram,
+			outputWrappedChromagram, null, estimatedKey);
 		// here is still a place for a race condition...
-		System.arraycopy(wrappedChromagram, 0, outputWrappedChromagram, 0, wrappedChromagram.length); 
+		System.arraycopy(chromagram,
+			0,
+			outputChromagram,
+			0,
+			outputChromagram.length);
+		System.arraycopy(wrappedChromagram,
+			0,
+			outputWrappedChromagram,
+			0,
+			wrappedChromagram.length);
 		visualizer.update(frame);
-//		System.out.println(System.nanoTime() + " compute spectrogram - end");
-//		ringBufferLock.set(false);
-//		}
+		// System.out.println(System.nanoTime() + " compute spectrogram - end");
+		// ringBufferLock.set(false);
+		// }
 	}
 
 	private AnalyzedFrame analyzeFrame(double[] allBins) {
@@ -214,7 +239,12 @@ public class ReassignedMusicAnalyzer implements SoundConsumer {
 
 	private double[] smooth(double[] octaveBins) {
 		double[] smoothedOctaveBins = null;
+
 		accumulatedOctaveBins = accumulator.smooth(octaveBins);
+//		accumulatedOctaveBins = accumulator.add(octaveBins);
+
+//		System.out.println("octave bins:" + l2Norm.norm(octaveBins)
+//			+ ", accumulated: " + l2Norm.norm(accumulatedOctaveBins));
 		if (accumulatorEnabled.get()) {
 			// accumulator.add(octaveBins);
 			// smoothedOctaveBins = accumulator.getAverage();

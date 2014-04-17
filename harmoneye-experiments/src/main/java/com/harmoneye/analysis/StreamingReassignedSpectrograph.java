@@ -9,6 +9,7 @@ import com.harmoneye.math.MaxNorm;
 import com.harmoneye.math.fft.ShortTimeFourierTransform;
 import com.harmoneye.math.filter.HighPassFilter;
 import com.harmoneye.math.filter.Normalizer;
+import com.harmoneye.math.filter.NormalizingHighPassFilter;
 import com.harmoneye.math.matrix.ComplexVector;
 import com.harmoneye.math.window.BlackmanWindow;
 
@@ -24,14 +25,14 @@ public class StreamingReassignedSpectrograph {
 	private boolean transientFilterEnabled = true;
 	// minimum threshold for secondDerivatives [0; 1] to consider the
 	// energy as not being a transient
-	double transientThreshold = 0.4;
+	private double transientThreshold = 0.4;
 	private boolean highPassFilterEnabled = true;
-	private int boxFilterSize = 10;
+	private int boxFilterSize = 20;
 	private boolean correlationEnabled = true;
 	private boolean octaveWrapEnabled = true;
 	private boolean circleOfFifthsEnabled = false;
 	// enable L2-norm normalization, otherwise use just plain constant scaling
-	private boolean normalizationEnabled = true;
+	private boolean normalizationEnabled = false;
 	// prevent zero-division - zero out too weak signals
 	private double normalizationThreshold = 1e-2;
 
@@ -61,7 +62,9 @@ public class StreamingReassignedSpectrograph {
 
 	private ShortTimeFourierTransform fft;
 	private HarmonicCorrelation harmonicCorrellation;
-	private HighPassFilter highPassFilter = new HighPassFilter(boxFilterSize);
+	//private HighPassFilter highPassFilter = new HighPassFilter(boxFilterSize);
+	private NormalizingHighPassFilter highPassFilter = new NormalizingHighPassFilter(new HighPassFilter(boxFilterSize),
+		new Normalizer(new L2Norm(), 1e-2));
 	private ChromagramWrapper chromagramWrapper;
 	private Normalizer l2Normalizer = new Normalizer(new L2Norm(),
 		normalizationThreshold);
@@ -148,6 +151,7 @@ public class StreamingReassignedSpectrograph {
 		postProcessChromagram(chromagram);
 		wrappedChromagram = wrapChromagram(chromagram);
 		if (normalizationEnabled) {
+			l2Normalizer.filter(chromagram);
 			l2Normalizer.filter(wrappedChromagram);
 		}
 
