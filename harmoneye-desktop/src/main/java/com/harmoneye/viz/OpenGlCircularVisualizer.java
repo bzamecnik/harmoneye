@@ -179,7 +179,7 @@ public class OpenGlCircularVisualizer implements
 
 		int pitchStep = getPitchStep();
 		
-		double radius = 0.68;
+		double radius = 0.65;
 
 		gl.glBegin(GL.GL_TRIANGLES);
 		double angle = 0.5 * (1 - binsPerHalftone) * stepAngle;
@@ -193,6 +193,7 @@ public class OpenGlCircularVisualizer implements
 			//index = (index - binsPerHalftone / 2 + values.length) % values.length;
 			
 			double value = values[index];
+			value = Math.max(Math.min(value, 1.0f), 0.0f);
 			//Color color = colorFunction.toColor((float) value);
 			
 			float hue = key != null ? tonicDistance.distanceToHue(tonicDistance.distance(movedPitchClass, key)) : 0;
@@ -206,12 +207,12 @@ public class OpenGlCircularVisualizer implements
 
 			gl.glVertex2d(0, 0);
 
-			double startRadius = radius * values[index];
+			double startRadius = radius * value;
 			double startAngle = angle - 0.5 * stepAngle;
 			gl.glVertex2d(startRadius * FastMath.sin(startAngle), startRadius
 				* FastMath.cos(startAngle));
 
-			double endRadius = radius * values[index];
+			double endRadius = radius * value;
 			double endAngle = angle + 0.5 * stepAngle;
 			gl.glVertex2d(endRadius * FastMath.sin(endAngle), endRadius
 				* FastMath.cos(endAngle));
@@ -243,7 +244,7 @@ public class OpenGlCircularVisualizer implements
 			float value = getMaxBinValue(index);
 			//Color color = colorFunction.toColor((float) value);
 			
-			renderer.setColor(key != null && i == key ? Color.LIGHT_GRAY : Color.GRAY);
+			renderer.setColor(key != null && i == key ? Color.WHITE : Color.GRAY);
 			String str = pitchClassNamer.getName(index);
 			Rectangle2D bounds = renderer.getBounds(str);
 			int offsetX = (int) (scaleFactor * 0.5f * bounds.getWidth());
@@ -274,7 +275,7 @@ public class OpenGlCircularVisualizer implements
 	}
 
 	private void drawCentralPupil(GL2 gl) {
-		float radius = 0.09f;
+		float radius = 0.05f;
 		int steps = 30;
 
 		gl.glColor3f(0.1f, 0.1f, 0.1f);
