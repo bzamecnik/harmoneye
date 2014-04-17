@@ -13,7 +13,15 @@ public class Normalizer implements Filter {
 	}
 
 	public double[] filter(double[] values) {
-		double normValue = norm.norm(values);
+		double normValue = norm(values);
+		return normalize(values, normValue);
+	}
+
+	double norm(double[] values) {
+		return norm.norm(values);
+	}
+
+	double[] normalize(double[] values, double normValue) {
 		double normInv = (normValue > threshold) ? 1 / normValue : 0;
 		for (int i = 0; i < values.length; i++) {
 			values[i] *= normInv;
