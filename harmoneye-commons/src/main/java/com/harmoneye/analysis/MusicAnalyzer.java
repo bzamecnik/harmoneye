@@ -257,7 +257,7 @@ public class MusicAnalyzer implements SoundConsumer {
 			return octaveBins;
 		}
 
-		public CqtContext getCtxContext() {
+		public CqtContext getCqtContext() {
 			return ctx;
 		}
 

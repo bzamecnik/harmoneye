@@ -135,7 +135,7 @@ public class OpenGlLinearVisualizer implements SwingVisualizer<AnalyzedFrame>,
 	}
 
 	private void drawBorders(GL2 gl) {
-		CqtContext ctx = frame.getCtxContext();
+		CqtContext ctx = frame.getCqtContext();
 
 		gl.glColor3f(0.4f, 0.4f, 0.4f);
 		gl.glLineWidth(0.1f);

@@ -78,7 +78,7 @@ public class OpenGlCircularVisualizer implements
 			return;
 		}
 
-		CqtContext ctx = frame.getCtxContext();
+		CqtContext ctx = frame.getCqtContext();
 
 		binsPerHalftone = ctx.getBinsPerHalftone();
 		halftoneCount = ctx.getHalftonesPerOctave();
