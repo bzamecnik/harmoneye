@@ -109,7 +109,6 @@ public class MusicAnalyzer implements SoundConsumer {
 
 	@Override
 	public void consume(double[] samples) {
-		removeMean(samples);
 		ringBufferBank.write(samples);
 	}
 
@@ -223,23 +222,6 @@ public class MusicAnalyzer implements SoundConsumer {
 		}
 	}
 
-	// remove DC bias
-	private void removeMean(double[] values) {
-		double mean = mean(values);
-		for (int i = 0; i < values.length; i++) {
-			values[i] -= mean; 
-		}
-	}
-	
-	private double mean(double[] values) {
-		double mean = 0;
-		for (int i = 0; i < values.length; i++) {
-			mean += values[i];
-		}
-		mean /= values.length;
-		return mean;
-	}
-	
 	public static class AnalyzedFrame {
 
 		private final double[] allBins;
@@ -248,12 +230,13 @@ public class MusicAnalyzer implements SoundConsumer {
 		private double[] detectedPitchClasses;
 		private Integer key;
 
-		public AnalyzedFrame(CqtContext ctx, double[] allBins, double[] octaveBins) {
+		public AnalyzedFrame(CqtContext ctx, double[] allBins,
+			double[] octaveBins) {
 			this(ctx, allBins, octaveBins, null, null);
 		}
 
-		public AnalyzedFrame(CqtContext ctx, double[] allBins, double[] octaveBins,
-			double[] detectedPitchClasses, Integer key) {
+		public AnalyzedFrame(CqtContext ctx, double[] allBins,
+			double[] octaveBins, double[] detectedPitchClasses, Integer key) {
 			this.allBins = allBins;
 			this.octaveBins = octaveBins;
 			this.ctx = ctx;
