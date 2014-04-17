@@ -69,7 +69,7 @@ public class MusicAnalyzer implements SoundConsumer {
 			.samplingFreq(sampleRate)
 //			.maxFreq((2 << 6) * 65.4063913251)
 			.kernelOctaves(1)
-			.binsPerHalftone(9)
+			.binsPerHalftone(7)
 			.build();
 		//@formatter:on
 
