@@ -8,9 +8,13 @@ import org.apache.commons.math3.util.FastMath;
 import com.harmoneye.audio.DecibelCalculator;
 import com.harmoneye.audio.MultiRateRingBufferBank;
 import com.harmoneye.audio.SoundConsumer;
+import com.harmoneye.math.L2Norm;
 import com.harmoneye.math.cqt.CqtContext;
 import com.harmoneye.math.cqt.FastCqt;
 import com.harmoneye.math.filter.ExpSmoother;
+import com.harmoneye.math.filter.HighPassFilter;
+import com.harmoneye.math.filter.Normalizer;
+import com.harmoneye.math.filter.NormalizingHighPassFilter;
 import com.harmoneye.math.matrix.ComplexVector;
 import com.harmoneye.math.matrix.DComplex;
 import com.harmoneye.viz.Visualizer;
@@ -18,7 +22,7 @@ import com.harmoneye.viz.Visualizer;
 public class MusicAnalyzer implements SoundConsumer {
 
 	/** [0.0; 1.0] 1.0 = no smoothing */
-	private static final double SMOOTHING_FACTOR = 0.25;
+	private static final double SMOOTHING_FACTOR = 0.5;
 
 	private CqtContext ctx;
 
@@ -36,6 +40,7 @@ public class MusicAnalyzer implements SoundConsumer {
 	private SpectralEqualizer spectralEqualizer;
 	private Median medianFilter;
 	private KeyDetector keyDetector;
+	private NormalizingHighPassFilter highPassFilter;
 
 	private double[] samples;
 	/** peak amplitude spectrum */
@@ -46,11 +51,12 @@ public class MusicAnalyzer implements SoundConsumer {
 	private AtomicBoolean initialized = new AtomicBoolean();
 	private AtomicBoolean accumulatorEnabled = new AtomicBoolean();
 
-	private static final boolean BIN_SMOOTHER_ENABLED = false;
+	private static final boolean HIGH_PASS_FILTER_ENABLED = true;
+	private static final boolean BIN_SMOOTHER_ENABLED = true;
 	private static final boolean OCTAVE_BIN_SMOOTHER_ENABLED = true;
 	private static final boolean HARMONIC_DETECTOR_ENABLED = true;
-	private static final boolean PERCUSSION_SUPPRESSOR_ENABLED = true;
-	private static final boolean SPECTRAL_EQUALIZER_ENABLED = true;
+	private static final boolean PERCUSSION_SUPPRESSOR_ENABLED = false;
+	private static final boolean SPECTRAL_EQUALIZER_ENABLED = false;
 	private static final boolean NOISE_GATE_ENABLED = false;
 	private static final boolean NOISE_GATE_MEDIAN_THRESHOLD_ENABLED = false;
 
@@ -90,6 +96,8 @@ public class MusicAnalyzer implements SoundConsumer {
 		spectralEqualizer = new SpectralEqualizer(ctx.getTotalBins(), 50);
 		keyDetector = new KeyDetector(ctx.getBinsPerHalftone(),
 			ctx.getHalftonesPerOctave());
+		highPassFilter = new NormalizingHighPassFilter(new HighPassFilter(20),
+			new Normalizer(new L2Norm(), 1e-2));
 
 		cqt = new FastCqt(ctx);
 	}
@@ -139,6 +147,10 @@ public class MusicAnalyzer implements SoundConsumer {
 
 	private AnalyzedFrame analyzeFrame(double[] allBins) {
 		double[] detectedPitchClasses = null;
+
+		if (HIGH_PASS_FILTER_ENABLED) {
+			allBins = highPassFilter.filter(allBins);
+		}
 
 		if (BIN_SMOOTHER_ENABLED) {
 			allBins = allBinSmoother.smooth(allBins);
