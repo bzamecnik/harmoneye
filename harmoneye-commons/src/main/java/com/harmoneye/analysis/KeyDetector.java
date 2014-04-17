@@ -35,8 +35,8 @@ class KeyDetector {
 			pitchClasses[pitchClass] = sum;
 		}
 		pitchClasses = smoother.smooth(pitchClasses);
-		double n = norm.norm(pitchClasses);
-		if (n < 1e-1) {
+		double n = norm.norm(octaveBins);
+		if (n < 1e-3) {
 			return null;
 		}
 		return classifier.classifyKey(pitchClasses);
