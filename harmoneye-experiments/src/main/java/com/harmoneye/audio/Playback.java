@@ -68,6 +68,11 @@ public class Playback implements Runnable {
 		AudioFormat inputFormat = audioInputStream.getFormat();
 		System.out.println("original input format:");
 		printFormat(inputFormat);
+		long frameCount = audioInputStream.getFrameLength();
+		System.out.println("frame count: " + frameCount);
+		System.out.println("duration (ms): "
+			+ ((frameCount > 0) ? (frameCount / inputFormat.getFrameRate())
+				: "unknown"));
 
 		AudioFormat playbackFormat = preparePlaybackFormat(inputFormat);
 
