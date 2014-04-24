@@ -23,35 +23,53 @@ public class ShortTimeFourierTransform {
 		normalizationFactor = 2.0 / windowIntegral;
 	}
 
-	public ComplexVector transform(double[] signal, ComplexVector spectrum) {
-		// StopWatch sw = new StopWatch();
-		// sw.start();
-
-		double[] dataRIElems = spectrum.getElements();
-		// System.arraycopy(signal, 0, dataRIElems, 0, signal.length);
-
-		for (int i = 0; i < signal.length; i++) {
-			dataRIElems[i] = signal[i] * sampledWindow[i];
-		}
-
-		fft.realForwardFull(dataRIElems);
-
-		normalize(spectrum);
-
-		// sw.stop();
-		// System.out.println("Computed transformed signal in " +
-		// acc.smooth(sw.getNanoTime()) * 0.001 + " us");
-
-		return spectrum;
-	}
-
 	public ComplexVector transform(double[] signal) {
 		return transform(signal, dataRI);
 	}
 
-	private void normalize(ComplexVector spectrum) {
+	public ComplexVector transform(float[] signal) {
+		return transform(signal, dataRI);
+	}
+
+	public ComplexVector transform(double[] signal, ComplexVector dataRI) {
+		fillWindowedSignal(signal, sampledWindow, dataRI);
+		return transform(dataRI);
+	}
+
+	public ComplexVector transform(float[] signal, ComplexVector dataRI) {
+		fillWindowedSignal(signal, sampledWindow, dataRI);
+		return transform(dataRI);
+	}
+
+	private ComplexVector transform(ComplexVector dataRI) {
+		fft.realForwardFull(dataRI.getElements());
+		return normalize(dataRI);
+	}
+
+	private void fillWindowedSignal(double[] signal, double[] sampledWindow,
+		ComplexVector dataRI) {
+		double[] dataRIElems = dataRI.getElements();
+		int length = signal.length;
+		for (int i = 0; i < length; i++) {
+			dataRIElems[i] = signal[i] * sampledWindow[i];
+		}
+	}
+
+	private void fillWindowedSignal(float[] signal, double[] sampledWindow,
+		ComplexVector dataRI) {
+		double[] dataRIElems = dataRI.getElements();
+		int length = signal.length;
+		for (int i = 0; i < length; i++) {
+			dataRIElems[i] = signal[i] * sampledWindow[i];
+		}
+	}
+
+	private ComplexVector normalize(ComplexVector spectrum) {
 		int size = spectrum.size();
 		double[] elements = spectrum.getElements();
+
+		// TODO: DVector.mult(elements, normalizationFactor);
+
 		for (int i = 0; i < size; i++) {
 			double re = elements[2 * i];
 			double im = elements[2 * i + 1];
@@ -60,5 +78,6 @@ public class ShortTimeFourierTransform {
 				elements[2 * i + 1] = normalizationFactor * im;
 			}
 		}
+		return spectrum;
 	}
 }
