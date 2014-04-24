@@ -4,8 +4,8 @@ import static com.harmoneye.audio.util.TextSignalPrinter.printSignal;
 
 import org.junit.Test;
 
-import com.harmoneye.audio.util.RmsCalculator;
 import com.harmoneye.audio.util.ToneGenerator;
+import com.harmoneye.math.Mean;
 
 public class DownsamplerTest {
 
@@ -19,18 +19,18 @@ public class DownsamplerTest {
 		double[] expectedSignal = toneGenerator.generateSinWave(freq, 0.5f * duration);
 
 		System.out.println("Original signal:");
-		System.out.println("RMS: " + RmsCalculator.computeRms(signal));
+		System.out.println("RMS: " + Mean.quadraticMean(signal));
 		printSignal(signal);
 
 		Decimator downsampler = Decimator.withDefaultFilter();
 		double[] downsampledSignal = downsampler.decimate(signal);
 
 		System.out.println("Decimated signal:");
-		System.out.println("RMS: " + RmsCalculator.computeRms(downsampledSignal));
+		System.out.println("RMS: " + Mean.quadraticMean(downsampledSignal));
 		printSignal(downsampledSignal);
 
 		System.out.println("Expected signal:");
-		System.out.println("RMS: " + RmsCalculator.computeRms(expectedSignal));
+		System.out.println("RMS: " + Mean.quadraticMean(expectedSignal));
 		printSignal(expectedSignal);
 	}
 

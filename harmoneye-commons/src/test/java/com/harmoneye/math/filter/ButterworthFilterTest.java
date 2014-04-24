@@ -7,8 +7,8 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
-import com.harmoneye.audio.util.RmsCalculator;
 import com.harmoneye.audio.util.ToneGenerator;
+import com.harmoneye.math.Mean;
 
 public class ButterworthFilterTest {
 
@@ -51,7 +51,7 @@ public class ButterworthFilterTest {
 
 			double[] lowPassSignal = filter.filter(signal);
 
-			System.out.println("freq: " + frequency + ", RMS: " + RmsCalculator.computeRms(lowPassSignal));
+			System.out.println("freq: " + frequency + ", RMS: " + Mean.quadraticMean(lowPassSignal));
 		}
 	}
 }
