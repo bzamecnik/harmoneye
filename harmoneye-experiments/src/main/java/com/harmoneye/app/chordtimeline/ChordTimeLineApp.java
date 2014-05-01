@@ -256,7 +256,7 @@ public class ChordTimeLineApp extends PApplet {
 	}
 
 	int findTonic(List<TimedChordLabel> labels) {
-		long[] keyIndexSums = new long[12];
+		double[] keyIndexSums = new double[12];
 		int size = labels.size();
 		// try to find the first key in case of later modulations
 		int searchedSize = (int) Math.round(size * 0.25);
@@ -265,13 +265,15 @@ public class ChordTimeLineApp extends PApplet {
 			List<Integer> tones = label.getChordLabel().getTones();
 			PitchClassSet pcs = PitchClassSet.fromSet(new HashSet<Integer>(
 				tones));
+			double weight = (label.getEndTime() - label.getStartTime()) / totalTime;
 			for (int tonic = 0; tonic < 12; tonic++) {
-				keyIndexSums[tonic] += chordIndexer.getIndex(pcs, tonic);
+				int index = chordIndexer.getIndex(pcs, tonic);
+				keyIndexSums[tonic] += weight * index;
 			}
 		}
 		println("keyIndexSums: " + Arrays.toString(keyIndexSums));
 		int minKeyIndex = 0;
-		long keyIndexSum = Integer.MAX_VALUE;
+		double keyIndexSum = Double.MAX_VALUE;
 		for (int i = 0; i < 12; i++) {
 			if (keyIndexSums[i] < keyIndexSum) {
 				keyIndexSum = keyIndexSums[i];
