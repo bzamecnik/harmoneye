@@ -7,17 +7,18 @@ import java.util.HashSet;
 import java.util.List;
 
 import processing.core.PApplet;
+import processing.core.PVector;
 import sojamo.drop.DropEvent;
 import sojamo.drop.SDrop;
 
 import com.harmoneye.music.KeyAwarePitchClassSetIndexer;
 import com.harmoneye.music.PitchClassNamer;
 import com.harmoneye.music.PitchClassSet;
-import com.harmoneye.music.PitchClassSetNamer;
 import com.harmoneye.music.TonicDistance;
 import com.harmoneye.music.chord.ChordLabel;
 import com.harmoneye.music.chord.ChordLabels;
 import com.harmoneye.music.chord.TimedChordLabel;
+import com.harmoneye.p5.PanZoomController;
 
 public class ChordTimeLineApp extends PApplet {
 
@@ -44,6 +45,8 @@ public class ChordTimeLineApp extends PApplet {
 	String mode = MODE_TONIC_DIST;
 	int diatonicStep = 1;
 
+	private PanZoomController panZoomController;
+
 	public static void main(String[] args) {
 		ChordTimeLineApp applet = new ChordTimeLineApp();
 
@@ -53,8 +56,10 @@ public class ChordTimeLineApp extends PApplet {
 	}
 
 	public void setup() {
-		size(1000, 200);
+		size(1000, 240);
 
+		panZoomController = new PanZoomController(this);
+		
 		sdrop = new SDrop(this);
 		loadFile(fileName);
 
@@ -62,6 +67,7 @@ public class ChordTimeLineApp extends PApplet {
 		// println(totalTime);
 
 		colorMode(HSB, 1.0f);
+		smooth();
 
 		noLoop();
 	}
@@ -71,6 +77,11 @@ public class ChordTimeLineApp extends PApplet {
 
 		translate(0, height);
 		scale(1, -1);
+		
+		PVector pan = panZoomController.getPan();
+		translate(pan.x, pan.y);
+		float scale = panZoomController.getScale();
+		scale(scale, 1);
 
 		float xScale = (float) (width / totalTime);
 		float yScale = height / 12.0f;
@@ -98,7 +109,7 @@ public class ChordTimeLineApp extends PApplet {
 			}
 		}
 
-		stroke(0);
+//		stroke(0);
 
 		for (TimedChordLabel label : chordLabels) {
 			float xStart = (float) (label.getStartTime() * xScale);
@@ -135,11 +146,11 @@ public class ChordTimeLineApp extends PApplet {
 							// }
 					}
 					float xSize = xEnd - xStart;
-					if (xSize <= 2.0f) {
-						noStroke();
-					} else {
-						stroke(0);
-					}
+//					if (xSize <= 2.0f) {
+//						noStroke();
+//					} else {
+//						stroke(0);
+//					}
 					rect(xStart, t * yScale, xSize, yScale);
 				}
 			}
@@ -166,10 +177,18 @@ public class ChordTimeLineApp extends PApplet {
 		} else if (key == 'd') {
 			diatonicStep = 1 + (diatonicStep % 2);
 			redraw();
+		} else if (key == 'r') {
+			resetPanZoom();
 		}
+		//panZoomController.keyPressed();
+	}
+
+	public void mouseDragged() {
+		panZoomController.mouseDragged();
 	}
 
 	public void mouseClicked() {
+		// TODO: fix it for non-zero pan/zoom
 		double time = totalTime * mouseX / width;
 		int labelCount = chordLabels.size();
 		for (int i = 0; i < labelCount; i++) {
@@ -204,11 +223,19 @@ public class ChordTimeLineApp extends PApplet {
 					.getEndTime();
 				setTonic(findTonic(chordLabels));
 			}
+			
+			resetPanZoom();
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			// exit();
 		}
 
+		redraw();
+	}
+
+	private void resetPanZoom() {
+		panZoomController.setPan(new PVector(0, 0));
+		panZoomController.setScale(1);
 		redraw();
 	}
 
