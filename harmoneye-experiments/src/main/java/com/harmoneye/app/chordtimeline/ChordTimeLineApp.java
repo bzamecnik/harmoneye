@@ -2,8 +2,6 @@ package com.harmoneye.app.chordtimeline;
 
 import java.io.Reader;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 
 import processing.core.PApplet;
@@ -23,25 +21,23 @@ public class ChordTimeLineApp extends PApplet {
 
 	private static final long serialVersionUID = 6524424444348489408L;
 
-	String dir = "/Users/bzamecnik/Documents/harmoneye-labs/music-information-retrieval/columbia-music-signal-processing/data/beatles/chordlabs/";
-	String fileName = dir + "A_Hard_Day_s_Night/05-And_I_Love_Her.lab";
+	private String dir = "/Users/bzamecnik/Documents/harmoneye-labs/music-information-retrieval/columbia-music-signal-processing/data/beatles/chordlabs/";
+	private String fileName = dir + "A_Hard_Day_s_Night/05-And_I_Love_Her.lab";
 
-	SDrop sdrop;
+	private List<TimedChordLabel> chordLabels = new ArrayList<TimedChordLabel>();
+	private double totalTime;
+	private int tonic = 4;
 
-	List<TimedChordLabel> chordLabels = new ArrayList<TimedChordLabel>();
-	double totalTime;
-	int tonic = 4;
+	private TonicDistance tonicDist = new TonicDistance(12);
 
-	TonicDistance tonicDist = new TonicDistance(12);
+	private PitchClassNamer pitchClassNamer = PitchClassNamer.defaultInstance();
 
-	PitchClassNamer pitchClassNamer = PitchClassNamer.defaultInstance();
+	private String MODE_LINEAR = "LINEAR";
+	private String MODE_FIFTHS = "FIFTHS";
+	private String MODE_TONIC_DIST = "TONIC_DIST";
 
-	String MODE_LINEAR = "LINEAR";
-	String MODE_FIFTHS = "FIFTHS";
-	String MODE_TONIC_DIST = "TONIC_DIST";
-
-	String mode = MODE_TONIC_DIST;
-	int diatonicStep = 1;
+	private String mode = MODE_TONIC_DIST;
+	private int diatonicStep = 1;
 
 	private PanZoomController panZoomController;
 
@@ -60,7 +56,7 @@ public class ChordTimeLineApp extends PApplet {
 
 		panZoomController = new PanZoomController(this);
 
-		sdrop = new SDrop(this);
+		SDrop sdrop = new SDrop(this);
 		loadFile(fileName);
 
 		// println(chordLabels);
@@ -101,7 +97,6 @@ public class ChordTimeLineApp extends PApplet {
 			rect(0, 0, width, yScale);
 		} else if (mode.equals(MODE_LINEAR)) {
 			for (int i = 0; i < 12; i++) {
-				int t = ((i - tonic + 12)) % 12;
 				if (tonicDist.distanceInt(i, 0) < 7) {
 					fill(0.25f, 0.2f, i == 0 ? 0.3f : 0.2f);
 					rect(0, i * yScale, width, yScale);
