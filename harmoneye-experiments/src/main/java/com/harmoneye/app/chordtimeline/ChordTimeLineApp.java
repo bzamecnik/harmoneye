@@ -11,9 +11,8 @@ import processing.core.PVector;
 import sojamo.drop.DropEvent;
 import sojamo.drop.SDrop;
 
-import com.harmoneye.music.KeyAwarePitchClassSetIndexer;
+import com.harmoneye.music.KeyDetector;
 import com.harmoneye.music.PitchClassNamer;
-import com.harmoneye.music.PitchClassSet;
 import com.harmoneye.music.TonicDistance;
 import com.harmoneye.music.chord.ChordLabel;
 import com.harmoneye.music.chord.ChordLabels;
@@ -34,7 +33,6 @@ public class ChordTimeLineApp extends PApplet {
 	int tonic = 4;
 
 	TonicDistance tonicDist = new TonicDistance(12);
-	KeyAwarePitchClassSetIndexer chordIndexer = new KeyAwarePitchClassSetIndexer();
 
 	PitchClassNamer pitchClassNamer = PitchClassNamer.defaultInstance();
 
@@ -46,6 +44,8 @@ public class ChordTimeLineApp extends PApplet {
 	int diatonicStep = 1;
 
 	private PanZoomController panZoomController;
+
+	private KeyDetector keyDetector = new KeyDetector();
 
 	public static void main(String[] args) {
 		ChordTimeLineApp applet = new ChordTimeLineApp();
@@ -239,7 +239,7 @@ public class ChordTimeLineApp extends PApplet {
 			if (!chordLabels.isEmpty()) {
 				totalTime = chordLabels.get(chordLabels.size() - 1)
 					.getEndTime();
-				setTonic(findTonic(chordLabels));
+				setTonic(keyDetector.findTonic(chordLabels));
 			}
 
 			resetPanZoom();
@@ -273,33 +273,6 @@ public class ChordTimeLineApp extends PApplet {
 		}
 	}
 
-	int findTonic(List<TimedChordLabel> labels) {
-		double[] keyIndexSums = new double[12];
-		int size = labels.size();
-		// try to find the first key in case of later modulations
-		int searchedSize = (int) Math.round(size * 0.25);
-		for (int i = 0; i < searchedSize; i++) {
-			TimedChordLabel label = labels.get(i);
-			List<Integer> tones = label.getChordLabel().getTones();
-			PitchClassSet pcs = PitchClassSet.fromSet(new HashSet<Integer>(
-				tones));
-			double weight = (label.getEndTime() - label.getStartTime()) / totalTime;
-			for (int tonic = 0; tonic < 12; tonic++) {
-				int index = chordIndexer.getIndex(pcs, tonic);
-				keyIndexSums[tonic] += weight * index;
-			}
-		}
-		println("keyIndexSums: " + Arrays.toString(keyIndexSums));
-		int minKeyIndex = 0;
-		double keyIndexSum = Double.MAX_VALUE;
-		for (int i = 0; i < 12; i++) {
-			if (keyIndexSums[i] < keyIndexSum) {
-				keyIndexSum = keyIndexSums[i];
-				minKeyIndex = i;
-			}
-		}
-		println("best key: " + minKeyIndex);
-		return minKeyIndex;
-	}
+	
 
 }
