@@ -294,6 +294,19 @@ public class StreamingReassignedSpectrograph {
 		return fft.transform(amplitudeFrame, spectrum);
 	}
 
+	public int getBinsPerOctave() {
+		return binsPerOctave;
+	}
+	
+	public int getBinsPerTone() {
+		return binsPerTone;
+	}
+	
+	/** octave starts at this tone */
+	public int getOctaveBinShift() {
+		return octaveBinShift;
+	}
+	
 	public static class OutputFrame {
 		private double[] chromagram;
 		private double[] wrappedChromagram;
