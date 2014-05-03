@@ -52,6 +52,8 @@ public class AudioReader {
 
 			int destIndex = 0;
 			int readBytesCount = 0;
+			int lastPercent = 0;
+			System.out.print("Reading audio: " + inputFileName + ": ");
 			while (readBytesCount >= 0) {
 				readBytesCount = wrappedInputStream.read(readBuffer);
 				if (readBytesCount < 0) {
@@ -72,7 +74,14 @@ public class AudioReader {
 					destIndex,
 					readSampleCount);
 				destIndex += readSampleCount;
+				
+				double percent = 10.0 * destIndex / sampleCount;
+				if ((int) percent > lastPercent) {
+					System.out.print(".");
+					lastPercent = (int) percent;
+				}
 			}
+			System.out.println(" done");
 			return new SampledAudio(amplitudes, inputFormat.getSampleRate());
 		} catch (RuntimeException ex) {
 			throw ex;
