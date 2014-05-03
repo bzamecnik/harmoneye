@@ -27,6 +27,10 @@ public class P5Visualization {
 //			visualizer, 44100, 16);
 		soundAnalyzer.initialize();
 
+		PApplet.runSketch((String[]) PApplet
+			.concat(new String[] { P5Visualizer.class.getName() }, args),
+			visualizer);
+		
 		SoundCapture capture = new SoundCapture(soundAnalyzer, 44100, 16);
 		// Playback playback = new Playback(soundAnalyzer, inputFileName);
 		Timer updateTimer = new Timer("update timer");
@@ -40,9 +44,6 @@ public class P5Visualization {
 		capture.start();
 		// playback.start();
 		// PApplet.main(P5Visualizer.class.getName(), args);
-		PApplet.runSketch((String[]) PApplet
-			.concat(new String[] { P5Visualizer.class.getName() }, args),
-			visualizer);
 	}
 
 	public static class P5Visualizer extends PApplet implements
@@ -53,7 +54,7 @@ public class P5Visualization {
 		private volatile AnalyzedFrame analyzedFrame;
 
 		private volatile PImage image;
-		private volatile int currentFrame;
+		private volatile int currentFrame = 0;
 		private int lastDrawnFrame;
 
 		PitchClassNamer pitchClassNamer = PitchClassNamer.defaultInstance();
@@ -66,7 +67,7 @@ public class P5Visualization {
 		}
 
 		public void draw() {
-			 background(0);
+			background(0);
 			// noStroke();
 			// stroke(0);
 			pushMatrix();
@@ -77,25 +78,6 @@ public class P5Visualization {
 			// text("no data", width / 2, height / 2);
 			// return;
 			// }
-
-			if (analyzedFrame == null) {
-				return;
-			}
-
-//			double[] bins = analyzedFrame.getOctaveBins();
-			 double[] bins = analyzedFrame.getAllBins();
-			if (image == null) {
-				image = createImage((int) (10 * frameRate), bins.length, RGB);
-			}
-			if (lastDrawnFrame != currentFrame) {
-				image.loadPixels();
-				for (int y = 0; y < bins.length; y++) {
-					int i = y * image.width + currentFrame;
-					image.pixels[i] = color((float) bins[y]);
-				}
-				image.updatePixels();
-				lastDrawnFrame = currentFrame;
-			}
 
 			if (image != null) {
 				image(image, height/12, 0, width, height);
@@ -129,9 +111,22 @@ public class P5Visualization {
 		@Override
 		public synchronized void update(AnalyzedFrame analyzedFrame) {
 			this.analyzedFrame = analyzedFrame;
-			if (image != null) {
-				currentFrame = Modulo.modulo(currentFrame + 1, image.width);
+			if (analyzedFrame == null) {
+				return;
 			}
+
+			double[] bins = analyzedFrame.getOctaveBins();
+//			 double[] bins = analyzedFrame.getAllBins();
+			if (image == null) {
+				image = createImage((int) (10 * frameRate), bins.length, RGB);
+			}
+			image.loadPixels();
+			for (int y = 0; y < bins.length; y++) {
+				int i = y * image.width + currentFrame;
+				image.pixels[i] = color((float) bins[y]);
+			}
+			image.updatePixels();
+			currentFrame = Modulo.modulo(currentFrame + 1, image.width);
 		}
 
 		private void drawBarPlot(double bins[]) {
