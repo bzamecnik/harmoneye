@@ -22,13 +22,16 @@ public class TonicDistance {
 
 	// normalized float distance [0.0; 1.0]
 	public float distance(float tone, int tonic) {
-		float i = ((tone - tonic + octaveSize) * 7) % octaveSize;
-		return (i < 6 ? i : octaveSize - 1 + 6 - i) / (octaveSize - 1.0f);
+		return distanceCommon(tone, tonic) / (octaveSize - 1.0f);
 	}
 	
 	// unnormalized integer distance [0; octaveSize - 1]
 	public int distanceInt(int tone, int tonic) {
-		int i = ((tone - tonic + octaveSize) * 7) % octaveSize;
+		return (int) distanceCommon(tone, tonic);
+	}
+	
+	public float distanceCommon(float tone, int tonic) {
+		float i = ((tone - tonic + octaveSize) * 7) % octaveSize;
 		return (i < 6 ? i : octaveSize - 1 + 6 - i);
 	}
 
