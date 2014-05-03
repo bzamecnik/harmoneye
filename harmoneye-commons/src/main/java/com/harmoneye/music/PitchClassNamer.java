@@ -9,6 +9,10 @@ public class PitchClassNamer {
 	private static PitchClassNamer ENGLISH_SHARP = new PitchClassNamer(
 		new String[] { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A",
 			"A#", "B" });
+	
+	private static PitchClassNamer ROMAN_FLAT = new PitchClassNamer(
+		new String[] { "I", "IIb", "II", "IIIb", "III", "IV", "Vb", "V", "VIb", "VI",
+			"VIIb", "VII" });
 
 	private final String[] names;
 
