@@ -16,7 +16,7 @@ public class DVector {
 
 	public static double[] add(double[] a, double[] b, double[] result) {
 		int n = a.length;
-		result = initResult(n, result);
+		result = ensureSize(n, result);
 		for (int i = 0; i < n; i++) {
 			result[i] = a[i] + b[i];
 		}
@@ -29,7 +29,7 @@ public class DVector {
 
 	public static double[] subtract(double[] a, double[] b, double[] result) {
 		int n = a.length;
-		result = initResult(n, result);
+		result = ensureSize(n, result);
 		for (int i = 0; i < n; i++) {
 			result[i] = a[i] - b[i];
 		}
@@ -50,12 +50,22 @@ public class DVector {
 	}
 
 	private static double[] copyToResult(double[] values, double[] result) {
-		result = initResult(values.length, result);
+		result = ensureSize(values.length, result);
 		System.arraycopy(values, 0, result, 0, values.length);
 		return result;
 	}
 
-	private static double[] initResult(int length, double result[]) {
+	/**
+	 * Ensures that the provided vector is allocated and has the given size.
+	 * 
+	 * Allocates the vector if null given.
+	 * 
+	 * @param length the desired length of the vector
+	 * @param result potentially-preallocated vector, can be null
+	 * @return the original pre-allocated vector of the given size or a newly
+	 * allocated one
+	 */
+	public static double[] ensureSize(int length, double result[]) {
 		if (result == null || result.length != length) {
 			result = new double[length];
 		}
