@@ -85,6 +85,16 @@ public class PitchClassSet {
 		}
 		return list;
 	}
+	
+	public int[] asBitArray() {
+		int[] array = new int[OCTAVE_SIZE];
+		for (int pitchClass = 0; pitchClass < OCTAVE_SIZE; pitchClass++) {
+			if ((index & (1 << pitchClass)) > 0) {
+				array[pitchClass] = 1;
+			}
+		}
+		return array;
+	}
 
 	public int getIndex() {
 		return index;
