@@ -1,5 +1,6 @@
 package com.harmoneye.app.chordtimeline;
 
+import java.awt.event.KeyEvent;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
@@ -168,13 +169,13 @@ public class ChordTimeLineApp extends PApplet {
 	}
 
 	public void keyPressed() {
-		if (key == 'w') {
+		if (keyCode == UP) {
 			shiftTonic(7);
-		} else if (key == 's') {
+		} else if (keyCode == DOWN) {
 			shiftTonic(5);
-		} else if (key == 'q') {
+		} else if (keyCode == KeyEvent.VK_PAGE_UP) {
 			shiftTonic(1);
-		} else if (key == 'a') {
+		} else if (keyCode == KeyEvent.VK_PAGE_DOWN) {
 			shiftTonic(11);
 		} else if (key == 'm') {
 			if (mode.equals(MODE_LINEAR)) {
