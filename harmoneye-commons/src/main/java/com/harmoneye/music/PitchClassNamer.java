@@ -19,6 +19,10 @@ public class PitchClassNamer {
 	public static PitchClassNamer defaultInstance() {
 		return ENGLISH_FLAT;
 	}
+	
+	public static PitchClassNamer romanNumeralFlat() {
+		return ROMAN_FLAT;
+	}
 
 	public PitchClassNamer(String[] names) {
 		this.names = names;
