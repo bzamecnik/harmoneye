@@ -242,7 +242,7 @@ public class ChordTimeLineApp extends PApplet {
 		int length = chordLabels.size();
 		for (int i = 0; i < length; i++) {
 			TimedChordLabel label = chordLabels.get(i);
-			if (label.getEndTime() >= timeSecs) {
+			if (label.getEndTime() > timeSecs) {
 				return label;
 			}
 		}
@@ -258,6 +258,26 @@ public class ChordTimeLineApp extends PApplet {
 			shiftTonic(1);
 		} else if (keyCode == KeyEvent.VK_PAGE_DOWN) {
 			shiftTonic(11);
+		} else if (keyCode == RIGHT) {
+			TimedChordLabel label = labelForTime(currentMillis * 0.001);
+			if (label != null) {
+				int index = chordLabels.indexOf(label);
+				if (index >= 0 && index < chordLabels.size() - 1) {
+					TimedChordLabel nextLabel = chordLabels.get(index + 1);
+					skipTo(nextLabel.getStartTime() * 1000);
+					redraw();
+				}
+			}
+		} else if (keyCode == LEFT) {
+			TimedChordLabel label = labelForTime(currentMillis * 0.001);
+			if (label != null) {
+				int index = chordLabels.indexOf(label);
+				if (index >= 1 && index < chordLabels.size()) {
+					TimedChordLabel prevLabel = chordLabels.get(index - 1);
+					skipTo(prevLabel.getStartTime() * 1000);
+					redraw();
+				}
+			}
 		} else if (key == 'm') {
 			if (mode.equals(MODE_LINEAR)) {
 				mode = MODE_FIFTHS;
@@ -294,10 +314,14 @@ public class ChordTimeLineApp extends PApplet {
 		float scaleX = panZoomController.getScale();
 		double selectedMillis = totalMillis * (mouseX - panX)
 			/ (scaleX * width);
+		skipTo(selectedMillis);
+		redraw();
+	}
+
+	private void skipTo(double selectedMillis) {
 		double diff = selectedMillis - audioPlayer.position();
 		audioPlayer.skip((int) Math.round(diff));
 		currentMillis = selectedMillis;
-		redraw();
 	}
 
 	private void togglePlayback() {
