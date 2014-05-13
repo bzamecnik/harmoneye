@@ -1,16 +1,15 @@
 package com.harmoneye.music;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import com.harmoneye.music.chord.TimedChordLabel;
 
 public class KeyDetector {
 
-	private static final Set<Integer> DIATONIC_TONES = new HashSet<Integer>(
-		Arrays.asList(0, 2, 4, 5, 7, 9, 11));
+	// diatonic tones have weight 1, others -1
+	// tonic (0) and dominant (7) have higher weights
+	private static final double[] WEIGHTS = { 2.5, -1, 1, -1, 1, 1, -1, 1.8,
+		-1, 1, -1, 1 };
 
 	private double relativeExcerptLength = 0.5;
 
@@ -35,40 +34,30 @@ public class KeyDetector {
 				keyWeightSums[tonic] += timeWeight * weight;
 			}
 		}
-		// System.out.println(Arrays.toString(keyIndexSums));
-		// for(int i = 0; i < 12; i++) {
-		// System.out.print(keyIndexSums[(i*7)%12] + ", ");
-		// }
-		// System.out.println();
 
-		return findMinIndex(keyWeightSums);
-	}
-
-	private int findMinIndex(double[] values) {
-		int minIndex = 0;
-		double sum = Double.MAX_VALUE;
-		for (int i = 0; i < 12; i++) {
-			if (values[i] < sum) {
-				sum = values[i];
-				minIndex = i;
-			}
-		}
-		return minIndex;
+		return findMax(keyWeightSums);
 	}
 
 	private double getWeight(List<Integer> tones, int tonic) {
-		// TODO: try to make weights like a sine
 		double sum = 0;
 		for (Integer tone : tones) {
 			int t = (tone - tonic + 12) % 12;
-			double weight = (DIATONIC_TONES.contains(t)) ? -1 : 1;
-			if (t == 0) {
-				weight *= 2.5;
-			} else if (t == 7) {
-				weight *= 1.8;
-			}
-			sum += weight;
+			sum += WEIGHTS[t];
 		}
 		return sum;
+	}
+
+	private int findMax(double[] values) {
+		int length = values.length;
+		double sum = Double.MIN_VALUE;
+		int maxIndex = 0;
+		for (int i = 0; i < length; i++) {
+			double value = values[i];
+			if (value > sum) {
+				sum = value;
+				maxIndex = i;
+			}
+		}
+		return maxIndex;
 	}
 }
