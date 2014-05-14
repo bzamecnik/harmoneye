@@ -186,7 +186,21 @@ public class ChordTimeLineApp extends PApplet {
 
 		popMatrix();
 
+		drawToneTitles();
+		
 		drawChordTitle(currentLabel);
+	}
+
+	private void drawToneTitles() {
+		float lineSize = height / 12.0f;
+		textSize(0.8f * lineSize);
+		textAlign(LEFT, BOTTOM);
+		fill(0, 0, 1, 0.5f);
+		for (int tone = 0; tone < 12; tone++) {
+			int i = toneToIndex(tone);
+			String title = englishFlatNamer.getName(tone);
+			text(title, lineSize * 0.5f, (1 - i / (12.0f)) * height);
+		}
 	}
 
 	private void drawPositionMarker() {
