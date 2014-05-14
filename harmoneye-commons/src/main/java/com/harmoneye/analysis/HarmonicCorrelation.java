@@ -28,7 +28,7 @@ public class HarmonicCorrelation {
 					acc += weight * reassignedMagnitudes[bin];
 				}
 			}
-			correlation[i] = acc;
+			correlation[i] = Math.max(acc, 0);
 		}
 		return correlation;
 	}
