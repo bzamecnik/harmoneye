@@ -3,10 +3,14 @@ package com.harmoneye.analysis;
 import com.harmoneye.math.Modulo;
 import com.harmoneye.math.filter.ExpSmoother;
 
+// TODO: extract smoothing as a decorater
+// TODO: refactor with com.harmoneye.music.KeyDetector and
+// com.harmoneye.music.ChromaKeyDetector
+
 public class KeyClassifier {
 
-	private static double[] DIATONIC_PATTERN = new double[] { 1, 0, 1, 0, 1, 1,
-		0, 1, 0, 1, 0, 1 };
+	private static double[] WEIGHTS = new double[] { 2.8, -1, 1, -1, 1, 1,
+		-1, 1.5, -1, 1, -1, 1 };
 	private static int OCTAVE_SIZE = 12;
 
 	private double[] correlation = new double[OCTAVE_SIZE];
@@ -24,7 +28,7 @@ public class KeyClassifier {
 			throw new IllegalArgumentException("wrong octave size: "
 				+ pitchClasses.length);
 		}
-		correlation = crossCorrelate(DIATONIC_PATTERN,
+		correlation = crossCorrelate(WEIGHTS,
 			pitchClasses,
 			correlation);
 		
