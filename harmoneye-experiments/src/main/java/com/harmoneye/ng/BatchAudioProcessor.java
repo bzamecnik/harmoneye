@@ -12,7 +12,7 @@ import processing.core.PVector;
 import com.harmoneye.analysis.StreamingReassignedSpectrograph;
 import com.harmoneye.app.spectrogram.AudioReader;
 import com.harmoneye.app.spectrogram.SampledAudio;
-import com.harmoneye.ng.ChromagramExtractor.Chromagram;
+import com.harmoneye.ng.ChromaExtractor.Chroma;
 import com.harmoneye.ng.RmsExtractor.RmsFeature;
 import com.harmoneye.ng.SpectrumExtractor.MagnitudeSpectrum;
 import com.harmoneye.p5.PanZoomController;
@@ -51,7 +51,7 @@ public class BatchAudioProcessor {
 		
 		StreamingReassignedSpectrograph chromagraph = new StreamingReassignedSpectrograph(windowSize,
 		audio.getSampleRate());
-		ChromagramExtractor extractor = new ChromagramExtractor(
+		ChromaExtractor extractor = new ChromaExtractor(
 			chromagraph, windowSize);
 
 		int frameCount = audioProvider.getFrameCount();
@@ -68,7 +68,7 @@ public class BatchAudioProcessor {
 		double[] samples = null;
 		for (int frameIndex = 0; frameIndex < frameCount; frameIndex++) {
 			samples = audioProvider.getFrame(frameIndex, samples);
-			Chromagram feature = extractor.extract(samples);
+			Chroma feature = extractor.extract(samples);
 			observer.update(frameIndex, feature);
 		}
 	}
@@ -260,8 +260,8 @@ public class BatchAudioProcessor {
 			} else if (feature instanceof MagnitudeSpectrum) {
 				double[] spectrum = ((MagnitudeSpectrum) feature).getSpectrum();
 				updateSpectrumImage(frameIndex, totalFrameCount, spectrum);
-			} else if (feature instanceof Chromagram) {
-				double[] chromagram = ((Chromagram) feature).getChromagram();
+			} else if (feature instanceof Chroma) {
+				double[] chromagram = ((Chroma) feature).getPreciseChroma();
 				updateSpectrumImage(frameIndex, totalFrameCount, chromagram);
 			}
 			redraw();
