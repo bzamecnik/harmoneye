@@ -283,7 +283,7 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 		return reassignedMagnitudes;
 	}
 
-	void distributeMagnitudeOverTime(double[][] frames, int frameIndex,
+	private void distributeMagnitudeOverTime(double[][] frames, int frameIndex,
 		int freqBin, double groupDelay, double magnitude) {
 		double idealFrameIndex = frameIndex + groupDelay;
 		int lowerT = (int) FastMath.floor(idealFrameIndex);
