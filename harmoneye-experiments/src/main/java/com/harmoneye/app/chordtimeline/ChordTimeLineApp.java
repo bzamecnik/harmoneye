@@ -168,22 +168,7 @@ public class ChordTimeLineApp extends PApplet {
 					float brightness = tone == root ? 1 : 0.5f;
 					brightness *= hightlightEnabled ? 1 : 0.8f;
 					fill(hue, 0.5f, brightness);
-					int t = tone;
-					if (mode.equals(MODE_LINEAR)) {
-						t = ((tone - tonic + 12)) % 12;
-					}
-					if (mode.equals(MODE_FIFTHS)) {
-						t = ((tone - tonic + 12) * 7 + 6) % 12;
-					}
-					// int t = ((tone - tonic + 12) * 7 + 1) % 12;
-					else if (mode.equals(MODE_TONIC_DIST)) {
-						t = tonicDist.distanceInt(tone, tonic);
-						if (t < 7) {
-							t = (t * diatonicStep) % 7;
-						}// else {
-							// t = (((t - 7) * 2) % 7) + 7;
-							// }
-					}
+					int t = toneToIndex(tone);
 					float xSize = xEnd - xStart;
 					// if (xSize <= 2.0f) {
 					// noStroke();
@@ -249,6 +234,27 @@ public class ChordTimeLineApp extends PApplet {
 		return null;
 	}
 
+	// maps a pitch class the index of the line where it should be displayed
+	private int toneToIndex(int tone) {
+		int t = tone;
+		if (mode.equals(MODE_LINEAR)) {
+			t = ((tone - tonic + 12)) % 12;
+		}
+		if (mode.equals(MODE_FIFTHS)) {
+			t = ((tone - tonic + 12) * 7 + 6) % 12;
+		}
+		// int t = ((tone - tonic + 12) * 7 + 1) % 12;
+		else if (mode.equals(MODE_TONIC_DIST)) {
+			t = tonicDist.distanceInt(tone, tonic);
+			if (t < 7) {
+				t = (t * diatonicStep) % 7;
+			}// else {
+				// t = (((t - 7) * 2) % 7) + 7;
+				// }
+		}
+		return t;
+	}
+	
 	public void keyPressed() {
 		if (keyCode == UP) {
 			shiftTonic(7);
