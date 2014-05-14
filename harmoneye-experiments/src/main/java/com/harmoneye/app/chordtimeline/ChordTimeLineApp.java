@@ -40,6 +40,7 @@ public class ChordTimeLineApp extends PApplet {
 	private PitchClassNamer englishFlatNamer = PitchClassNamer
 		.defaultInstance();
 	private PitchClassNamer romanFlatNamer = PitchClassNamer.romanNumeralFlat();
+	private PitchClassNamer intervalNamer = PitchClassNamer.intervalFlat();
 
 	private Minim minim;
 	private AudioPlayer audioPlayer;
@@ -51,9 +52,11 @@ public class ChordTimeLineApp extends PApplet {
 
 	private String mode = MODE_FIFTHS;
 
-	private PanZoomController panZoomController;
-
 	private KeyDetector keyDetector = new KeyDetector();
+
+	private int toneTitleWidth;
+
+	private ChordTimeLine chordTimeLine;
 
 	public static void main(String[] args) {
 		ChordTimeLineApp applet = new ChordTimeLineApp();
@@ -65,8 +68,6 @@ public class ChordTimeLineApp extends PApplet {
 
 	public void setup() {
 		size(1000, 240);
-
-		panZoomController = new PanZoomController(this);
 
 		SDrop sdrop = new SDrop(this);
 		minim = new Minim(this);
@@ -82,6 +83,12 @@ public class ChordTimeLineApp extends PApplet {
 	}
 
 	public void draw() {
+		toneTitleWidth = height * 4 / 12;
+		if (chordTimeLine == null) {
+			chordTimeLine = new ChordTimeLine(height, width - toneTitleWidth,
+				toneTitleWidth, 0);
+		}
+
 		if (audioPlayer.isPlaying()) {
 			double audioTotalTime = audioPlayer.length() * 0.001;
 			currentMillis = audioPlayer.position() * totalTime / audioTotalTime;
@@ -90,114 +97,39 @@ public class ChordTimeLineApp extends PApplet {
 
 		background(0.15f);
 
-		pushMatrix();
+		chordTimeLine.draw(currentLabel);
 
-		PVector pan = panZoomController.getPan();
-		translate(pan.x, pan.y);
-		float scaleX = panZoomController.getScale();
-		// scale(scaleX, 1);
-
-		pushMatrix();
-
-		translate(0, height);
-		scale(1, -1);
-
-		float xScale = (float) (width / totalTime);
-		float yScale = height / 12.0f;
-
-		rectMode(CORNER);
-
-		fill(0.2f);
-		noStroke();
-		if (mode.equals(MODE_LINEAR)) {
-			for (int i = 0; i < 12; i++) {
-				if (tonicDist.distanceInt(i, 0) < 7) {
-					fill(0.25f, 0.2f, i == 0 ? 0.3f : 0.2f);
-					rect(0, i * yScale, scaleX * width, yScale);
-				}
-			}
-		} else if (mode.equals(MODE_FIFTHS)) {
-			fill(0.125f, 0.2f, 0.2f);
-			rect(0, 11 * yScale, scaleX * width, yScale);
-			fill(0.25f, 0.2f, 0.2f);
-			rect(0, 7 * yScale, scaleX * width, 4 * yScale);
-			fill(0.25f, 0.2f, 0.3f);
-			rect(0, 6 * yScale, scaleX * width, yScale);
-			fill(0.125f, 0.2f, 0.2f);
-			rect(0, 5 * yScale, scaleX * width, yScale);
-			fill(0, 0.2f, 0.15f);
-			rect(0, 0, scaleX * width, 5 * yScale);
-		}
-
-		stroke(0);
-
-		for (TimedChordLabel label : chordLabels) {
-			float xStart = (float) (label.getStartTime() * xScale);
-			float xEnd = (float) (label.getEndTime() * xScale);
-			ChordLabel chordLabel = label.getChordLabel();
-			List<Integer> tones = chordLabel.getTones();
-			if (!tones.isEmpty()) {
-				// float dist = tonicDist.distance(chordLabel.getRoot(), tonic);
-				// float dist = (float)chordIndexer.getLogIndex(tones);
-				// //println(dist);
-				// fill(tonicDist.distanceToHue(dist), 0.5f, 1);
-				// float xSize = xEnd - xStart;
-				// if (xSize <= 2.0f) {
-				// noStroke();
-				// } else {
-				// stroke(0);
-				// }
-				// rect(scaleX*xStart, height*(1-dist), scaleX*xSize, height);
-				int root = chordLabel.getRoot();
-				boolean hightlightEnabled = currentLabel == null
-					|| currentLabel == label;
-				for (Integer tone : tones) {
-					float hue = tonicDist.distanceToHue(tonicDist
-						.distance(tone, tonic));
-					float brightness = tone == root ? 1 : 0.5f;
-					brightness *= hightlightEnabled ? 1 : 0.8f;
-					fill(hue, 0.5f, brightness);
-					int t = toneToIndex(tone);
-					float xSize = xEnd - xStart;
-					// if (xSize <= 2.0f) {
-					// noStroke();
-					// } else {
-					// stroke(0);
-					// }
-					rect(scaleX * xStart, t * yScale, scaleX * xSize, yScale);
-				}
-			}
-		}
-
-		popMatrix();
-
-		drawPositionMarker();
-
-		popMatrix();
-
-		drawToneTitles();
+		drawToneTitles(toneTitleWidth);
 
 		drawChordTitle(currentLabel);
 	}
 
-	private void drawToneTitles() {
-		float lineSize = height / 12.0f;
+	private void drawToneTitles(int width) {
+		fill(0.15f);
+		noStroke();
+		rect(0, 0, width, height);
+		stroke(0.25f);
+		line(width, 0, width, height);
+
+		float step = 1 / 12.0f;
+		float lineSize = height * step;
 		textSize(0.8f * lineSize);
+		textAlign(RIGHT, BOTTOM);
+		int selectedTone = (int) Math.floor((height - mouseY) * 12.0 / height);
+		for (int tone = 0; tone < 12; tone++) {
+			int i = toneToIndex((tone + tonic) % 12);
+			fill(0, 0, i == selectedTone ? 0.75f : 0.5f);
+			String title = intervalNamer.getName(tone);
+			text(title, lineSize * 1.5f, (1 - i * step) * height);
+		}
 		textAlign(LEFT, BOTTOM);
-		fill(0, 0, 1, 0.5f);
 		for (int tone = 0; tone < 12; tone++) {
 			int i = toneToIndex(tone);
+			fill(0, 0, i == selectedTone ? 0.75f : 0.5f);
 			String title = englishFlatNamer.getName(tone);
-			text(title, lineSize * 0.5f, (1 - i / (12.0f)) * height);
+			text(title, lineSize * 2.5f, (1 - i * step) * height);
 		}
-	}
 
-	private void drawPositionMarker() {
-		double relativePosition = currentMillis / (totalTime * 1000);
-		float scaleX = panZoomController.getScale();
-		float markerX = (float) (scaleX * width * relativePosition);
-		stroke(0, 0, 1, 0.5f);
-		line(markerX, 0, markerX, height);
 	}
 
 	private void drawChordTitle(TimedChordLabel label) {
@@ -299,16 +231,15 @@ public class ChordTimeLineApp extends PApplet {
 	}
 
 	public void mouseDragged() {
-		panZoomController.mouseDragged();
+		chordTimeLine.mouseDragged();
 	}
 
 	public void mouseClicked() {
-		double totalMillis = 1000 * totalTime;
-		float panX = panZoomController.getPan().x;
-		float scaleX = panZoomController.getScale();
-		double selectedMillis = totalMillis * (mouseX - panX)
-			/ (scaleX * width);
-		skipTo(selectedMillis);
+		chordTimeLine.mouseClicked();
+	}
+
+	@Override
+	public void mouseMoved() {
 		redraw();
 	}
 
@@ -371,9 +302,9 @@ public class ChordTimeLineApp extends PApplet {
 	}
 
 	private void resetPanZoom() {
-		panZoomController.setPan(new PVector(0, 0));
-		panZoomController.setScale(1);
-		redraw();
+		if (chordTimeLine != null) {
+			chordTimeLine.resetPanZoom();
+		}
 	}
 
 	void setTonic(int tonic) {
@@ -397,6 +328,154 @@ public class ChordTimeLineApp extends PApplet {
 			} else if (fileName.endsWith(".mp3") || fileName.endsWith(".wav")) {
 				loadAudio(fileName);
 			}
+		}
+	}
+
+	private class ChordTimeLine {
+		private int height;
+		private int width;
+		private int left;
+		private int top;
+
+		private PanZoomController panZoomController;
+
+		public ChordTimeLine(int height, int width, int left, int top) {
+			this.height = height;
+			this.width = width;
+			this.left = left;
+			this.top = top;
+
+			panZoomController = new PanZoomController(ChordTimeLineApp.this);
+			resetPanZoom();
+		}
+
+		public void resetPanZoom() {
+			panZoomController.setPan(new PVector(left, top));
+			panZoomController.setScale(1);
+			redraw();
+		}
+
+		public void draw(TimedChordLabel currentLabel) {
+			pushMatrix();
+
+			// translate(left, top);
+
+			PVector pan = panZoomController.getPan();
+			translate(pan.x, pan.y);
+			float scaleX = panZoomController.getScale();
+			// scale(scaleX, 1);
+
+			pushMatrix();
+
+			translate(0, height);
+			scale(1, -1);
+
+			float xScale = (float) (width / totalTime);
+			float yScale = height / 12.0f;
+
+			rectMode(CORNER);
+
+			fill(0.2f);
+			noStroke();
+			if (mode.equals(MODE_LINEAR)) {
+				for (int i = 0; i < 12; i++) {
+					if (tonicDist.distanceInt(i, 0) < 7) {
+						fill(0.25f, 0.2f, i == 0 ? 0.3f : 0.2f);
+						rect(0, i * yScale, scaleX * width, yScale);
+					}
+				}
+			} else if (mode.equals(MODE_FIFTHS)) {
+				fill(0.125f, 0.2f, 0.2f);
+				rect(0, 11 * yScale, scaleX * width, yScale);
+				fill(0.25f, 0.2f, 0.2f);
+				rect(0, 7 * yScale, scaleX * width, 4 * yScale);
+				fill(0.25f, 0.2f, 0.3f);
+				rect(0, 6 * yScale, scaleX * width, yScale);
+				fill(0.125f, 0.2f, 0.2f);
+				rect(0, 5 * yScale, scaleX * width, yScale);
+				fill(0, 0.2f, 0.15f);
+				rect(0, 0, scaleX * width, 5 * yScale);
+			}
+
+			stroke(0);
+
+			for (TimedChordLabel label : chordLabels) {
+				float xStart = (float) (label.getStartTime() * xScale);
+				float xEnd = (float) (label.getEndTime() * xScale);
+				ChordLabel chordLabel = label.getChordLabel();
+				List<Integer> tones = chordLabel.getTones();
+				if (!tones.isEmpty()) {
+					// float dist = tonicDist.distance(chordLabel.getRoot(),
+					// tonic);
+					// float dist = (float)chordIndexer.getLogIndex(tones);
+					// //println(dist);
+					// fill(tonicDist.distanceToHue(dist), 0.5f, 1);
+					// float xSize = xEnd - xStart;
+					// if (xSize <= 2.0f) {
+					// noStroke();
+					// } else {
+					// stroke(0);
+					// }
+					// rect(scaleX*xStart, height*(1-dist), scaleX*xSize,
+					// height);
+					int root = chordLabel.getRoot();
+					boolean hightlightEnabled = currentLabel == null
+						|| currentLabel == label;
+					float xSize = xEnd - xStart;
+					if (hightlightEnabled) {
+						fill(0, 0, 0.5f, 0.25f);
+						noStroke();
+						rect(scaleX * xStart, 0, scaleX * xSize, height);
+					}
+					stroke(0);
+					for (Integer tone : tones) {
+						float hue = tonicDist.distanceToHue(tonicDist
+							.distance(tone, tonic));
+						float brightness = tone == root ? 1 : 0.5f;
+						// brightness *= hightlightEnabled ? 1 : 0.8f;
+						fill(hue, 0.5f, brightness);
+						int t = toneToIndex(tone);
+
+						// if (xSize <= 2.0f) {
+						// noStroke();
+						// } else {
+						// stroke(0);
+						// }
+						rect(scaleX * xStart,
+							t * yScale,
+							scaleX * xSize,
+							yScale);
+					}
+				}
+			}
+
+			popMatrix();
+
+			drawPositionMarker();
+
+			popMatrix();
+		}
+
+		private void drawPositionMarker() {
+			double relativePosition = currentMillis / (totalTime * 1000);
+			float scaleX = panZoomController.getScale();
+			float markerX = (float) (scaleX * width * relativePosition);
+			stroke(0, 0, 1, 0.5f);
+			line(markerX, 0, markerX, height);
+		}
+
+		public void mouseClicked() {
+			double totalMillis = 1000 * totalTime;
+			float panX = panZoomController.getPan().x;
+			float scaleX = panZoomController.getScale();
+			double selectedMillis = totalMillis * (mouseX - panX)
+				/ (scaleX * width);
+			skipTo(selectedMillis);
+			redraw();
+		}
+
+		public void mouseDragged() {
+			panZoomController.mouseDragged();
 		}
 	}
 }
