@@ -48,10 +48,8 @@ public class ChordTimeLineApp extends PApplet {
 
 	private String MODE_LINEAR = "LINEAR";
 	private String MODE_FIFTHS = "FIFTHS";
-	private String MODE_TONIC_DIST = "TONIC_DIST";
 
 	private String mode = MODE_FIFTHS;
-	private int diatonicStep = 1;
 
 	private PanZoomController panZoomController;
 
@@ -111,16 +109,7 @@ public class ChordTimeLineApp extends PApplet {
 
 		fill(0.2f);
 		noStroke();
-		if (mode.equals(MODE_TONIC_DIST)) {
-			fill(0, 0.2f, 0.15f);
-			rect(0, 7 * yScale, scaleX * width, 5 * yScale);
-			fill(0.125f, 0.2f, 0.2f);
-			rect(0, 5 * yScale, scaleX * width, 2 * yScale);
-			fill(0.25f, 0.2f, 0.2f);
-			rect(0, 0, scaleX * width, 5 * yScale);
-			fill(0.25f, 0.2f, 0.3f);
-			rect(0, 0, scaleX * width, yScale);
-		} else if (mode.equals(MODE_LINEAR)) {
+		if (mode.equals(MODE_LINEAR)) {
 			for (int i = 0; i < 12; i++) {
 				if (tonicDist.distanceInt(i, 0) < 7) {
 					fill(0.25f, 0.2f, i == 0 ? 0.3f : 0.2f);
@@ -187,7 +176,7 @@ public class ChordTimeLineApp extends PApplet {
 		popMatrix();
 
 		drawToneTitles();
-		
+
 		drawChordTitle(currentLabel);
 	}
 
@@ -257,18 +246,9 @@ public class ChordTimeLineApp extends PApplet {
 		if (mode.equals(MODE_FIFTHS)) {
 			t = ((tone - tonic + 12) * 7 + 6) % 12;
 		}
-		// int t = ((tone - tonic + 12) * 7 + 1) % 12;
-		else if (mode.equals(MODE_TONIC_DIST)) {
-			t = tonicDist.distanceInt(tone, tonic);
-			if (t < 7) {
-				t = (t * diatonicStep) % 7;
-			}// else {
-				// t = (((t - 7) * 2) % 7) + 7;
-				// }
-		}
 		return t;
 	}
-	
+
 	public void keyPressed() {
 		if (keyCode == UP) {
 			shiftTonic(7);
@@ -302,14 +282,8 @@ public class ChordTimeLineApp extends PApplet {
 			if (mode.equals(MODE_LINEAR)) {
 				mode = MODE_FIFTHS;
 			} else if (mode.equals(MODE_FIFTHS)) {
-				// mode = MODE_TONIC_DIST;
 				mode = MODE_LINEAR;
 			}
-			// else if (mode.equals(MODE_TONIC_DIST)) {
-			// mode = MODE_LINEAR;
-			// }
-		} else if (key == 'd') {
-			diatonicStep = 1 + (diatonicStep % 2);
 		} else if (key == 'r') {
 			resetPanZoom();
 		} else if (key == ' ') {
