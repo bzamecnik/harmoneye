@@ -318,13 +318,13 @@ public class ReassignedSpectrograph implements MagnitudeSpectrograph {
 				computeHarmonicCorrelation(chromagram);
 			}
 
+			if (normalizationEnabled) {
+				l2Normalizer.filter(chromagram);
+			}
+			
 			if (octaveWrapEnabled) {
 				double[] wrappedChromagram = outputFrames[frameIndex];
 				chromagram = chromagramWrapper.wrap(chromagram, wrappedChromagram);
-			}
-
-			if (normalizationEnabled) {
-				l2Normalizer.filter(chromagram);
 			}
 
 			if (postScalingFactor != 1) {
