@@ -3,6 +3,7 @@ package com.harmoneye.app.chordtimeline;
 import java.awt.event.KeyEvent;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import processing.core.PApplet;
@@ -57,6 +58,7 @@ public class ChordTimeLineApp extends PApplet {
 	private int toneTitleWidth;
 
 	private ChordTimeLine chordTimeLine;
+	private ToneCircle toneCircle;
 
 	public static void main(String[] args) {
 		ChordTimeLineApp applet = new ChordTimeLineApp();
@@ -67,7 +69,7 @@ public class ChordTimeLineApp extends PApplet {
 	}
 
 	public void setup() {
-		size(1000, 240);
+		size(1200, 360);
 
 		SDrop sdrop = new SDrop(this);
 		minim = new Minim(this);
@@ -83,10 +85,13 @@ public class ChordTimeLineApp extends PApplet {
 	}
 
 	public void draw() {
-		toneTitleWidth = height * 4 / 12;
+		toneTitleWidth = Math.min(height * 4 / 12, 80);
 		if (chordTimeLine == null) {
-			chordTimeLine = new ChordTimeLine(height, width - toneTitleWidth,
-				toneTitleWidth, 0);
+			chordTimeLine = new ChordTimeLine(height, width
+				- (toneTitleWidth + height), toneTitleWidth, 0);
+		}
+		if (toneCircle == null) {
+			toneCircle = new ToneCircle(width - height, 0, height / 2);
 		}
 
 		if (audioPlayer.isPlaying()) {
@@ -98,10 +103,9 @@ public class ChordTimeLineApp extends PApplet {
 		background(0.15f);
 
 		chordTimeLine.draw(currentLabel);
+		toneCircle.draw(currentLabel);
 
 		drawToneTitles(toneTitleWidth);
-
-		drawChordTitle(currentLabel);
 	}
 
 	private void drawToneTitles(int width) {
@@ -110,39 +114,31 @@ public class ChordTimeLineApp extends PApplet {
 		rect(0, 0, width, height);
 		stroke(0.25f);
 		line(width, 0, width, height);
+		line(width / 2, 0, width / 2, height);
 
 		float step = 1 / 12.0f;
-		float lineSize = height * step;
-		textSize(0.8f * lineSize);
+		float textSize = width * 0.24f;
+		textSize(textSize);
 		textAlign(RIGHT, BOTTOM);
 		int selectedTone = (int) Math.floor((height - mouseY) * 12.0 / height);
 		for (int tone = 0; tone < 12; tone++) {
 			int i = toneToIndex((tone + tonic) % 12);
 			fill(0, 0, i == selectedTone ? 0.75f : 0.5f);
 			String title = intervalNamer.getName(tone);
-			text(title, lineSize * 1.5f, (1 - i * step) * height);
+			text(title, textSize * 1.75f, (1 - i * step) * height);
 		}
 		textAlign(LEFT, BOTTOM);
 		for (int tone = 0; tone < 12; tone++) {
 			int i = toneToIndex(tone);
 			fill(0, 0, i == selectedTone ? 0.75f : 0.5f);
 			String title = englishFlatNamer.getName(tone);
-			text(title, lineSize * 2.5f, (1 - i * step) * height);
+			text(title, textSize * 2.5f, (1 - i * step) * height);
 		}
 
 	}
 
-	private void drawChordTitle(TimedChordLabel label) {
-		if (label != null) {
-			String title = relativeChordTitle(label.getChordLabel(), tonic);
-			fill(0, 0, 1, 0.5f);
-			textAlign(CENTER, CENTER);
-			textSize(100);
-			text(title, width / 2, height - 65);
-		}
-	}
-
-	private String relativeChordTitle(ChordLabel chordLabel, int tonic) {
+	private String relativeChordTitle(ChordLabel chordLabel, int tonic,
+		PitchClassNamer namer) {
 		if (chordLabel.getTones().isEmpty()) {
 			return "";
 		}
@@ -150,7 +146,7 @@ public class ChordTimeLineApp extends PApplet {
 		String[] parts = title.split(":");
 		int root = chordLabel.getRoot();
 		int relativeRoot = (root - tonic + 12) % 12;
-		String rootTitle = romanFlatNamer.getName(relativeRoot);
+		String rootTitle = namer.getName(relativeRoot);
 		if (parts.length > 1) {
 			rootTitle = rootTitle + ":" + parts[1];
 		}
@@ -179,6 +175,11 @@ public class ChordTimeLineApp extends PApplet {
 			t = ((tone - tonic + 12) * 7 + 6) % 12;
 		}
 		return t;
+	}
+
+	private float toneHue(Integer tone) {
+		float hue = tonicDist.distanceToHue(tonicDist.distance(tone, tonic));
+		return hue;
 	}
 
 	public void keyPressed() {
@@ -419,8 +420,7 @@ public class ChordTimeLineApp extends PApplet {
 					// rect(scaleX*xStart, height*(1-dist), scaleX*xSize,
 					// height);
 					int root = chordLabel.getRoot();
-					boolean hightlightEnabled = currentLabel == null
-						|| currentLabel == label;
+					boolean hightlightEnabled = currentLabel == label;
 					float xSize = xEnd - xStart;
 					if (hightlightEnabled) {
 						fill(0, 0, 0.5f, 0.25f);
@@ -429,8 +429,7 @@ public class ChordTimeLineApp extends PApplet {
 					}
 					stroke(0);
 					for (Integer tone : tones) {
-						float hue = tonicDist.distanceToHue(tonicDist
-							.distance(tone, tonic));
+						float hue = toneHue(tone);
 						float brightness = tone == root ? 1 : 0.5f;
 						// brightness *= hightlightEnabled ? 1 : 0.8f;
 						fill(hue, 0.5f, brightness);
@@ -476,6 +475,144 @@ public class ChordTimeLineApp extends PApplet {
 
 		public void mouseDragged() {
 			panZoomController.mouseDragged();
+		}
+	}
+
+	private class ToneCircle {
+		private static final float TONE_COUNT = 12;
+
+		private int radius;
+		private int left;
+		private int top;
+		private PVector center;
+
+		private float textSize;
+
+		private List<Bead> beads = new ArrayList<Bead>();
+
+		public ToneCircle(int left, int top, int radius) {
+			this.radius = radius;
+			this.left = left;
+			this.top = top;
+			this.center = new PVector(left + radius, top + radius);
+
+			float windowRadius = 0.5f * (float) Math.min(width, height);
+			float beadRadius = 0.19f * windowRadius;
+			float bigRadius = 0.8f * windowRadius;
+			float apexRadius = bigRadius - beadRadius;
+			// apexRadius *= 0.9f;
+
+			float toneCountInv = 1.0f / TONE_COUNT;
+			for (int i = 0; i < TONE_COUNT; i++) {
+				float p = i * toneCountInv;
+
+				double angle = p * TWO_PI - HALF_PI;
+				float x = (float) Math.cos(angle);
+				float y = (float) Math.sin(angle);
+
+				PVector center = new PVector(bigRadius * x, bigRadius * y);
+				PVector apex = new PVector(apexRadius * x, apexRadius * y);
+				Bead bead = new Bead(center, apex, beadRadius);
+				beads.add(bead);
+			}
+
+			textSize = beadRadius;
+		}
+
+		public void draw(TimedChordLabel currentLabel) {
+			pushMatrix();
+
+			translate(center.x, center.y);
+
+			fill(0.15f);
+			noStroke();
+			rectMode(RADIUS);
+			rect(0, 0, radius, radius);
+
+			scale(0.9f);
+
+			drawBeadCircle(currentLabel);
+
+			drawChordTitle(currentLabel);
+
+			popMatrix();
+
+			stroke(0.25f);
+			line(left, 0, left, height);
+		}
+
+		private void drawBeadCircle(TimedChordLabel label) {
+			ChordLabel chordLabel = label.getChordLabel();
+			List<Integer> activeTones = Collections.emptyList();
+			if (chordLabel != null) {
+				activeTones = chordLabel.getTones();
+			}
+
+			textAlign(CENTER, CENTER);
+			textSize(textSize);
+			noStroke();
+			ellipseMode(RADIUS);
+			int step = mode == MODE_FIFTHS ? 7 : 1;
+			for (int i = 0; i < 12; i++) {
+				int tone = (i * step + tonic) % 12;
+				Bead bead = beads.get(i);
+				PVector center = bead.getCenter();
+				boolean isActive = activeTones.contains(tone);
+				boolean isRoot = chordLabel.getRoot() == tone;
+				float brightness = isActive ? (isRoot ? 1 : 0.75f) : 0.25f;
+				float saturation = isActive ? 0.5f : 0.25f;
+				fill(toneHue(tone), saturation, brightness);
+				ellipse(center.x, center.y, bead.getRadius(), bead.getRadius());
+				String toneName = intervalNamer.getName((i * step) % 12);
+				fill(0);
+				text(toneName, center.x, center.y);
+			}
+		}
+
+		private void drawChordTitle(TimedChordLabel label) {
+			if (label != null) {
+				String relTitle = relativeChordTitle(label.getChordLabel(),
+					tonic,
+					romanFlatNamer);
+				fill(0, 0, 1, 0.5f);
+				textAlign(CENTER, CENTER);
+				float bigTextSize = radius * 0.3f;
+				textSize(bigTextSize);
+				text(relTitle, 0, 0);
+
+				String absTitle = relativeChordTitle(label.getChordLabel(),
+					0,
+					englishFlatNamer);
+				fill(0, 0, 1, 0.5f);
+				textAlign(CENTER, CENTER);
+				textSize(bigTextSize * 0.5f);
+				text(absTitle, 0, bigTextSize);
+			}
+		}
+	}
+
+	private static class Bead {
+		private PVector center;
+		// connection point for the curves joining the beads inside the circle
+		private PVector apex;
+		private float radius;
+
+		public Bead(PVector center, PVector apex, float radius) {
+			this.center = center;
+			this.apex = apex;
+			this.radius = radius;
+		}
+
+		public PVector getCenter() {
+			return center;
+		}
+
+		public PVector getApex() {
+			return apex;
+		}
+
+		public float getRadius() {
+			return radius;
 		}
 	}
 }
