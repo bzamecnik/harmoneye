@@ -1,5 +1,6 @@
 package com.harmoneye.ng;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,6 +13,7 @@ import processing.core.PVector;
 import com.harmoneye.analysis.StreamingReassignedSpectrograph;
 import com.harmoneye.app.spectrogram.AudioReader;
 import com.harmoneye.app.spectrogram.SampledAudio;
+import com.harmoneye.music.ChromaKeyDetector;
 import com.harmoneye.ng.ChromaExtractor.Chroma;
 import com.harmoneye.ng.RmsExtractor.RmsFeature;
 import com.harmoneye.ng.SpectrumExtractor.MagnitudeSpectrum;
@@ -20,7 +22,7 @@ import com.harmoneye.p5.PanZoomController;
 public class BatchAudioProcessor {
 
 	private static final String inputFile =
-		"../midi/test/ii-v-i-vi.wav";
+		"../midi/test/minor7Chords.wav";
 //		"/Users/bzamecnik/Documents/harmoneye-labs/music-information-retrieval/GTZAN Genre Collection/genres/reggae/reggae.00001.au";
 //		"bossa-loop-097_1.wav";
 //		"/Users/bzamecnik/Documents/harmoneye-labs/music-information-retrieval/GTZAN Genre Collection/genres/classical/classical.00000.au";
@@ -28,6 +30,7 @@ public class BatchAudioProcessor {
 //	 "c-scale-piano-mono.wav";
 //	 "../mp3/01-Mourn.mp3";
 //	"tartini-example-violin.wav";
+//		"/Users/bzamecnik/Documents/harmoneye-labs/music-information-retrieval/columbia-music-signal-processing/data/beatles/mp3s-32k/Help_/12-I_ve_Just_Seen_A_Face.mp3";
 
 	private SampledAudio audio;
 	private FeatureObserver<Object> observer;
@@ -74,15 +77,16 @@ public class BatchAudioProcessor {
 	}
 
 	public static void main(String[] args) {
-		final P5Plot observer = new P5Plot();
+//		final P5Plot observer = new P5Plot();
 
 		// setup() must run before update() on the PApplet
 
-		PApplet.runSketch((String[]) PApplet.concat(new String[] { observer
-			.getClass().getName() }, args), observer);
+//		PApplet.runSketch((String[]) PApplet.concat(new String[] { observer
+//			.getClass().getName() }, args), observer);
 		
 		
-//		final FeatureObserver<Object> observer = new TextPrintingFeatureObserver();
+		//final FeatureObserver<Object> observer = new TextPrintingFeatureObserver();
+		final FeatureObserver<Object> observer = new KeyDetectionObserver();
 		
 		new Thread(new Runnable() {
 			@Override
@@ -115,6 +119,34 @@ public class BatchAudioProcessor {
 		}
 	}
 
+	static class KeyDetectionObserver implements FeatureObserver<Object> {
+		private double[][] chromagram;
+		private int frameCount; 
+		@Override
+		public void update(int frameIndex, Object features) {
+			Chroma chromaFeature = (Chroma) features;
+			double[] chroma = chromaFeature.getChroma();
+			chromagram[frameIndex] = chroma;
+			System.out.println(Arrays.toString(chroma));
+			if (frameIndex == frameCount - 1) {
+				detectKey(chromagram);
+			}
+		}
+
+		private void detectKey(double[][] chromagram) {
+			ChromaKeyDetector keyDetector = new ChromaKeyDetector();
+			int tonic = keyDetector.findTonic(chromagram);
+			System.out.println("key: " + tonic);
+		}
+
+		@Override
+		public void summary(Map<String, Object> summary) {
+			frameCount = (int) summary.get("frameCount");
+			chromagram = new double[frameCount][12];
+		}
+	}
+
+	
 	static class P5Plot extends PApplet implements FeatureObserver<Object> {
 
 		private volatile double[] rmsValues;
