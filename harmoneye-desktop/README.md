@@ -1,10 +1,5 @@
-# HarmonEye
+# HarmonEye for macOS
 
-Listens to music and visualizes the tones and chords.
-
-http://harmoneye.com/
-
-# Requirements
 ## Libraries
 
 Download and put to lib/ directory:
@@ -27,4 +22,6 @@ Download and put to lib/ directory:
 
 - create Eclipse project
 
+```
 $ gradle eclipse
+```
