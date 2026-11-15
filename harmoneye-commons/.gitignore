@@ -1,0 +1,9 @@
+.gradle/
+.settings/
+/bin/
+/build/
+/dist/
+/libs/
+.classpath
+.project
+*.dmg
