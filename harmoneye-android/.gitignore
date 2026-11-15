@@ -3,3 +3,8 @@ gen/
 libs/
 proguard/
 local.properties
+.gradle/
+.settings/
+.classpath
+.project
+.DS_Store
